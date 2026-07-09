@@ -620,14 +620,7 @@ void loop() {
     AddPlayer();
     HurryUp();
     Tilt();
-    if (effect == HIGH) {
-      Shooteffect();
-      Weedmultiball();
-      Weedblast();
-      Looplight();
-      BridgeLowEff();
-      HurryHit();
-    }
+    RunLightEffect(); // fenyeffekt-motor (d_light_effects.ino), effect == HIGH eseten fut
   }
 
   if (effect == LOW) {

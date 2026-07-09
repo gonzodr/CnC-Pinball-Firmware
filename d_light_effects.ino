@@ -1,559 +1,171 @@
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-//// Shooteffect | ID: 1
+//// FENYEFFEKT MOTOR (V4)
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-void Shooteffect() {
+//
+// Minden effekt kozos, ido-alapu motoron fut:
+//  - a kepkockak millis() alapjan, fix utemben (EFFECT_FRAME_MS)
+//    leptetnek -> egyenletes mozgas, nincs effectState/bool tanc
+//  - az aktualis kepkocka MINDEN loop-korben ujrarajzolodik, igy a
+//    jateklogika nem tudja felulirni az effekt kepet
+//  - FastLED.show() NINCS itt: a loop vegi egyetlen show() tolja ki
+//  - fadeToBlackBy() folyamatos utofenyt ad: ami kialszik, az szepen
+//    elhalvanyul, a vegen pedig EFFECT_FADE_MS alatt hunyik ki minden
+//
+// Inditas a jateklogikabol (VALTOZATLAN interfesz):
+//    effect = HIGH; effectID = n;
+// A motor a vegen magatol all vissza (effect = LOW + Initlights).
+//
+// Effekt ID-k:
+//  1 = Kiloves (EffectID1 maszk, 7 kocka, feher)
+//  2 = Weed multiball (EffectID2 maszk, 4 kocka x 4 szin)
+//  3 = Weedblast (EffectID3 tobbszinu maszk, 6 kocka)
+//  4 = Looplight (teljes palya, 4 szin villanasai)
+//  5 = Hid (EffectID5 maszk, 4x feher + 4x piros)
+//  6 = HurryUp talalat (teljes palya, sorsolt szin, 4 villanas)
 
-  if (effectState == HIGH & shooteffbool == LOW & effect == HIGH & effectID == 1) {
-      if (shootLightCycle < 7){
-      shootLightCycle ++;
-      for (int i = 0; i < 68; i++) {
-      colorcode = pgm_read_byte(&EffectID1[offset]);
-      offset = offset + 1;
+#define EFFECT_LEDS 68        // a jatekter LED-jei (0..67)
+#define EFFECT_FRAME_MS 60    // egy lepes idotartama
+#define EFFECT_FADE_MS 700    // utofeny a vegen, mielott visszaall az alap
+#define EFFECT_FADE_AMOUNT 25 // halvanyitas loop-koronkent (nagyobb = gyorsabb kihunyas)
 
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::White;
-        }
-      }
-        FastLED.show();
-      }
-      if (shootLightCycle == 7){
-      offset = 0;
-      initlight = HIGH;
-      Initlights();
-      effect = LOW;
-      effectID = 0;
-      shooteffbool = LOW;
-      shootLightCycle = 0;
-      }
+int runningEffect = 0;
+unsigned long effectStartT = 0;
+CRGB hurryColor = CRGB::White;
 
-    shooteffbool = HIGH;
+const CRGB hurryPalette[6] = {
+  CRGB::Blue, CRGB::Green, CRGB::Yellow, CRGB::Purple, CRGB::Red, CRGB::White
+};
+
+// A Weedblast (EffectID3) szinkodjai: a tabla 1..12 ertekeihez tartozo szinek
+const CRGB blastPalette[12] = {
+  CRGB::White, CRGB::Yellow, CRGB::Red, CRGB::Orange, CRGB::Green,
+  CRGB::IndianRed, CRGB::SkyBlue, CRGB::DeepPink, CRGB::DarkViolet,
+  CRGB::Tomato, CRGB::LightSeaGreen, CRGB::FairyLight
+};
+
+// Egy maszk-sor kirajzolasa a PROGMEM tablabol, egy szinnel.
+// A 0 ertek = hatter: NEM feketet irunk, hanem beke hagyjuk, hogy az
+// elozo kocka fenyei a fadeToBlackBy-tol szepen elhalvanyuljanak.
+void EffectDrawMask(const uint8_t* table, uint8_t row, CRGB color) {
+  int base = (int)row * EFFECT_LEDS;
+  for (int i = 0; i < EFFECT_LEDS; i++) {
+    if (pgm_read_byte(&table[base + i]) != 0) {
+      leds[i] = color;
+    }
   }
-  else {
-    shooteffbool = LOW;
-  }
-  }
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// End Shooteffect Rutin
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-
-
-
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// Weedmultiball | ID: 2
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-void Weedmultiball() {
-
-  if (effectState == HIGH and weedmultibool == LOW and effect == HIGH and effectID == 2) {
-    weedmulticounter = weedmulticounter + 1;
-    weedmultibool = HIGH;
-  
-  
-  if (weedmulticounter == 1 or weedmulticounter == 3 or weedmulticounter == 5 or weedmulticounter == 7) {
-      if (weedmulticounter == 1){
-        offset = 0;
-      }
-      for (int i = 0; i < 68; i++) {
-          colorcode = pgm_read_byte(&EffectID2[offset]);
-      offset = offset + 1;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::Red;
-        }
-      }
-        FastLED.show();
-      }
-
-  if (weedmulticounter == 9 or weedmulticounter == 11 or weedmulticounter == 13 or weedmulticounter == 15) {
-      if (weedmulticounter == 9){
-        offset = 0;
-      }
-      for (int i = 0; i < 68; i++) {
-          colorcode = pgm_read_byte(&EffectID2[offset]);
-      offset = offset + 1;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::Orange;
-        }
-      }
-        FastLED.show();
-      }
-
-  if (weedmulticounter == 17 or weedmulticounter == 19 or weedmulticounter == 21 or weedmulticounter == 23) {
-      if (weedmulticounter == 17){
-        offset = 0;
-      }
-      for (int i = 0; i < 68; i++) {
-          colorcode = pgm_read_byte(&EffectID2[offset]);
-          offset = offset + 1;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::Yellow;
-        }
-      }
-        FastLED.show();
-      }
-
-  if (weedmulticounter == 25 or weedmulticounter == 27 or weedmulticounter == 29 or weedmulticounter == 31) {
-      if (weedmulticounter == 25){
-        offset = 0;
-      }
-      for (int i = 0; i < 68; i++) {
-          colorcode = pgm_read_byte(&EffectID2[offset]);
-          offset = offset + 1;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::White;
-        }
-      }
-        FastLED.show();
-      }
-  if (weedmulticounter == 2 || weedmulticounter == 4 || weedmulticounter == 6 || weedmulticounter == 8 || weedmulticounter == 10 || weedmulticounter == 12 || weedmulticounter == 14 || weedmulticounter == 16 || weedmulticounter == 18 || weedmulticounter == 20 || 
-  weedmulticounter == 22 || weedmulticounter == 24 || weedmulticounter == 26 || weedmulticounter == 28 || weedmulticounter == 30) {
-      for (int i = 0; i < 68; i++) {
-        leds[i] = CRGB::Black;
-      }
-    FastLED.show();
-  }
-
-  
-  if (weedmulticounter == 32){
-      offset = 0;
-      initlight = HIGH;
-      Initlights();
-      effect = LOW;
-      effectID = 0;
-      weedmultibool = LOW;
-      weedmulticounter = 0;
-  }
-  }
-  
-  if (effectState == LOW) {
-    weedmultibool = LOW;
-
 }
 
+// Tobbszinu maszk-sor (Weedblast): a tabla erteke valasztja ki a szint
+void EffectDrawMulti(const uint8_t* table, uint8_t row) {
+  int base = (int)row * EFFECT_LEDS;
+  for (int i = 0; i < EFFECT_LEDS; i++) {
+    uint8_t c = pgm_read_byte(&table[base + i]);
+    if (c >= 1 && c <= 12) {
+      leds[i] = blastPalette[c - 1];
+    }
+  }
 }
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// End Weedmultieffect Rutin
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// Weedblast | ID: 3
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-void Weedblast() {
-
-  if (effectState == HIGH and weedblastbool == LOW and effect == HIGH and effectID == 3) {
-    weedblastcounter = weedblastcounter + 1;
-    if (weedblastcounter == 1){
-      }
-  if (weedblastcounter < 7) {
-
-      for (int i = 0; i < 68; i++) {
-          colorcode = pgm_read_byte(&EffectID3[offset]);
-          offset ++;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::White;
-        }
-      if (colorcode == 2){
-      leds[i] = CRGB::Yellow;
-        }
-      if (colorcode == 3){
-      leds[i] = CRGB::Red;
-        }
-      if (colorcode == 4){
-      leds[i] = CRGB::Orange;
-        }
-      if (colorcode == 5){
-      leds[i] = CRGB::Green;
-        }
-      if (colorcode == 6){
-      leds[i] = CRGB::IndianRed;
-        }
-      if (colorcode == 7){
-      leds[i] = CRGB::SkyBlue;
-        }
-      if (colorcode == 8){
-      leds[i] = CRGB::DeepPink;
-        }
-      if (colorcode == 9){
-      leds[i] = CRGB::DarkViolet;
-        }
-      if (colorcode == 10){
-      leds[i] = CRGB::Tomato;
-        }
-      if (colorcode == 11){
-      leds[i] = CRGB::LightSeaGreen;
-        }
-      if (colorcode == 12){
-      leds[i] = CRGB::FairyLight;
-        }
-
-      }
-      FastLED.show();
-    }
-  if (weedblastcounter == 7){
-      weedblastcounter =0;
-      offset = 0;
-      initlight = HIGH;
-      Initlights();
-      effect = LOW;
-      effectID = 0;
-      weedmultibool = LOW;
-      weedmulticounter = 0;
-  }
-    weedblastbool = HIGH;
-  }
-
-  if (effectState == LOW) {
-    weedblastbool = LOW;
-  }
-
-  }
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// End Weedmultieffect Rutin
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// Looplight | ID: 4
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-void Looplight() {
-
-  if (effectState == HIGH and looplightbool == LOW and effect == HIGH and effectID == 4) {
-    looplightcounter = looplightcounter + 1;
-    looplightbool = HIGH;
-  if (looplightcounter == 1 or looplightcounter == 3 or looplightcounter == 5 or looplightcounter == 7){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::DeepPink;
-        }
-      }
-  
-  if (looplightcounter == 9 or looplightcounter == 11 or looplightcounter == 13 or looplightcounter == 15){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::DarkViolet;
-        }
-      }
-  
-  if (looplightcounter == 17 or looplightcounter == 19 or looplightcounter == 21 or looplightcounter == 23){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::SkyBlue;
-        }
-      }
-  
-  if (looplightcounter == 25 or looplightcounter == 27 or looplightcounter == 29 or looplightcounter == 31){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::White;
-        }
-      }
-  
-  else if (looplightcounter == 2 || looplightcounter == 4 || looplightcounter == 6 || looplightcounter == 8 || looplightcounter == 10 || looplightcounter == 12 || looplightcounter == 14 || looplightcounter == 16 || looplightcounter == 18 || looplightcounter == 20 || 
-  looplightcounter == 22 || looplightcounter == 24 || looplightcounter == 26 || looplightcounter == 28 || looplightcounter == 30){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::Black;
-        }
-    }
-  else if (looplightcounter == 32){
-      effect = LOW;
-      effectID = 0;
-      looplightbool = LOW;
-      looplightcounter = 0;
-      initlight = HIGH;
-      Initlights();
-    }
-  }
-
-
-  
-  if (effectState == LOW) {
-    looplightbool = LOW;
-  }
-
+// Teljes jatekter egy szinre
+void EffectFill(CRGB color) {
+  fill_solid(leds, EFFECT_LEDS, color);
 }
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// End Looplight Rutin
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
 
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// BridgeLowEff | ID: 5
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-void BridgeLowEff() {
-
-  if (effectState == HIGH and BridgeLowEffbool == LOW and effect == HIGH and effectID == 5) {
-    BridgeLowEffcounter = BridgeLowEffcounter + 1;
-    BridgeLowEffbool = HIGH;
-  if (BridgeLowEffcounter == 1 || BridgeLowEffcounter == 9){
-    offset = 0;
+void RunLightEffect() {
+  if (effect != HIGH) {
+    runningEffect = 0;
+    return;
   }
-  if (BridgeLowEffcounter == 1 or BridgeLowEffcounter == 3 or BridgeLowEffcounter == 5 or BridgeLowEffcounter == 7){
-      for (int i = 0; i < 68; i++) {
-      
-      colorcode = pgm_read_byte(&EffectID5[offset]);
-      offset = offset + 1;
 
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::White;
-        }
-        }
-      }
-  
-  if (BridgeLowEffcounter == 9 or BridgeLowEffcounter == 11 or BridgeLowEffcounter == 13 or BridgeLowEffcounter == 15){
-          for (int i = 0; i < 68; i++) {
-      
-              colorcode = pgm_read_byte(&EffectID5[offset]);
-              offset = offset + 1;
-
-      if (colorcode == 0){
-      leds[i] = CRGB::Black;
-        }
-      if (colorcode == 1){
-      leds[i] = CRGB::Red;
-        }
-        }
-      }
-  
-  else if (BridgeLowEffcounter == 2 || BridgeLowEffcounter == 4 || BridgeLowEffcounter == 6 || BridgeLowEffcounter == 8 || BridgeLowEffcounter == 10 || BridgeLowEffcounter == 12 || BridgeLowEffcounter == 14 || BridgeLowEffcounter == 16){
-          for (int i = 0; i < 68; i++) {
-      leds[i] = CRGB::Black;
-        }
+  // uj effekt indul (vagy masik effekt valtja le a futot)
+  if (runningEffect != effectID) {
+    runningEffect = effectID;
+    effectStartT = millis();
+    if (effectID == 6) {
+      hurryColor = hurryPalette[random(0, 6)]; // szin EGYSZER sorsolva, nem villodzik
     }
-  else if (BridgeLowEffcounter == 17){
-      effect = LOW;
-      effectID = 0;
-      BridgeLowEffbool = LOW;
-      BridgeLowEffcounter = 0;
-      initlight = HIGH;
-      Initlights();
-    }    
   }
 
-  
-  
-  
-  
-  if (effectState == LOW) {
-    BridgeLowEffbool = LOW;
-  }
+  unsigned long elapsed = millis() - effectStartT;
+  unsigned int step = elapsed / EFFECT_FRAME_MS;
+
+  // folyamatos utofeny: amit ebben a korben nem rajzolunk ujra, halvanyul
+  fadeToBlackBy(leds, EFFECT_LEDS, EFFECT_FADE_AMOUNT);
+
+  unsigned int totalSteps = 0;
+
+  switch (runningEffect) {
+
+    case 1: // Kiloves -- 7 kockas vegigfutas, feher
+      totalSteps = 7;
+      if (step < totalSteps) {
+        EffectDrawMask(EffectID1, step, CRGB::White);
+      }
+      break;
+
+    case 2: // Weed multiball -- 4 kocka x 4 szin, lukteto utemben
+      totalSteps = 32;
+      if (step < totalSteps && (step & 1) == 0) {
+        CRGB c;
+        if      (step < 8)  { c = CRGB::Red; }
+        else if (step < 16) { c = CRGB::Orange; }
+        else if (step < 24) { c = CRGB::Yellow; }
+        else                { c = CRGB::White; }
+        EffectDrawMask(EffectID2, (step >> 1) & 3, c);
+      }
+      break;
+
+    case 3: // Weedblast -- 6 kockas, tobbszinu "robbanas"
+      totalSteps = 6;
+      if (step < totalSteps) {
+        EffectDrawMulti(EffectID3, step);
+      }
+      break;
+
+    case 4: // Looplight -- teljes palya, 4 szin lukteto villanasai
+      totalSteps = 32;
+      if (step < totalSteps && (step & 1) == 0) {
+        CRGB c;
+        if      (step < 8)  { c = CRGB::DeepPink; }
+        else if (step < 16) { c = CRGB::DarkViolet; }
+        else if (step < 24) { c = CRGB::SkyBlue; }
+        else                { c = CRGB::White; }
+        EffectFill(c);
+      }
+      break;
+
+    case 5: // Hid -- maszkos villogas: 4x feher, majd 4x piros
+      totalSteps = 16;
+      if (step < totalSteps && (step & 1) == 0) {
+        EffectDrawMask(EffectID5, (step >> 1) & 3, (step < 8) ? CRGB::White : CRGB::Red);
+      }
+      break;
+
+    case 6: // HurryUp talalat -- 4 villanas az indulaskor sorsolt szinnel
+      totalSteps = 8;
+      if (step < totalSteps && (step & 1) == 0) {
+        EffectFill(hurryColor);
+      }
+      break;
+
+    default: // ismeretlen ID -- vedelem: azonnal lezarjuk
+      totalSteps = 0;
+      break;
   }
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// End Weedmultieffect Rutin
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-//// HurryHit | ID: 6
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-void HurryHit() {
-  int r = random(1, 7);
-  if (effectState == HIGH and hurryhitbool == LOW and effect == HIGH and effectID == 6) {
-    hurryhitcounter = hurryhitcounter + 1;
-    hurryhitbool = HIGH;
-  }
-  else {
-    hurryhitbool = LOW;
-  }
-  switch (hurryhitcounter) {
-    case 1:
-      if (r == 1){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Blue; // Slingshot1
-        }
-      }
-      if (r == 2){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Green; // Slingshot1
-        }
-      }
-      if (r == 3){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Yellow; // Slingshot1
-        }
-      }
-      if (r == 4){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Purple; // Slingshot1
-        }
-      }
-      if (r == 5){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Red; // Slingshot1
-        }
-      }
-      if (r == 6){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::White; // Slingshot1
-        }
-      }
-      break;
-    case 2:
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Black; // Slingshot1
-        }
-      break;
-    case 3:
-      if (r == 1){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Blue; // Slingshot1
-        }
-      }
-      if (r == 2){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Green; // Slingshot1
-        }
-      }
-      if (r == 3){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Yellow; // Slingshot1
-        }
-      }
-      if (r == 4){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Purple; // Slingshot1
-        }
-      }
-      if (r == 5){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Red; // Slingshot1
-        }
-      }
-      if (r == 6){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::White; // Slingshot1
-        }
-      }
-      break;
-    case 4:
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Black; // Slingshot1
-        }
-      break;
-    case 5:
-      if (r == 1){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Blue; // Slingshot1
-        }
-      }
-      if (r == 2){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Green; // Slingshot1
-        }
-      }
-      if (r == 3){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Yellow; // Slingshot1
-        }
-      }
-      if (r == 4){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Purple; // Slingshot1
-        }
-      }
-      if (r == 5){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Red; // Slingshot1
-        }
-      }
-      if (r == 6){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::White; // Slingshot1
-        }
-      }
-      break;
-    case 6:
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Black; // Slingshot1
-        }
-      break;
-    case 7:
-      if (r == 1){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Blue; // Slingshot1
-        }
-      }
-      if (r == 2){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Green; // Slingshot1
-        }
-      }
-      if (r == 3){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Yellow; // Slingshot1
-        }
-      }
-      if (r == 4){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Purple; // Slingshot1
-        }
-      }
-      if (r == 5){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::Red; // Slingshot1
-        }
-      }
-      if (r == 6){
-      for (int i = 0; i < 68; i++) {
-          leds[i] = CRGB::White; // Slingshot1
-        }
-      }
-      break;
-    case 8:
-      initlight = HIGH;
-      Initlights();
-      effect = LOW;
-      effectID = 0;
-      hurryhitbool = LOW;
-      hurryhitcounter = 0;
-      break;
+  // az animacio lefutott ES az utofeny is kihunyt -> visszaallas az alapra
+  if (elapsed > (unsigned long)totalSteps * EFFECT_FRAME_MS + EFFECT_FADE_MS) {
+    effect = LOW;
+    effectID = 0;
+    runningEffect = 0;
+    initlight = HIGH;
+    Initlights();
   }
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-//// End HurryHit Rutin
+//// End Fenyeffekt motor
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////

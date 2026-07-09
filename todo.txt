@@ -41,8 +41,13 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 [ ] 4 jatekosos jatek vegig (pontszam-tomb tulindexeles javitva)
 [ ] UFO fonyeremeny es Multiball4: a 40000 pont most mar PLUSZ
     (eddig int tulcsordulas miatt LEVONT ~25000-et!)
-[ ] Weedmultiball / hid fenyeffekt: szebb lett-e (tombon tuli
-    olvasas javitva, szemet-villogas megszunt)
+[ ] FENYEFFEKTEK (uj ido-alapu motor + utofeny/fade):
+    - kiloves: 7 kockas futofeny egyenletesen, vegen lassu elhalvanyulas
+    - weed multiball, hid, looplight, hurryup: lukteto villanasok
+      kemeny vagas helyett
+    - ha tul lassu/gyors: EFFECT_FRAME_MS (60) allitando
+    - ha tul hosszu/rovid az utofeny: EFFECT_FADE_MS (700) es
+      EFFECT_FADE_AMOUNT (25) allitando (d_light_effects.ino teteje)
 [ ] MULTIBALL VEGE: ket golyo gyors egymasutani lefolyasa utan a
     kovetkezo golyon MAR NEM jackpotolnak a hidak es nem valt zenet
     jatek kozben (beragado multiball javitva: BIS >= 4)
