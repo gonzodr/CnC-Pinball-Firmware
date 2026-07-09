@@ -1,0 +1,58 @@
+=====================================================================
+CnC PINBALL - TODO (2026-07-09)
+AltSoftSerial -> Serial1 attelepites + stabilitasi javitasok utan
+=====================================================================
+
+A KOD MAR AT VAN IRVA az uj bekoteshez, tehat eloszor a lenti
+atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
+(Ha a regi allapot kell: CnC_firmware3_backup_20260709 mappa.)
+
+---------------------------------------------------------------------
+1) ATKOTESEK A GEPBEN
+---------------------------------------------------------------------
+[ ] DAVE "A" kapcsolo:  Mega 18-as pin  ->  Mega 42-es pin
+[ ] DAVE "D" kapcsolo:  Mega 19-es pin  ->  Mega 49-es pin
+[ ] WAV Trigger RX:     Mega 46-os pin  ->  Mega 18-as pin (TX1)
+[ ] WAV Trigger TX (ha be volt kotve a 48-asra): -> Mega 19 (RX1)
+    (ha nem volt bekotve, hagyd ugy)
+
+---------------------------------------------------------------------
+2) wavTrigger LIBRARY ATIRASA (a fejleszto gepen!)
+---------------------------------------------------------------------
+[ ] Keresd meg a wavTrigger.h fajlt a libraries mappaban
+    (altalaban Dokumentumok\Arduino\libraries\wavTrigger\)
+[ ] Benne:
+      //#define __WT_USE_ALTSOFTSERIAL__    <- kikommentezni
+      #define __WT_USE_SERIAL1__            <- ezt aktivalni
+[ ] Mentes, majd forditas Visual Micro-ban (hibatlanul kell mennie,
+    az AltSoftSerial include mar nincs a sketchben)
+
+---------------------------------------------------------------------
+3) FELTOLTES UTANI TESZTLISTA
+---------------------------------------------------------------------
+[ ] Hangok: sling, pop, CnC celok, weed, multiball indul/leall
+    (144 db delay kerult ki a wTrig hivasok utan - a hangnak
+    ugyanugy mennie kell, csak minden reszponzivabb lesz)
+[ ] DAVE savok: az A es D kapcsolo mukodik az uj pineken
+[ ] Flipperek erzese (gyorsabbnak kell lennie esemenyduseben)
+[ ] UFO kilokes mindharom valtozata (a 3-asnal rovidebb lett a
+    tekercsimpulzus - eddig ~550ms-ig huzott, az sok volt)
+[ ] Tilt: 3 gyors razas -> tilt, utana normal golyovaltas
+[ ] 4 jatekosos jatek vegig (pontszam-tomb tulindexeles javitva)
+[ ] UFO fonyeremeny es Multiball4: a 40000 pont most mar PLUSZ
+    (eddig int tulcsordulas miatt LEVONT ~25000-et!)
+[ ] Weedmultiball / hid fenyeffekt: szebb lett-e (tombon tuli
+    olvasas javitva, szemet-villogas megszunt)
+[ ] MULTIBALL VEGE: ket golyo gyors egymasutani lefolyasa utan a
+    kovetkezo golyon MAR NEM jackpotolnak a hidak es nem valt zenet
+    jatek kozben (beragado multiball javitva: BIS >= 4)
+[ ] FANTOM-GOLYO: sok ballsave-es jatek utan sem jon ki magatol
+    masodik golyo kiloveskor (beragado sidelane-zaszlo javitva)
+
+COIL GUARD (uj vedelem, e_coil_guard.ino):
+[ ] Normal jatek kozben NEM jon "CoilGuard,..." uzenet a sorosra
+    (ha jon, az vagy tul szoros limit, vagy valodi bug - szolj!)
+[ ] Provokacios teszt: flippergomb nyomva tartasa 60 mp-ig ->
+    a flipper leold, "CoilGuard,flipL,1" uzenet, majd 3 mp mulva
+    ujra hasznalhato
+=====================================================================

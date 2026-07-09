@@ -1,0 +1,6 @@
+# Visual Studio / Visual Micro build szemet
+.vs/
+Debug/
+Release/
+__vm/
+*.vcxproj.user
