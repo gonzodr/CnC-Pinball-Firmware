@@ -527,7 +527,7 @@ void setup() {
   currentBlending = NOBLEND;
 
   Wire.begin();
-  Serial.begin(9800);
+  Serial.begin(115200); // a Python GUI-hoz igazitva (a regi 9800 a 9600 elgepelese volt)
 
   pinMode(PIN_A0, INPUT); // Ball 1
   pinMode(PIN_A1, INPUT); // Ball 2
