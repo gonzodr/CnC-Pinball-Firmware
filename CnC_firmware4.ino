@@ -848,12 +848,14 @@ void Ballhandler() {
   ////////////////////////
   //// Ejectball
   ////////////////////////
-  if (shoot == 1) {
-    if (millis() - shoottimer <= 50) {
-      digitalWrite(ballTroughCoil, HIGH);
-    }
-    else {
-      digitalWrite(ballTroughCoil, LOW);
+  // A tekercs MINDEN mas esetben LOW-t kap - ha a kilokes kozben barmi
+  // nullazna a shoot-ot, a tekercs korabban HIGH-ban ragadt (CoilGuard fogta meg)
+  if (shoot == 1 && millis() - shoottimer <= 50) {
+    digitalWrite(ballTroughCoil, HIGH);
+  }
+  else {
+    digitalWrite(ballTroughCoil, LOW);
+    if (shoot == 1) {
       firstplay = LOW;
     }
   }

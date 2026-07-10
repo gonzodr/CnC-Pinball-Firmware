@@ -41,6 +41,7 @@ unsigned long simReleaseAt[70]; // gombnyomas-lejaratok
 uint8_t troughBalls = 5;        // golyok a taroloban
 unsigned long laneLowAt = 0;    // ekkor "erkezik" a golyo a kilovosavba
 unsigned long laneHighAt = 0;   // ekkor hagyja el a savot
+unsigned long laneOccupiedSince = 0; // miota "foglalt" a sav (onjavitashoz)
 unsigned long ufoRestoreAt = 0; // UFO-infra visszaallitasa
 boolean prevTroughCoil = LOW;
 boolean prevKickCoil = LOW;
@@ -248,6 +249,8 @@ void SimPoll() {
 
   boolean kickCoil = digitalRead(shooterlaneCoil);
   if (kickCoil == HIGH && prevKickCoil == LOW) {
+    Serial.print("SIM,kicker,lane=");   // diagnosztika: fantom-kick vadaszat
+    Serial.println((int)simD[13]);
     laneHighAt = now + 150;        // a kicker kilovi a savbol
     laneLowAt = 0;
   }
@@ -255,6 +258,7 @@ void SimPoll() {
 
   if (laneLowAt != 0 && now > laneLowAt) {
     simD[13] = 0;                  // golyo a kilovosavban
+    laneOccupiedSince = now;
     laneLowAt = 0;
     Serial.println("SIM,golyo a savban");
   }
@@ -262,6 +266,14 @@ void SimPoll() {
     simD[13] = 1;                  // golyo jatekban
     laneHighAt = 0;
     Serial.println("SIM,golyo jatekban");
+  }
+
+  // ONJAVITAS: ha a sav 8 mp-nel tovabb "foglalt" (beragadt allapot -
+  // a valosagban a golyo nem ul orokke a savban), kiuritjuk, kulonben
+  // fantom-kickek szuletnek es az egesz demo konyveles szetcsuszik
+  if (simD[13] == 0 && now - laneOccupiedSince > 8000) {
+    simD[13] = 1;
+    Serial.println("SIM,lane-timeout-fix");
   }
 
   // -- forgatokonyv-lepteto (relativ idozites, LANE = golyora var) --
