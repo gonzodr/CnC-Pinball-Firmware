@@ -200,7 +200,10 @@ void SimHelp() {
   Serial.println("SIM,U=SpaceCoke-cinkeles M=pontlopas-cinkeles (utana u!)");
 }
 
-void SimRunEvent(const SimEvent &e) {
+// Indexet kap (nem SimEvent&-t), mert az Arduino auto-prototipusai a
+// struct definicioja ELE kerulnenek -> "does not name a type" fordito hiba
+void SimRunEvent(uint8_t idx) {
+  const SimEvent &e = simScript[idx];
   if (e.cmd == SIMCMD_PRESS) {
     SimPress(e.pin, e.ms);
   }
@@ -266,7 +269,7 @@ void SimPoll() {
     const SimEvent &e = simScript[simScriptIx];
     if (e.trig == TRIG_TIME) {
       if (now - simPrevFire >= e.t) {
-        SimRunEvent(e);
+        SimRunEvent(simScriptIx);
         simPrevFire = now;
         simScriptIx++;
       }
@@ -278,7 +281,7 @@ void SimPoll() {
         }
       }
       else if (now - simLaneAnchor >= e.t) {
-        SimRunEvent(e);
+        SimRunEvent(simScriptIx);
         simPrevFire = now;
         simLaneAnchor = 0;
         simScriptIx++;
