@@ -1469,9 +1469,7 @@ void intmMode() {
       lfHscSw = 1;
       lfHscTimer = millis();
       wTrig.trackPlayPoly(105);
-      Serial.println("Right");
-      delay(20);
-      Serial.println("n/a");
+      Serial.println("FLIPPER_LEFT"); // Python GUI protokoll (regi Unity-nev: "Right")
       delay(20);
     }
     if (lfHscSw == 1 && millis() - 250 > lfHscTimer && SimDigitalRead(leftFlipperButton) == HIGH) {
@@ -1482,9 +1480,7 @@ void intmMode() {
       rfHscSw = 1;
       rfHscTimer = millis();
       wTrig.trackPlayPoly(106);
-      Serial.println("Left");
-      delay(20);
-      Serial.println("n/a");
+      Serial.println("FLIPPER_RIGHT"); // Python GUI protokoll (regi Unity-nev: "Left")
       delay(20);
     }
     if (rfHscSw == 1 && millis() - 250 > rfHscTimer && SimDigitalRead(rightflipperButton) == HIGH) {
@@ -1495,9 +1491,7 @@ void intmMode() {
       shHscSw = 1;
       shHscTimer = millis();
       wTrig.trackPlayPoly(107);
-      Serial.println("Shoot");
-      delay(20);
-      Serial.println("n/a");
+      Serial.println("PLAYER_PRESS"); // Python GUI protokoll: betu kivalasztasa
       delay(20);
     }
     if (shHscSw == 1 && millis() - 250 > shHscTimer && SimDigitalRead(ballShooterButton) == HIGH) {
@@ -1507,9 +1501,7 @@ void intmMode() {
     if (SimDigitalRead(startButton) == LOW && stHscSw == 0) {
       stHscSw = 1;
       stHscTimer = millis();
-      Serial.println("Start");
-      delay(20);
-      Serial.println("n/a");
+      Serial.println("Start"); // GUI: nevbevitel kihagyasa (skip)
       delay(20);
     }
     if (stHscSw == 1 && millis() - 250 > stHscTimer && SimDigitalRead(startButton) == HIGH) {
