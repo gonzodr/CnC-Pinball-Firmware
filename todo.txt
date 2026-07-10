@@ -7,6 +7,12 @@ A KOD MAR AT VAN IRVA az uj bekoteshez, tehat eloszor a lenti
 atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 (Ha a regi allapot kell: CnC_firmware3_backup_20260709 mappa.)
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!! ELES GEPRE FELTOLTES ELOTT: a CnC_firmware4.ino tetejen a     !!!
+!!! "#define SIM_MODE" sort KOMMENTELD KI! Sim modban a golyo-    !!!
+!!! infrak szimulalt erteket adnak, a gep hasznalhatatlan lenne!  !!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 ---------------------------------------------------------------------
 1) ATKOTESEK A GEPBEN
 ---------------------------------------------------------------------

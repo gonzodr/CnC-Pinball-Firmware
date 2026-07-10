@@ -36,6 +36,14 @@
 #include <Wire.h>             // For send data to Servo UNO
 #include <wavTrigger.h>       // Serial1-en fut (TX1 = 18-as pin)! A wavTrigger.h library-ban __WT_USE_SERIAL1__ legyen aktiv!
 
+//////////////////////////////////////////////////////////////////////
+// !!! PROBAPADI SZIMULATOR MOD (f_sim_mode.ino) !!!
+// ELES GEPRE FELTOLTES ELOTT EZT A SORT KOMMENTELD KI!
+// (sim modban a golyo-infrak szimulalt erteket adnak, a valodi
+// erzekeloket a firmware NEM olvassa!)
+#define SIM_MODE
+//////////////////////////////////////////////////////////////////////
+
 #define NUM_LEDS 115
 #define DATA_PIN 3
 #define BRIGHTNESS  64
@@ -578,6 +586,7 @@ void setup() {
 
   
   CoilGuardInit(); // tekercsvedelem (e_coil_guard.ino) - a pinMode-ok UTAN kell!
+  SimInit();       // probapadi szimulator (f_sim_mode.ino) - eles buildben ures
 
   heysoundtimer = millis();
   digitalWrite(PIN_A13, HIGH);
@@ -585,6 +594,7 @@ void setup() {
 
 void loop() {
   CoilGuardReport(); // jelzi a sorosra, ha a tekercsvedelem kozbelepett
+  SimPoll();         // probapadi szimulator lepteto - eles buildben ures
 
   if (intmon == 1 || intmon == 2) {
     intmMode();
@@ -792,8 +802,8 @@ void Ballhandler() {
   //// Ballkick
   /////////////////////////////////////////////////
 
-  if (digitalRead(shooterLaneSwitch) == LOW && kick == 0) {
-    if (AutoKick == LOW && digitalRead(ballShooterButton) == LOW && millis() - 500 > shoottimer2) {
+  if (SimDigitalRead(shooterLaneSwitch) == LOW && kick == 0) {
+    if (AutoKick == LOW && SimDigitalRead(ballShooterButton) == LOW && millis() - 500 > shoottimer2) {
       kick = 1;
       kicktimer = millis();
       AutoKick = HIGH;
@@ -831,7 +841,7 @@ void Ballhandler() {
 
   // Rescue: ha a kilokes elindult (shoot == 1), de a golyo nem ert a kilovosavba,
   // a gomb ~3 mp nyomva tartasa ujra kiloki. Jatek kozben (shoot == 0) nem csinal semmit.
-  if (digitalRead(ballShooterButton) == LOW && shoot == 1 && kick == 0){
+  if (SimDigitalRead(ballShooterButton) == LOW && shoot == 1 && kick == 0){
     shootfail ++;
     if (shootfail > 300){
     shoottimer = millis();
@@ -851,11 +861,11 @@ void Ballhandler() {
 void MIV(boolean m) {
   Blinktimer();
   if (BallReadState == HIGH || m == HIGH) {
-    ball1 = analogRead(PIN_A0);
-    ball2 = analogRead(PIN_A1);
-    ball3 = analogRead(PIN_A2);
-    ball4 = analogRead(PIN_A3);
-    ball5 = analogRead(PIN_A4);
+    ball1 = SimAnalogRead(PIN_A0);
+    ball2 = SimAnalogRead(PIN_A1);
+    ball3 = SimAnalogRead(PIN_A2);
+    ball4 = SimAnalogRead(PIN_A3);
+    ball5 = SimAnalogRead(PIN_A4);
 
     if (ball1 > 988){
       ballPresent1 = 1;
@@ -1250,18 +1260,18 @@ void intmMode() {
     incomeMsg = " ";
       
       /*
-      miv1 = analogRead(a1);
-      miv2 = analogRead(a3);
-      miv3 = analogRead(a4);
-      miv4 = analogRead(a5);
-      miv5 = analogRead(a6);
+      miv1 = SimAnalogRead(a1);
+      miv2 = SimAnalogRead(a3);
+      miv3 = SimAnalogRead(a4);
+      miv4 = SimAnalogRead(a5);
+      miv5 = SimAnalogRead(a6);
       Serial.println(miv1);
       Serial.println(miv2);
       Serial.println(miv3);
       Serial.println(miv4);
       Serial.println(miv5);
-      Serial.println(analogRead(a7));
-      Serial.println(analogRead(a2));
+      Serial.println(SimAnalogRead(a7));
+      Serial.println(SimAnalogRead(a2));
       
       Serial.println("----");
       delay(700);
@@ -1277,7 +1287,7 @@ void intmMode() {
       }
 
     
-    if (digitalRead(startButton) == LOW) {
+    if (SimDigitalRead(startButton) == LOW) {
       wTrig.trackPlayPoly(15);
       wTrig.trackPlayPoly(47);
       Serial.println("Zero");
@@ -1310,11 +1320,11 @@ void intmMode() {
       weedmeter[4] = 180;
       weedmetersend();
       feny[0] = 960;
-      miv1 = analogRead(a1);
-      miv2 = analogRead(a3);
-      miv3 = analogRead(a4);
-      miv4 = analogRead(a5);
-      miv5 = analogRead(a6);
+      miv1 = SimAnalogRead(a1);
+      miv2 = SimAnalogRead(a3);
+      miv3 = SimAnalogRead(a4);
+      miv4 = SimAnalogRead(a5);
+      miv5 = SimAnalogRead(a6);
       cheechCollectives[0] = 0;
       chongCollectives[0] = 0;
       cheechCollectives[1] = 0;
@@ -1338,7 +1348,7 @@ void intmMode() {
     }
 
     //// Send buttonstates to Highscore table
-    if (digitalRead(leftFlipperButton) == LOW && lfHscSw == 0) {
+    if (SimDigitalRead(leftFlipperButton) == LOW && lfHscSw == 0) {
       lfHscSw = 1;
       lfHscTimer = millis();
       wTrig.trackPlayPoly(105);
@@ -1347,11 +1357,11 @@ void intmMode() {
       Serial.println("n/a");
       delay(20);
     }
-    if (lfHscSw == 1 && millis() - 250 > lfHscTimer && digitalRead(leftFlipperButton) == HIGH) {
+    if (lfHscSw == 1 && millis() - 250 > lfHscTimer && SimDigitalRead(leftFlipperButton) == HIGH) {
       lfHscSw = 0;
     }
 
-    if (digitalRead(rightflipperButton) == LOW && rfHscSw == 0) {
+    if (SimDigitalRead(rightflipperButton) == LOW && rfHscSw == 0) {
       rfHscSw = 1;
       rfHscTimer = millis();
       wTrig.trackPlayPoly(106);
@@ -1360,11 +1370,11 @@ void intmMode() {
       Serial.println("n/a");
       delay(20);
     }
-    if (rfHscSw == 1 && millis() - 250 > rfHscTimer && digitalRead(rightflipperButton) == HIGH) {
+    if (rfHscSw == 1 && millis() - 250 > rfHscTimer && SimDigitalRead(rightflipperButton) == HIGH) {
       rfHscSw = 0;
     }
 
-    if (digitalRead(ballShooterButton) == LOW && shHscSw == 0) {
+    if (SimDigitalRead(ballShooterButton) == LOW && shHscSw == 0) {
       shHscSw = 1;
       shHscTimer = millis();
       wTrig.trackPlayPoly(107);
@@ -1373,11 +1383,11 @@ void intmMode() {
       Serial.println("n/a");
       delay(20);
     }
-    if (shHscSw == 1 && millis() - 250 > shHscTimer && digitalRead(ballShooterButton) == HIGH) {
+    if (shHscSw == 1 && millis() - 250 > shHscTimer && SimDigitalRead(ballShooterButton) == HIGH) {
       shHscSw = 0;
     }
 
-    if (digitalRead(startButton) == LOW && stHscSw == 0) {
+    if (SimDigitalRead(startButton) == LOW && stHscSw == 0) {
       stHscSw = 1;
       stHscTimer = millis();
       Serial.println("Start");
@@ -1385,7 +1395,7 @@ void intmMode() {
       Serial.println("n/a");
       delay(20);
     }
-    if (stHscSw == 1 && millis() - 250 > stHscTimer && digitalRead(startButton) == HIGH) {
+    if (stHscSw == 1 && millis() - 250 > stHscTimer && SimDigitalRead(startButton) == HIGH) {
       stHscSw = 0;
     }
 
@@ -1401,7 +1411,7 @@ void intmMode() {
       wTrig.trackPlayPoly(104);
       digitalWrite(PIN_A13, LOW);
     }
-    if (digitalRead(startButton) == LOW && digitalRead(ballShooterButton) == LOW) {
+    if (SimDigitalRead(startButton) == LOW && SimDigitalRead(ballShooterButton) == LOW) {
         resetTimer++;
         if (resetTimer > 2000) {
             digitalWrite(PIN_A13, LOW);
@@ -1634,14 +1644,14 @@ void Initlights() {
 /////////////////////////////////////////////////
 
 void Left_Flipper() {
-  if (digitalRead(leftFlipperButton) == LOW && flipl == 0) {
+  if (SimDigitalRead(leftFlipperButton) == LOW && flipl == 0) {
     flipl = 1;
     flipltimer = millis();
   }
   if (flipl == 1) {
     digitalWrite(leftFlipperBat, HIGH);
   }
-  if (digitalRead(leftFlipperButton) == HIGH && millis() - 100 > flipltimer) {
+  if (SimDigitalRead(leftFlipperButton) == HIGH && millis() - 100 > flipltimer) {
     digitalWrite(leftFlipperBat, LOW);
     flipl = 0;
   }
@@ -1649,14 +1659,14 @@ void Left_Flipper() {
 
 
 void Right_Flipper() {
-  if (digitalRead(rightflipperButton) == LOW && flipr == 0) {
+  if (SimDigitalRead(rightflipperButton) == LOW && flipr == 0) {
     flipr = 1;
     fliprtimer = millis();
   }
   if (flipr == 1) {
     digitalWrite(rightFlipperBat, HIGH);
   }
-  if (digitalRead(rightflipperButton) == HIGH && millis() - 100 > fliprtimer) {
+  if (SimDigitalRead(rightflipperButton) == HIGH && millis() - 100 > fliprtimer) {
     digitalWrite(rightFlipperBat, LOW);
     flipr = 0;
   }
@@ -1676,7 +1686,7 @@ void Right_Flipper() {
 
 
 void Right_Slingshot() {
-  if (digitalRead(rightSlingshotSwitch) == LOW && slingr == 0) {
+  if (SimDigitalRead(rightSlingshotSwitch) == LOW && slingr == 0) {
     slingr = 1;
     slingrtimer = millis();
     wTrig.trackPlayPoly(29);
@@ -1704,7 +1714,7 @@ void Right_Slingshot() {
     digitalWrite(rightSlingshotCoil, LOW);
   }
 
-  if (digitalRead(rightSlingshotSwitch) == HIGH && millis() - 500 > slingrtimer) {
+  if (SimDigitalRead(rightSlingshotSwitch) == HIGH && millis() - 500 > slingrtimer) {
     slingr = 0;
   }
 }
@@ -1716,7 +1726,7 @@ void Right_Slingshot() {
 
 
 void Left_Slingshot() {
-  if (digitalRead(leftSlingshotSwitch) == LOW && slingl == 0) {
+  if (SimDigitalRead(leftSlingshotSwitch) == LOW && slingl == 0) {
     slingl = 1;
     slingltimer = millis();
     wTrig.trackPlayPoly(29);
@@ -1743,7 +1753,7 @@ void Left_Slingshot() {
   else {
     digitalWrite(leftSlingshotCoil, LOW);
   }
-  if (digitalRead(leftSlingshotSwitch) == HIGH && millis() - 500 > slingltimer) {
+  if (SimDigitalRead(leftSlingshotSwitch) == HIGH && millis() - 500 > slingltimer) {
     slingl = 0;
   }
 }
@@ -1761,7 +1771,7 @@ void Left_Slingshot() {
 /////////////////////////////////////////////////
 
 void CnC() {
-  if (digitalRead(cncLetterC3rd) == HIGH) {
+  if (SimDigitalRead(cncLetterC3rd) == HIGH) {
     Blinktimer();
     if (effect == LOW) {
       leds[18] = CRGB::Yellow;
@@ -1775,7 +1785,7 @@ void CnC() {
 
   if (hurryUp == LOW) {
     /// Normal mode
-    if (digitalRead(cncLetterC3rd) == LOW && cncswitch3 == 0) {
+    if (SimDigitalRead(cncLetterC3rd) == LOW && cncswitch3 == 0) {
       cncswitch3 = 1;
       wTrig.trackPlayPoly(12);
       Score(1500, 50);
@@ -1784,7 +1794,7 @@ void CnC() {
         Gift();
       }
     }
-    if (digitalRead(cncLetterN) == LOW && cncswitch2 == 0) {
+    if (SimDigitalRead(cncLetterN) == LOW && cncswitch2 == 0) {
       cncswitch2 = 1;
       wTrig.trackPlayPoly(13);
       Score(1500, 50);
@@ -1793,7 +1803,7 @@ void CnC() {
         Gift();
       }
     }
-    if (digitalRead(cncLetterC1st) == LOW && cncswitch1 == 0) {
+    if (SimDigitalRead(cncLetterC1st) == LOW && cncswitch1 == 0) {
       cncswitch1 = 1;
       wTrig.trackPlayPoly(14);
       Score(1500, 50);
@@ -1806,7 +1816,7 @@ void CnC() {
 
   if (hurryUp == HIGH) {
     /// HurryUp mode
-    if (digitalRead(cncLetterC3rd) == LOW && cnchurryswitch3 == 0) {
+    if (SimDigitalRead(cncLetterC3rd) == LOW && cnchurryswitch3 == 0) {
       cnchurryswitch3 = 1;
       cnchurryTimer3 = millis();
       wTrig.trackPlayPoly(12);
@@ -1815,7 +1825,7 @@ void CnC() {
       Score(2500, 500);
       Serial.println("Point1");
     }
-    if (digitalRead(cncLetterN) == LOW && cnchurryswitch2 == 0) {
+    if (SimDigitalRead(cncLetterN) == LOW && cnchurryswitch2 == 0) {
       cnchurryswitch2 = 1;
       cnchurryTimer2 = millis();
       wTrig.trackPlayPoly(13);
@@ -1824,7 +1834,7 @@ void CnC() {
       Score(2500, 500);
       Serial.println("Point1");
     }
-    if (digitalRead(cncLetterC1st) == LOW && cnchurryswitch1 == 0) {
+    if (SimDigitalRead(cncLetterC1st) == LOW && cnchurryswitch1 == 0) {
       cnchurryswitch1 = 1;
       cnchurryTimer1 = millis();
       wTrig.trackPlayPoly(14);
@@ -1851,7 +1861,7 @@ void CnC() {
 
   /// Random gift
   if (giftsw == 1 ) {
-    if (digitalRead(cncLetterC3rd) == LOW && cncswitch3 == 2) {
+    if (SimDigitalRead(cncLetterC3rd) == LOW && cncswitch3 == 2) {
       cncswitch3 = 1;
       wTrig.trackPlayPoly(12);
       wTrig.trackPlayPoly(36);
@@ -1861,7 +1871,7 @@ void CnC() {
       Serial.println("Point2");
       giftsw = 3;
     }
-    if (digitalRead(cncLetterN) == LOW && cncswitch2 == 2) {
+    if (SimDigitalRead(cncLetterN) == LOW && cncswitch2 == 2) {
       cncswitch2 = 1;
       wTrig.trackPlayPoly(13);
       wTrig.trackPlayPoly(36);
@@ -1871,7 +1881,7 @@ void CnC() {
       Serial.println("Point2");
       giftsw = 3;
     }
-    if (digitalRead(cncLetterC1st) == LOW && cncswitch1 == 2) {
+    if (SimDigitalRead(cncLetterC1st) == LOW && cncswitch1 == 2) {
       cncswitch1 = 1;
       wTrig.trackPlayPoly(14);
       wTrig.trackPlayPoly(36);
@@ -1981,13 +1991,13 @@ void CnC() {
 /////////////////////////////////////////////////
 
 void Loopshoot() {
-  if (digitalRead(loopSwitchTop) == LOW && loopsw == LOW) {
+  if (SimDigitalRead(loopSwitchTop) == LOW && loopsw == LOW) {
     looptimer = millis();
     loopswt = millis();
     loopsw = HIGH;
     wTrig.trackPlayPoly(19);
   }
-  if (digitalRead(loopSwitchSide) == LOW && millis() - 1000 < looptimer && loopsw == LOW) {
+  if (SimDigitalRead(loopSwitchSide) == LOW && millis() - 1000 < looptimer && loopsw == LOW) {
     if (multiloopsw == 1) {
       Serial.println("Jackpot6");
       wTrig.trackPlayPoly(73);
@@ -2042,7 +2052,7 @@ void Weed() {
 
   if (hurryUp == LOW) {
     /// Normal mode
-    if (digitalRead(d11) == LOW && weedswitch1 == 0) {
+    if (SimDigitalRead(d11) == LOW && weedswitch1 == 0) {
       weedswitch1 = 1;
       Score(1000, 50);
       wTrig.trackPlayPoly(5);
@@ -2051,7 +2061,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d10) == LOW && weedswitch2 == 0) {
+    if (SimDigitalRead(d10) == LOW && weedswitch2 == 0) {
       weedswitch2 = 1;
       Score(1000, 50);
       wTrig.trackPlayPoly(39);
@@ -2060,7 +2070,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d9) == LOW && weedswitch3 == 0) {
+    if (SimDigitalRead(d9) == LOW && weedswitch3 == 0) {
       weedswitch3 = 1;
       Score(1000, 50);
       wTrig.trackPlayPoly(40);
@@ -2069,7 +2079,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d8) == LOW && weedswitch4 == 0) {
+    if (SimDigitalRead(d8) == LOW && weedswitch4 == 0) {
       weedswitch4 = 1;
       Score(1000, 50);
       wTrig.trackPlayPoly(41);
@@ -2082,7 +2092,7 @@ void Weed() {
 
   if (hurryUp == HIGH) {
     /// HurryUp mode
-    if (digitalRead(d11) == LOW && weedhurryswitch1 == 0) {
+    if (SimDigitalRead(d11) == LOW && weedhurryswitch1 == 0) {
       weedhurryswitch1 = 1;
       weedhurrytimer1 = millis();
       effect = HIGH;
@@ -2096,7 +2106,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d10) == LOW && weedhurryswitch2 == 0) {
+    if (SimDigitalRead(d10) == LOW && weedhurryswitch2 == 0) {
       weedhurryswitch2 = 1;
       weedhurrytimer2 = millis();
       effect = HIGH;
@@ -2110,7 +2120,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d9) == LOW && weedhurryswitch3 == 0) {
+    if (SimDigitalRead(d9) == LOW && weedhurryswitch3 == 0) {
       weedhurryswitch3 = 1;
       weedhurrytimer3 = millis();
       effect = HIGH;
@@ -2124,7 +2134,7 @@ void Weed() {
         Gift();
       }
     }
-    if (digitalRead(d8) == LOW && weedhurryswitch4 == 0) {
+    if (SimDigitalRead(d8) == LOW && weedhurryswitch4 == 0) {
       weedhurryswitch4 = 1;
       weedhurrytimer4 = millis();
       effect = HIGH;
@@ -2154,7 +2164,7 @@ void Weed() {
 
   /// Random gift
   if (giftsw == 1 ) {
-    if (digitalRead(d11) == LOW && weedswitch1 == 2) {
+    if (SimDigitalRead(d11) == LOW && weedswitch1 == 2) {
       weedswitch1 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(5);
@@ -2163,7 +2173,7 @@ void Weed() {
       Serial.println("Point2");
       giftsw = 3;
     }
-    if (digitalRead(d10) == LOW && weedswitch2 == 2) {
+    if (SimDigitalRead(d10) == LOW && weedswitch2 == 2) {
       weedswitch2 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(39);
@@ -2172,7 +2182,7 @@ void Weed() {
       Serial.println("Point2");
       giftsw = 3;
     }
-    if (digitalRead(d9) == LOW && weedswitch3 == 2) {
+    if (SimDigitalRead(d9) == LOW && weedswitch3 == 2) {
       weedswitch3 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(40);
@@ -2181,7 +2191,7 @@ void Weed() {
       Serial.println("Point2");
       giftsw = 3;
     }
-    if (digitalRead(d8) == LOW && weedswitch4 == 2) {
+    if (SimDigitalRead(d8) == LOW && weedswitch4 == 2) {
       weedswitch4 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(41);
@@ -2339,7 +2349,7 @@ void Weed() {
 /////////////////////////////////////////////////
 
 void Fishtank() {
-  if (digitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 0) {
+  if (SimDigitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 0) {
     fishTankLightState1 = 1;
     if (hurryUp == HIGH) {
       effect = HIGH;
@@ -2357,7 +2367,7 @@ void Fishtank() {
       Gift();
     }
   }
-  if (digitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 0) {
+  if (SimDigitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 0) {
       fishTankLightState2 = 1;
     if (hurryUp == HIGH) {
       effect = HIGH;
@@ -2378,7 +2388,7 @@ void Fishtank() {
 
   // Random gift
   if (giftsw == 1) {
-    if (digitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 2) {
+    if (SimDigitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 2) {
       fishTankLightState1 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(10);
@@ -2389,7 +2399,7 @@ void Fishtank() {
     }
 
 
-    if (digitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 2) {
+    if (SimDigitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 2) {
       fishTankLightState2 = 1;
       Score(5000, 100);
       wTrig.trackPlayPoly(2);
@@ -2495,7 +2505,7 @@ void Fishtank() {
 /////////////////////////////////////////////////
 
 void Dave_switch() {
-  if (digitalRead(daveLaneSwitchD) == LOW && sltimesw == LOW) {
+  if (SimDigitalRead(daveLaneSwitchD) == LOW && sltimesw == LOW) {
     wTrig.trackPlayPoly(23);
     davearr[1] = 1;
     sltimesw = HIGH;
@@ -2504,19 +2514,19 @@ void Dave_switch() {
         sidelaneBallsaverSw = HIGH;
     }
   }
-  if (digitalRead(daveLaneSwitchA) == LOW && sltimesw == LOW) {
+  if (SimDigitalRead(daveLaneSwitchA) == LOW && sltimesw == LOW) {
     wTrig.trackPlayPoly(23);
     davearr[2] = 1;
     sltimesw = HIGH;
     sltimer = millis();
   }
-  if (digitalRead(daveLaneSwitchV) == LOW && sltimesw == LOW) {
+  if (SimDigitalRead(daveLaneSwitchV) == LOW && sltimesw == LOW) {
     wTrig.trackPlayPoly(23);
     davearr[3] = 1;
     sltimesw = HIGH;
     sltimer = millis();
   }
-  if (digitalRead(daveLaneSwitchE) == LOW && sltimesw == LOW) {
+  if (SimDigitalRead(daveLaneSwitchE) == LOW && sltimesw == LOW) {
     wTrig.trackPlayPoly(23);
     davearr[4] = 1;
     sltimesw = HIGH;
@@ -2559,7 +2569,7 @@ void Dave_switch() {
   }
 
   // Shift left
-  if (slltimesw == LOW && digitalRead(leftFlipperButton) == LOW) {
+  if (slltimesw == LOW && SimDigitalRead(leftFlipperButton) == LOW) {
     slltimesw = HIGH;
     slltimer = millis();
     davearr[0] = davearr[1];
@@ -2570,14 +2580,14 @@ void Dave_switch() {
   }
 
 
-  if (millis() - 200 > slltimer && digitalRead(leftFlipperButton) == HIGH) {
+  if (millis() - 200 > slltimer && SimDigitalRead(leftFlipperButton) == HIGH) {
     slltimesw = LOW;
   }
 
 
 
   // Shift Right
-  if (slrtimesw == LOW && digitalRead(rightflipperButton) == LOW) {
+  if (slrtimesw == LOW && SimDigitalRead(rightflipperButton) == LOW) {
     slrtimesw = HIGH;
     slrtimer = millis();
     davearr[5] = davearr[4];
@@ -2588,7 +2598,7 @@ void Dave_switch() {
 
   }
 
-  if (millis() - 200 > slrtimer && digitalRead(rightflipperButton) == HIGH) {
+  if (millis() - 200 > slrtimer && SimDigitalRead(rightflipperButton) == HIGH) {
     slrtimesw = LOW;
   }
 
@@ -2648,7 +2658,7 @@ void Dave_switch() {
 /////////////////////////////////////////////////
 void Gate() {
 
-  if (digitalRead(gateSwitch1) == LOW && gatetimesw == 0) {
+  if (SimDigitalRead(gateSwitch1) == LOW && gatetimesw == 0) {
     wTrig.trackPlayPoly(28);
     if (gatearr[1] == 2) {
       Score(1500, 50);
@@ -2668,7 +2678,7 @@ void Gate() {
     gateambtimer = millis();
   }
 
-  if (digitalRead(gateSwitch2) == LOW && gatetimesw == 0) {
+  if (SimDigitalRead(gateSwitch2) == LOW && gatetimesw == 0) {
     wTrig.trackPlayPoly(28);
     if (gatearr[2] == 2) {
       Score(1500, 50);
@@ -2688,7 +2698,7 @@ void Gate() {
     gateambtimer = millis();
   }
 
-  if (digitalRead(gateSwitch3) == LOW && gatetimesw == 0) {
+  if (SimDigitalRead(gateSwitch3) == LOW && gatetimesw == 0) {
     wTrig.trackPlayPoly(28);
     if (gatearr[3] == 2) {
       Score(1500, 50);
@@ -2817,7 +2827,7 @@ void Gate() {
   }
 
   // SHIFT LEFT
-  if (gsltimesw == 0 && digitalRead(leftFlipperButton) == LOW) {
+  if (gsltimesw == 0 && SimDigitalRead(leftFlipperButton) == LOW) {
     gsltimesw = 1;
     gsltimer = millis();
     gatearr[0] = gatearr[1];
@@ -2825,14 +2835,14 @@ void Gate() {
     gatearr[2] = gatearr[3];
     gatearr[3] = gatearr[0];
   }
-  if (millis() - 200 > gsltimer && digitalRead(leftFlipperButton) == HIGH) {
+  if (millis() - 200 > gsltimer && SimDigitalRead(leftFlipperButton) == HIGH) {
     gsltimesw = 0;
   }
 
 
 
   // SHIFT RIGHT
-  if (gsrtimesw == 0 && digitalRead(rightflipperButton) == LOW) {
+  if (gsrtimesw == 0 && SimDigitalRead(rightflipperButton) == LOW) {
     gsrtimesw = 1;
     gsrtimer = millis();
     gatearr[4] = gatearr[3];
@@ -2840,7 +2850,7 @@ void Gate() {
     gatearr[2] = gatearr[1];
     gatearr[1] = gatearr[4];
   }
-  if (millis() - 200 > gsrtimer && digitalRead(rightflipperButton) == HIGH) {
+  if (millis() - 200 > gsrtimer && SimDigitalRead(rightflipperButton) == HIGH) {
     gsrtimesw = 0;
   }
 
@@ -2859,7 +2869,7 @@ void Gate() {
 
 void Pops() {
   // POP 1
-  if (digitalRead(pop1Switch) == LOW && pop1LogicBool == LOW) {
+  if (SimDigitalRead(pop1Switch) == LOW && pop1LogicBool == LOW) {
     if (hurryUp == HIGH) {
       effect = HIGH;
       effectID = 6;
@@ -2885,12 +2895,12 @@ void Pops() {
     digitalWrite(pop1Coil, LOW);
   }
 
-  if (digitalRead(pop1Switch) == HIGH && millis() - 100 > poptimer1) {
+  if (SimDigitalRead(pop1Switch) == HIGH && millis() - 100 > poptimer1) {
     pop1LogicBool = LOW;
   }
 
   // POP 2
-  if (digitalRead(pop2Switch) == LOW && pop2LogicBool == LOW) {
+  if (SimDigitalRead(pop2Switch) == LOW && pop2LogicBool == LOW) {
     if (hurryUp == HIGH) {
       effect = HIGH;
       effectID = 6;
@@ -2916,13 +2926,13 @@ void Pops() {
     digitalWrite(pop2Coil, LOW);
   }
 
-  if (digitalRead(pop2Switch) == HIGH && millis() - 100 > poptimer2) {
+  if (SimDigitalRead(pop2Switch) == HIGH && millis() - 100 > poptimer2) {
     pop2LogicBool = LOW;
   }
 
   // POP 3
 
-  if (digitalRead(pop3Switch) == LOW && pop3LogicBool == LOW) {
+  if (SimDigitalRead(pop3Switch) == LOW && pop3LogicBool == LOW) {
     if (hurryUp == HIGH) {
       effect = HIGH;
       effectID = 6;
@@ -2947,7 +2957,7 @@ void Pops() {
     digitalWrite(pop3Coil, LOW);
   }
 
-  if (digitalRead(pop3Switch) == HIGH && millis() - 100 > poptimer3) {
+  if (SimDigitalRead(pop3Switch) == HIGH && millis() - 100 > poptimer3) {
     pop3LogicBool = LOW;
   }
 
@@ -3183,7 +3193,7 @@ void BonusXLed() {
 /////////////////////////////////////////////////
 
 void Weedspinner() {
-  if (weedspsw == 0 && digitalRead(spinnerSwitch) == LOW) {
+  if (weedspsw == 0 && SimDigitalRead(spinnerSwitch) == LOW) {
     weedspsw = 1;
     if (multiball != 0) {
       Score(1000, 10);
@@ -3318,7 +3328,7 @@ void Weedspinner() {
 
     }
   }
-  if (weedspsw == 1 && digitalRead(spinnerSwitch) == HIGH) {
+  if (weedspsw == 1 && SimDigitalRead(spinnerSwitch) == HIGH) {
     weedspsw = 0;
   }
   if (spinnersw == 1) {
@@ -3421,7 +3431,7 @@ void weedmetersend() {
 void UFOO() {
 
   if (ufoInactivesw == 0) {
-    ufoanalog = analogRead(PIN_A5);
+    ufoanalog = SimAnalogRead(PIN_A5);
     //Serial.println(ert);// put your main code here, to run repeatedly:
   }
 
@@ -3680,7 +3690,7 @@ void UFOO() {
 ///  Inactive state
 ///
 void Chong_switch() {
-  if (digitalRead(chongSwitch) == LOW && chongoffsw == LOW) {
+  if (SimDigitalRead(chongSwitch) == LOW && chongoffsw == LOW) {
     chongoffsw = HIGH;
     chongoffswtimer = millis();
     chongspeech = random(1, 11);
@@ -3791,7 +3801,7 @@ void Cheech_switch() {
     ///  Inactive state
     ///
 
-    if (digitalRead(cheechSwitch) == LOW && cheechoffsw == LOW) {
+    if (SimDigitalRead(cheechSwitch) == LOW && cheechoffsw == LOW) {
     cheechoffsw = HIGH;
     cheechoffswtimer = millis();
     cheechspeech = random(1, 16); // 1..15, a switch mind a 15 hangjat lefedi
@@ -4047,7 +4057,7 @@ void BridgeLow() {
     leds[24] = CRGB::Black; // Left ramp
     leds[25] = CRGB::Black; // Left ramp
 
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
 
@@ -4134,7 +4144,7 @@ void BridgeLow() {
     }
 
 
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 0) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 0) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(5000, 200);
@@ -4145,7 +4155,7 @@ void BridgeLow() {
       effectID = 5;
     }
 
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 1) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 1) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(10000, 200);
@@ -4155,7 +4165,7 @@ void BridgeLow() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 2) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 2) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(15000, 200);
@@ -4165,7 +4175,7 @@ void BridgeLow() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 3) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 3) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(20000, 200);
@@ -4175,7 +4185,7 @@ void BridgeLow() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 4) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 4) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(25000, 200);
@@ -4185,7 +4195,7 @@ void BridgeLow() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 5) {
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 5) {
       BrdgLowSw = 1;
       BrdgLowT = millis();
       Score(30000, 200);
@@ -4226,7 +4236,7 @@ void BridgeHigh() {
   if (BrdgHighActive == LOW) {
     leds[36] = CRGB::Black; // Left ramp
     leds[37] = CRGB::Black; // Left ramp
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
 
@@ -4314,7 +4324,7 @@ void BridgeHigh() {
         leds[37] = CRGB::Yellow; // Left ramp
       }
     }
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 0) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 0) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(5000, 200);
@@ -4325,7 +4335,7 @@ void BridgeHigh() {
       effectID = 5;
     }
 
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 1) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 1) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(10000, 500);
@@ -4335,7 +4345,7 @@ void BridgeHigh() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 2) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 2) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(15000, 500);
@@ -4345,7 +4355,7 @@ void BridgeHigh() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 3) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 3) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(20000, 500);
@@ -4355,7 +4365,7 @@ void BridgeHigh() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 4) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 4) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(20000, 500);
@@ -4365,7 +4375,7 @@ void BridgeHigh() {
       effect = HIGH;
       effectID = 5;
     }
-    if (digitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 5) {
+    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 5) {
       BrdgHighSw = 1;
       BrdgHighT = millis();
       Score(20000, 500);
@@ -4404,7 +4414,7 @@ void BridgeHigh() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 void AddPlayer() {
-  if (digitalRead(startButton) == LOW && ball == 1 && addPlayersw == 0) {
+  if (SimDigitalRead(startButton) == LOW && ball == 1 && addPlayersw == 0) {
     addPlayersw = 1;
     addPlayerTimer = millis();
     wTrig.trackPlayPoly(103);
@@ -4413,7 +4423,7 @@ void AddPlayer() {
       numofplayers = 1;
     }
   }
-  if (addPlayersw == 1 && millis() - 100 > addPlayerTimer && digitalRead(startButton) == HIGH)
+  if (addPlayersw == 1 && millis() - 100 > addPlayerTimer && SimDigitalRead(startButton) == HIGH)
   {
     addPlayersw = 0;
   }
@@ -4489,7 +4499,7 @@ void HurryUp()
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 void Tilt() {
-    if (digitalRead(PIN_A12) == 0 && tiltLogicSW == LOW) {
+    if (SimDigitalRead(PIN_A12) == 0 && tiltLogicSW == LOW) {
         wTrig.trackPlayPoly(111);
         wTrig.trackPlayPoly(112);
         tiltcounter = tiltcounter + 10;
