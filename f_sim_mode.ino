@@ -124,11 +124,14 @@ const SimEvent simScript[] = {
   { TRIG_LANE,  1500, SIMCMD_PRESS, 51, 400 },
   { TRIG_TIME, 16000, SIMCMD_DRAIN,  0,   0 },  // -> "End" -> nevbevitel!
   // --- nevbevitel demo ---
-  { TRIG_TIME, 10000, SIMCMD_PRESS, 27, 200 },  // betuvaltas balra
-  { TRIG_TIME,  1500, SIMCMD_PRESS, 26, 200 },  // betuvaltas jobbra
-  { TRIG_TIME,  1500, SIMCMD_PRESS, 51, 200 },  // betu kivalasztasa
-  { TRIG_TIME,  1500, SIMCMD_PRESS, 51, 200 },
-  { TRIG_TIME,  1500, SIMCMD_PRESS, 51, 200 },  // nev kesz
+  // A GUI a game over utan meg ~8 mp SUMMARY + ~8 mp FINAL_SCORES
+  // kepernyot mutat (tobbjatekos mod!), a NAME_ENTRY csak ~18 mp-nel
+  // jon - a gombnyomasokat CSAK UTANA szabad kuldeni!
+  { TRIG_TIME, 22000, SIMCMD_PRESS, 27, 200 },  // betuvaltas balra
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 26, 200 },  // betuvaltas jobbra
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 51, 200 },  // betu kivalasztasa
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 51, 200 },
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 51, 200 },  // nev kesz
 };
 #define SIM_SCRIPT_LEN (sizeof(simScript) / sizeof(simScript[0]))
 
