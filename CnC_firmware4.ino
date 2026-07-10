@@ -38,10 +38,12 @@
 
 //////////////////////////////////////////////////////////////////////
 // !!! PROBAPADI SZIMULATOR MOD (f_sim_mode.ino) !!!
-// ELES GEPRE FELTOLTES ELOTT EZT A SORT KOMMENTELD KI!
-// (sim modban a golyo-infrak szimulalt erteket adnak, a valodi
-// erzekeloket a firmware NEM olvassa!)
-#define SIM_MODE
+// Probapadi teszthez vedd ki a kommentet - ELES GEPRE SOHA ne keruljon
+// fel bekapcsolva! (sim modban a golyo-infrak szimulalt erteket adnak,
+// a valodi erzekeloket a firmware NEM olvassa!)
+// A main agon MINDIG kikommentelve tartjuk, mert a gepbeli F7-es
+// firmware update automatikusan a main-t huzza es flasheli!
+//#define SIM_MODE
 #ifdef SIM_MODE
 int simForceLottery = 0; // a kovetkezo UFO-lotto kenyszeritett erteke (7 = SpaceCoke)
 #endif
