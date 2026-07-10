@@ -251,7 +251,9 @@ void SimPoll() {
   if (kickCoil == HIGH && prevKickCoil == LOW) {
     Serial.print("SIM,kicker,lane=");   // diagnosztika: fantom-kick vadaszat
     Serial.println((int)simD[13]);
-    laneHighAt = now + 150;        // a kicker kilovi a savbol
+    if (laneHighAt == 0) {
+      laneHighAt = now + 150;      // a kicker kilovi a savbol
+    }                              // (ujratuzeles NEM tolja ki az uritest!)
     laneLowAt = 0;
   }
   prevKickCoil = kickCoil;

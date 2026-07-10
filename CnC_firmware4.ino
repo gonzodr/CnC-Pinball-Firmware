@@ -875,7 +875,10 @@ void Ballhandler() {
       ballsavetime = 15000;
     }
 
-    if (AutoKick == HIGH  && millis() - 700 > shoottimer2) {
+    // FONTOS: az utolso kick ota is teljen el 700 ms! Enelkul az 50 ms-os
+    // impulzus vege utan AZONNAL ujratuzelt (~60 ms-onkent, gepfegyverkent),
+    // amig golyot latott a savban - gyenge kilovesnel ez egette a tekercset.
+    if (AutoKick == HIGH && millis() - 700 > shoottimer2 && millis() - kicktimer > 700) {
       kick = 1;
       kicktimer = millis();
     }
