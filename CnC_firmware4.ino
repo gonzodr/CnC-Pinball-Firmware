@@ -42,6 +42,9 @@
 // (sim modban a golyo-infrak szimulalt erteket adnak, a valodi
 // erzekeloket a firmware NEM olvassa!)
 #define SIM_MODE
+#ifdef SIM_MODE
+int simForceLottery = 0; // a kovetkezo UFO-lotto kenyszeritett erteke (7 = SpaceCoke)
+#endif
 //////////////////////////////////////////////////////////////////////
 
 #define NUM_LEDS 115
@@ -459,6 +462,11 @@ boolean shHscSw = 0;
 boolean stHscSw = 0;
 boolean hurryUp = LOW;
 boolean hurryUpState = LOW;
+// Player select mod (intmon == 3)
+boolean selArmSw = LOW;
+boolean selShootSw = LOW;
+unsigned long selShootTimer = 0;
+unsigned long selTimeoutTimer = 0;
 boolean weedhurryswitch1 = 0;
 boolean weedhurryswitch2 = 0;
 boolean weedhurryswitch3 = 0;
@@ -596,7 +604,7 @@ void loop() {
   CoilGuardReport(); // jelzi a sorosra, ha a tekercsvedelem kozbelepett
   SimPoll();         // probapadi szimulator lepteto - eles buildben ures
 
-  if (intmon == 1 || intmon == 2) {
+  if (intmon != 0) { // 1 = attract, 2 = hiscore/nevbevitel, 3 = player select
     intmMode();
   }
 
@@ -627,7 +635,6 @@ void loop() {
     Collectives();
     BridgeLow();
     BridgeHigh();
-    AddPlayer();
     HurryUp();
     Tilt();
     RunLightEffect(); // fenyeffekt-motor (d_light_effects.ino), effect == HIGH eseten fut
@@ -1288,8 +1295,48 @@ void intmMode() {
 
     
     if (SimDigitalRead(startButton) == LOW) {
-      wTrig.trackPlayPoly(15);
+      // 1. start: jatekosvalaszto mod - a jatek meg NEM indul!
+      // (V2-es CharmMode logika visszahozva)
       wTrig.trackPlayPoly(47);
+      Serial.println("Start"); // GUI: kilep az attractbol a SCORE kepernyore
+      delay(20);
+      numofplayers = 1;
+      selArmSw = LOW;          // az inditashoz elobb el kell engedni a startot
+      selShootSw = HIGH;       // a shoot gombot is elesiteni kell
+      selShootTimer = millis();
+      selTimeoutTimer = millis();
+      intmon = 3;
+      SendData();
+    }
+  }
+
+  //// Player select mod: shoot gomb = +1 jatekos, 2. start = jatek indul
+  if (intmon == 3) {
+    SendData(); // folyamatos pontszam/jatekosszam kuldes a GUI-nak
+
+    if (selArmSw == LOW && SimDigitalRead(startButton) == HIGH) {
+      selArmSw = HIGH; // a belepo startnyomas elengedve -> a kovetkezo mar indit
+    }
+    if (selShootSw == HIGH && millis() - 250 > selShootTimer && SimDigitalRead(ballShooterButton) == HIGH) {
+      selShootSw = LOW;
+    }
+
+    // Shoot / player select gomb: +1 jatekos (4 utan korbefordul 1-re)
+    if (SimDigitalRead(ballShooterButton) == LOW && selShootSw == LOW) {
+      selShootSw = HIGH;
+      selShootTimer = millis();
+      selTimeoutTimer = millis();
+      numofplayers = numofplayers + 1;
+      if (numofplayers == 5) {
+        numofplayers = 1;
+      }
+      wTrig.trackPlayPoly(103);
+      SendData();
+    }
+
+    // 2. start: jatek inditasa a kivalasztott jatekosszammal
+    if (selArmSw == HIGH && SimDigitalRead(startButton) == LOW) {
+      wTrig.trackPlayPoly(15);
       Serial.println("Zero");
       delay(300);
       intmon = 0;
@@ -1337,6 +1384,15 @@ void intmMode() {
       chongCollectives[4] = 0;
       bonus = 0;
       bonusx = 0;
+    }
+
+    // 60 mp tetlenseg: vissza az attract modba
+    if (millis() - selTimeoutTimer > 60000) {
+      intmon = 1;
+      numofplayers = 1;
+      heysoundtimer = millis();
+      Serial.println("Attract"); // GUI: attract-loop ujraindul
+      delay(20);
     }
   }
   if (intmon == 2)
@@ -3447,7 +3503,12 @@ void UFOO() {
       SetupPurpleAndGreenPalette();
       ufoshoot = 4;
       lottery = random(1, 8);
-      //lottery = 2;
+#ifdef SIM_MODE
+      if (simForceLottery > 0) { // probapadi "cinkelt kocka" (f_sim_mode)
+        lottery = simForceLottery;
+        simForceLottery = 0;
+      }
+#endif
       if (lottery  == 1) {
         extraball += 1;
         Serial.println("Ufo5");
@@ -4413,22 +4474,8 @@ void BridgeHigh() {
 //// Add player
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-void AddPlayer() {
-  if (SimDigitalRead(startButton) == LOW && ball == 1 && addPlayersw == 0) {
-    addPlayersw = 1;
-    addPlayerTimer = millis();
-    wTrig.trackPlayPoly(103);
-    numofplayers ++;
-    if (numofplayers == 5) {
-      numofplayers = 1;
-    }
-  }
-  if (addPlayersw == 1 && millis() - 100 > addPlayerTimer && SimDigitalRead(startButton) == HIGH)
-  {
-    addPlayersw = 0;
-  }
-
-}
+// Az AddPlayer() (start gombbal jatek kozben) megszunt: a jatekosok
+// hozzaadasa a player select modban tortenik (intmMode, intmon == 3).
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 //// End Add Player Rutin

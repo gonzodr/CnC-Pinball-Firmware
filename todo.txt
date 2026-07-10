@@ -60,6 +60,15 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 [ ] FANTOM-GOLYO: sok ballsave-es jatek utan sem jon ki magatol
     masodik golyo kiloveskor (beragado sidelane-zaszlo javitva)
 
+PLAYER SELECT MOD (V2-es CharmMode logika visszahozva):
+[ ] 1. start: player select (GUI kilep az attractbol), MEG NEM indit!
+[ ] shoot gomb: +1 jatekos (1..4 korbe), GUI jatekoskartyak frissulnek
+[ ] 2. start: jatek indul a valasztott jatekosszammal
+[ ] 60 mp tetlenseg a valasztoban -> vissza az attractba
+[ ] hangok oke-e? (belepes: 47-es track, +jatekos: 103, inditas: 15 -
+    ha nem jok, szolj es csereljuk)
+[ ] FIGYELEM: a regi "start gombbal jatek kozben +jatekos" MEGSZUNT!
+
 COIL GUARD (uj vedelem, e_coil_guard.ino):
 [ ] Normal jatek kozben NEM jon "CoilGuard,..." uzenet a sorosra
     (ha jon, az vagy tul szoros limit, vagy valodi bug - szolj!)
