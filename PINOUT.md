@@ -65,7 +65,7 @@ lasd todo.txt!)
 
 | Pin | Irany | Funkcio |
 |-----|-------|---------|
-| A0 | BE (analog) | Golyotarolo infra 1 (>988 = golyo ott, <974 = nincs) |
+| A0 | BE (analog) | Golyotarolo infra 1 (<100 = golyo ott! FORDITOTT logika) |
 | A1 | BE (analog) | Golyotarolo infra 2 |
 | A2 | BE (analog) | Golyotarolo infra 3 |
 | A3 | BE (analog) | Golyotarolo infra 4 |

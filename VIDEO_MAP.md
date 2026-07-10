@@ -5,15 +5,21 @@ Python GUI projekt gyokereben) + a Unity Inspector kifotozott bekotesei
 (2026-07-10). Ez az ETALON: a gepben futo (mini PC-s!) firmware-nek
 ehhez kell(ett) igazodnia.
 
-## FONTOS FIGYELMEZTETES
+## MEGOLDVA (2026-07-10): a mini PC-s forras elokerult!
 
-A mini PC-n (a flipperben) valo'szinuleg UJABB firmware van, mint az
-itteni CnC_firmware3 (a V4 alapja)! Bizonyitekok:
- - a Unity GUI Ufo1..Ufo13 parancsokat kezel, a fw3 csak Ufo1-7+9-et kuld
- - a Unity Point1..Point8-at kezel, a fw3 csak Point1-2-t kuld
- - a Unity ismeri a Jackpot1-et (PsyJackpot) es az ExtraB-t, a fw3 nem kuldi
-=> AMIG A MINI PC-S FORRAST NEM VETETTUK OSSZE A V4-GYEL, AZ ELES GEPRE
-   NE MENJEN FEL A V4! (A mai javitasok mind git-ben vannak, atemelhetok.)
+A gepben futott forras a repo "Régi fullos firmvare/CnC_firmware3"
+mappajaban van megorizve. A V4-be atemelve belole:
+ - FORDITOTT golyoerzekeles (<100 = golyo ott van) - a gep valodi bekotese!
+ - UFO pontlopas-nyeremeny (lottery 8, csak tobbjatekosnal): -10000 pont
+   egy veletlen masik jatekosnak; uzenet: Ufo10..13 (= kirabolt jatekos),
+   hang: 124..127 + 91 (firework)
+ - maxBallSw: SpaceCoke-ballsave alatt az utolso tarolt golyo 1 mp
+   kesleltetessel megy ki
+NEM emeltuk at (a V4/fw3 verzioja maradt): resetFunc() helyett A13-as
+reset-vonal; lottery 6 = 25000/Ufo3 (a gepiben ures "nyeretlen" volt);
+reset-kombo start+shoot 20 mp.
+A gepi verzio bugjai, amiket a portolas javitott: playerSucks==1 duplikatum
+(3 jatekosnal), score alulcsordulas 10000 pont alatti aldozatnal.
 
 ## A Unity CamTimer altal kezelt parancsok (62 db)
 
@@ -40,7 +46,9 @@ uzenete lehet.
 | Ufo1..5 | ufo1..ufo5 | |
 | Ufo6 | **Ufofuck** | ELCSUSZAS! a 6-os trigger a "nyeretlen" video |
 | Ufo7 | **ufo6** | ezert nincs Ufo7.mp4 fajl! |
-| Ufo8..13 | ufo8..ufo13 | a fw3/V4 csak a 9-est kuldi ezekbol |
+| Ufo8 | ufo8 | egyik firmware sem kuldi (arva video) |
+| Ufo9 | ufo9 | SpaceCoke multiball |
+| Ufo10..13 | ufo10..ufo13 | pontlopas: a kirabolt jatekos (1..4) videoja |
 | Beer1..3 | Beer1..3 | |
 | Combo1..6 | Combo1..6 | |
 | ChongC1..3 / CheechC1..3 | ChongC1..3 / CheechC1..3 | |

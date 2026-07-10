@@ -133,7 +133,7 @@ const SimEvent simScript[] = {
 
 void SimUpdateTrough() {
   for (uint8_t i = 0; i < 5; i++) {
-    simA[i] = (i < troughBalls) ? 1000 : 400; // >988 = golyo ott van
+    simA[i] = (i < troughBalls) ? 50 : 500; // FORDITOTT: <100 = golyo ott van
   }
 }
 
@@ -196,7 +196,8 @@ int SimAnalogRead(uint8_t pin) {
 void SimHelp() {
   Serial.println("SIM,parancsok: S=start K=kiloves D=lefolyas R=demo ujra");
   Serial.println("SIM,1-4=weed c=cheech h=chong o=pop n=spinner l/L=loop");
-  Serial.println("SIM,a/b/e=gate s=sling f/j=flipper x/y=hid U=cinkelt u=ufo");
+  Serial.println("SIM,a/b/e=gate s=sling f/j=flipper x/y=hid u=ufo");
+  Serial.println("SIM,U=SpaceCoke-cinkeles M=pontlopas-cinkeles (utana u!)");
 }
 
 void SimRunEvent(const SimEvent &e) {
@@ -314,6 +315,10 @@ void SimPoll() {
         case 'U':                                // cinkelt kocka: SpaceCoke
           simForceLottery = 7;
           Serial.println("SIM,cinkelt kocka");
+          break;
+        case 'M':                                // cinkelt kocka: pontlopas
+          simForceLottery = 8;                   // (csak tobbjatekos jatekban ervenyes!)
+          Serial.println("SIM,cinkelt kocka,pontlopas");
           break;
         case 'u': SimUfoHit(300); break;         // golyo az UFO-ba
         case 'R':                                // demo ujrainditasa
