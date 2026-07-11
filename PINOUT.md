@@ -1,5 +1,9 @@
 # CnC Pinball - Arduino Mega pin terkep (V4)
 
+ELLENORIZVE 2026-07-11: a gepben utoljara futott firmware ("Régi fullos
+firmvare" mappa) pinkiosztasa BITRE AZONOS ezzel, kiveve a ket DAVE-savot
+(A: 18, D: 19 volt) - ezek atkotese a Serial1-migracios terv resze.
+
 Aktualis allapot a 2026-07-09-es Serial1-atallas UTAN.
 (A 18/19 -> 42/49 atkotes es a WAV Trigger 46 -> 18 atkotese szukseges hozza,
 lasd todo.txt!)
