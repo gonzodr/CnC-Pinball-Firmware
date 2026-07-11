@@ -360,6 +360,16 @@ void SimPoll() {
     simBannerAt = now;
     Serial.println("SIM,mode");
   }
+
+  // -- A13 reset-vonal figyelese: az eles gepen ez hardveresen reseteli
+  // az Arduinot (a GUI "Exit" uzenete utan huzza LOW-ba a firmware).
+  // A probapadon nincs bekotve, ezert SIM modban szoftveresen inditjuk
+  // ujra magunkat -> a demo a jatek vegen orokre korbe-korbe megy!
+  if (now > 5000 && digitalRead(PIN_A13) == LOW) {
+    Serial.println("SIM,A13-reset,ujraindulas");
+    delay(100); // hadd menjen ki az uzenet
+    asm volatile("jmp 0");
+  }
 }
 
 #else // ---- eles build: atlatszo csonkok, nulla tobbletkoltseg ----
