@@ -52,7 +52,7 @@ lasd todo.txt!)
 | 39 | BE (pullup) | Pop bumper 3 kapcsolo |
 | 40 | BE (pullup) | Gate kapcsolo 3 |
 | 41 | KI | BAL FLIPPER TEKERCS |
-| 42 | BE (pullup) | DAVE "A" sav (2026-07-09: atkotve a 18-rol!) |
+| 42 | BE | CHEECH ALLEY kapcsolo - BE VAN KOTVE, de a kod nem hasznalja! (fotoval igazolva 2026-07-11; jovobeli funkcio jelolt) |
 | 43 | BE (pullup) | Loop kapcsolo (also/oldalso) |
 | 44 | BE (pullup) | Gate kapcsolo 2 |
 | 45 | BE (pullup) | Gate kapcsolo 1 |
@@ -60,7 +60,7 @@ lasd todo.txt!)
 | 47 | BE (pullup) | Start gomb |
 | 48 | - | SZABAD (regen AltSoftSerial RX volt) |
 | 49 | BE (pullup) | DAVE "D" sav (2026-07-09: atkotve a 19-rol!) |
-| 50 | - | SZABAD |
+| 50 | BE (pullup) | DAVE "A" sav (2026-07-11: ide kotendo at a 18-rol - a 42 foglalt!) |
 | 51 | BE (pullup) | Golyokilovo gomb |
 | 52 | BE (pullup) | Nagy hid (Bridge High) kapcsolo |
 | 53 | BE (pullup) | Kis hid (Bridge Low) kapcsolo |

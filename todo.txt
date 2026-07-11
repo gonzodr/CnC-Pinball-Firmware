@@ -16,7 +16,9 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 ---------------------------------------------------------------------
 1) ATKOTESEK A GEPBEN
 ---------------------------------------------------------------------
-[ ] DAVE "A" kapcsolo:  Mega 18-as pin  ->  Mega 42-es pin
+[ ] DAVE "A" kapcsolo:  Mega 18-as pin  ->  Mega 50-es pin
+    (NEM a 42-re! Azon a bekotott, kodban nem hasznalt Cheech Alley
+    kapcsolo ul - fotoval ellenorizve 2026-07-11)
 [ ] DAVE "D" kapcsolo:  Mega 19-es pin  ->  Mega 49-es pin
 [ ] WAV Trigger RX:     Mega 46-os pin  ->  Mega 18-as pin (TX1)
 [ ] WAV Trigger TX (ha be volt kotve a 48-asra): -> Mega 19 (RX1)

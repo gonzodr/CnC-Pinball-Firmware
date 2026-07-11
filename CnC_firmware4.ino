@@ -184,7 +184,9 @@ unsigned long cnchurryTimer3 = 0;
 /////////////////////////////////////////////////////////////////
 /// Variables for Dave
 // Pins
-int daveLaneSwitchA = 42; // A (18-rol atkotve! 18/19 = Serial1 a wavTriggernek)
+int daveLaneSwitchA = 50; // A (18-rol atkotve! 18/19 = Serial1 a wavTriggernek)
+                          // NEM a 42-re: azon a (kodban nem hasznalt, de
+                          // BEKOTOTT) Cheech Alley kapcsolo vezeteke ul!
 int daveLaneSwitchD = 49; // D (19-rol atkotve!)
 int daveLaneSwitchV = 22; // V
 int daveLaneSwitchE = 23; // E
