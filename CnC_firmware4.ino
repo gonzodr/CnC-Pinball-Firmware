@@ -2987,154 +2987,59 @@ void Gate() {
 /////////////////////////////////////////////////
 
 void Pops() {
-  // POP 1
-  if (SimDigitalRead(pop1Switch) == LOW && pop1LogicBool == LOW) {
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(1000, 10);
+  // A harom pop bumper azonos logikaja egy ciklusban. A globalis
+  // valtozokat NEM valtjuk ki - lokalis mutato-tombokkel hivatkozunk
+  // rajuk, igy a refaktor a fuggvenyen belul marad.
+  const uint8_t popSwitch[3] = { (uint8_t)pop1Switch, (uint8_t)pop2Switch, (uint8_t)pop3Switch };
+  const uint8_t popCoil[3]   = { (uint8_t)pop1Coil,   (uint8_t)pop2Coil,   (uint8_t)pop3Coil };
+  const uint8_t popLed[3]    = { 64, 65, 66 };
+  boolean* popLogic[3]       = { &pop1LogicBool, &pop2LogicBool, &pop3LogicBool };
+  boolean* popSw[3]          = { &popsw1, &popsw2, &popsw3 };
+  unsigned long* popTimer[3] = { &poptimer1, &poptimer2, &poptimer3 };
+
+  for (uint8_t i = 0; i < 3; i++) {
+    if (SimDigitalRead(popSwitch[i]) == LOW && *popLogic[i] == LOW) {
+      if (hurryUp == HIGH) {
+        effect = HIGH;
+        effectID = 6;
+        Score(1000, 10);
+      }
+      else {
+        Score(200, 10);
+      }
+      *popSw[i] = HIGH;
+      *popLogic[i] = HIGH;
+      *popTimer[i] = millis();
+      ufoInactivesw = 1;
+      ufoInactiveTimer = millis();
+      ballHandlerSkip = 1;
+      ballHandlerSkipTimer = millis();
+    }
+
+    if (*popLogic[i] == HIGH && millis() - 50 < *popTimer[i]) {
+      digitalWrite(popCoil[i], HIGH);
     }
     else {
-      Score(200, 10);
+      digitalWrite(popCoil[i], LOW);
     }
-    popsw1 = HIGH;
 
-    pop1LogicBool = HIGH;
-    poptimer1 = millis();
-    ufoInactivesw = 1;
-    ufoInactiveTimer = millis();
-    ballHandlerSkip = 1;
-    ballHandlerSkipTimer = millis();
-
-  }
-  if (pop1LogicBool == HIGH && millis() - 50 < poptimer1) {
-    digitalWrite(pop1Coil, HIGH);
-  }
-  else {
-    digitalWrite(pop1Coil, LOW);
-  }
-
-  if (SimDigitalRead(pop1Switch) == HIGH && millis() - 100 > poptimer1) {
-    pop1LogicBool = LOW;
-  }
-
-  // POP 2
-  if (SimDigitalRead(pop2Switch) == LOW && pop2LogicBool == LOW) {
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(1000, 10);
+    if (SimDigitalRead(popSwitch[i]) == HIGH && millis() - 100 > *popTimer[i]) {
+      *popLogic[i] = LOW;
     }
-    else {
-      Score(200, 10);
-    }
-    popsw2 = HIGH;
-    pop2LogicBool = HIGH;
-    poptimer2 = millis();
-    ufoInactivesw = 1;
-    ufoInactiveTimer = millis();
-    ballHandlerSkip = 1;
-    ballHandlerSkipTimer = millis();
-
   }
 
-  if (pop2LogicBool == HIGH && millis() - 50 < poptimer2) {
-    digitalWrite(pop2Coil, HIGH);
-  }
-  else {
-    digitalWrite(pop2Coil, LOW);
-  }
-
-  if (SimDigitalRead(pop2Switch) == HIGH && millis() - 100 > poptimer2) {
-    pop2LogicBool = LOW;
-  }
-
-  // POP 3
-
-  if (SimDigitalRead(pop3Switch) == LOW && pop3LogicBool == LOW) {
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(1000, 10);
-    }
-    else {
-      Score(200, 10);
-    }
-    popsw3 = HIGH;
-    pop3LogicBool = HIGH;
-    poptimer3 = millis();
-    ufoInactivesw = 1;
-    ufoInactiveTimer = millis();
-    ballHandlerSkip = 1;
-    ballHandlerSkipTimer = millis();
-  }
-
-  if (pop3LogicBool == HIGH && millis() - 50 < poptimer3) {
-    digitalWrite(pop3Coil, HIGH);
-  }
-  else {
-    digitalWrite(pop3Coil, LOW);
-  }
-
-  if (SimDigitalRead(pop3Switch) == HIGH && millis() - 100 > poptimer3) {
-    pop3LogicBool = LOW;
-  }
-
-
-  // Lights
-
+  // Lights (villogas talalat utan ~1 mp-ig, aztan alap kek)
   if (effect == LOW) {
-
-    // Pop blink 1
-
-    if (popsw1 == HIGH && millis() - 1000 < poptimer1) {
-      if (ledState == HIGH) {
-        leds[64] = CRGB::Red; // Pop1
+    for (uint8_t i = 0; i < 3; i++) {
+      if (*popSw[i] == HIGH && millis() - 1000 < *popTimer[i]) {
+        leds[popLed[i]] = (ledState == HIGH) ? CRGB::Red : CRGB::Blue;
       }
       else {
-        leds[64] = CRGB::Blue; // Pop1
-
+        *popSw[i] = LOW;
+        leds[popLed[i]] = CRGB::Blue;
       }
-    }
-    else {
-      popsw1 = LOW;
-      leds[64] = CRGB::Blue; // Pop1
-    }
-
-    // Pop blink 2
-
-    if (popsw2 == HIGH && millis() - 1000 < poptimer2) {
-      if (ledState == HIGH) {
-        leds[65] = CRGB::Red; // Pop1
-      }
-      else {
-        leds[65] = CRGB::Blue; // Pop1
-
-      }
-    }
-    else {
-      popsw2 = LOW;
-      leds[65] = CRGB::Blue; // Pop1
-    }
-
-
-    // Pop blink 3
-
-    if (popsw3 == HIGH && millis() - 1000 < poptimer3) {
-      if (ledState == HIGH) {
-        leds[66] = CRGB::Red; // Pop1
-      }
-      else {
-        leds[66] = CRGB::Blue; // Pop1
-
-      }
-    }
-    else {
-      popsw3 = LOW;
-      leds[66] = CRGB::Blue; // Pop1
     }
   }
-
 }
 
 /////////////////////////////////////////////////
