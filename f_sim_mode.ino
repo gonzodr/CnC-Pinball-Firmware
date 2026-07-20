@@ -123,7 +123,9 @@ const SimEvent simScript[] = {
   { TRIG_TIME,  2500, SIMCMD_DRAIN,  0,   0 },  // utolso golyo -> P1/B3 vege
   // --- P2 / B3: gyors kor -> GAME OVER ---
   { TRIG_LANE,  1500, SIMCMD_PRESS, 51, 400 },
-  { TRIG_TIME, 16000, SIMCMD_DRAIN,  0,   0 },  // -> "End" -> nevbevitel!
+  { TRIG_TIME,  2000, SIMCMD_PRESS,  7, 150 },  // Chong -> veletlen beszed (tesztlefedettseg)
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 12, 150 },  // Cheech -> veletlen beszed (tesztlefedettseg)
+  { TRIG_TIME, 12000, SIMCMD_DRAIN,  0,   0 },  // -> "End" -> nevbevitel!
   // --- nevbevitel demo ---
   // A GUI a game over utan meg ~8 mp SUMMARY + ~8 mp FINAL_SCORES
   // kepernyot mutat (tobbjatekos mod!), a NAME_ENTRY csak ~18 mp-nel

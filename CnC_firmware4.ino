@@ -321,8 +321,8 @@ boolean cheechoffsw = LOW;
 boolean chongactive = LOW;
 boolean CollectSw = 0;
 // Integers
-int cheechspeech = 0;
-int chongspeech = 0;
+// (cheechspeech/chongspeech valtozok megszuntek: a beszedvalasztas mostmar
+//  a PlaySpeech() helper + track-tombok dolga)
 // Timers
 unsigned long cheechoffswtimer = 0;
 unsigned long chongoffswtimer = 0;
@@ -1659,6 +1659,19 @@ void Score(unsigned long scr, unsigned long bns) {
   char tb[52];
   snprintf(tb, sizeof(tb), "T,score,p%d,scr=%lu,bns=%lu,tot=%lu",
            player, scr, bns, score[player]);
+  Serial.println(tb);
+#endif
+}
+
+// Veletlen beszedhang lejatszasa egy listabol. RNG-ekvivalens a regi
+// random(1,count+1)+switch valtozattal: EGY random() huzas, es a tracks[]
+// index pontosan a switch case-eket tukrozi -> azonos hang, azonos RNG-allapot.
+void PlaySpeech(const uint8_t* tracks, uint8_t count) {
+  uint8_t t = tracks[random(0, count)];
+  wTrig.trackPlayPoly(t);
+#ifdef SIM_MODE
+  char tb[24];
+  snprintf(tb, sizeof(tb), "T,speech,%u", t);
   Serial.println(tb);
 #endif
 }
@@ -3747,39 +3760,9 @@ void Chong_switch() {
   if (SimDigitalRead(chongSwitch) == LOW && chongoffsw == LOW) {
     chongoffsw = HIGH;
     chongoffswtimer = millis();
-    chongspeech = random(1, 11);
-    switch (chongspeech) {
-      case 1:
-        wTrig.trackPlayPoly(8);
-        break;
-      case 2:
-        wTrig.trackPlayPoly(9);
-        break;
-      case 3:
-        wTrig.trackPlayPoly(52);
-        break;
-      case 4:
-        wTrig.trackPlayPoly(53);
-        break;
-      case 5:
-        wTrig.trackPlayPoly(9);
-        break;
-      case 6:
-        wTrig.trackPlayPoly(79);
-        break;
-      case 7:
-        wTrig.trackPlayPoly(80);
-        break;
-      case 8:
-        wTrig.trackPlayPoly(82);
-        break;
-      case 9:
-        wTrig.trackPlayPoly(83);
-        break;
-      case 10:
-        wTrig.trackPlayPoly(85);
-        break;
-    }
+    // Chong beszedhangok (a regi 10 case-es switch helyett)
+    static const uint8_t chongTracks[10] = { 8, 9, 52, 53, 9, 79, 80, 82, 83, 85 };
+    PlaySpeech(chongTracks, 10);
     
     /// 
     /// Active state
@@ -3858,54 +3841,9 @@ void Cheech_switch() {
     if (SimDigitalRead(cheechSwitch) == LOW && cheechoffsw == LOW) {
     cheechoffsw = HIGH;
     cheechoffswtimer = millis();
-    cheechspeech = random(1, 16); // 1..15, a switch mind a 15 hangjat lefedi
-    switch (cheechspeech) {
-      case 1:
-        wTrig.trackPlayPoly(7);
-        break;
-      case 2:
-        wTrig.trackPlayPoly(35);
-        break;
-      case 3:
-        wTrig.trackPlayPoly(36);
-        break;
-      case 4:
-        wTrig.trackPlayPoly(37);
-        break;
-      case 5:
-        wTrig.trackPlayPoly(48);
-        break;
-      case 6:
-        wTrig.trackPlayPoly(49);
-        break;
-      case 7:
-        wTrig.trackPlayPoly(50);
-        break;
-      case 8:
-        wTrig.trackPlayPoly(54);
-        break;
-      case 9:
-        wTrig.trackPlayPoly(55);
-        break;
-      case 10:
-        wTrig.trackPlayPoly(56);
-        break;
-      case 11:
-        wTrig.trackPlayPoly(57);
-        break;
-      case 12:
-        wTrig.trackPlayPoly(58);
-        break;
-      case 13:
-        wTrig.trackPlayPoly(59);
-        break;
-      case 14:
-        wTrig.trackPlayPoly(81);
-        break;
-      case 15:
-        wTrig.trackPlayPoly(87);
-        break;
-    }
+    // Cheech beszedhangok (a regi 15 case-es switch helyett)
+    static const uint8_t cheechTracks[15] = { 7, 35, 36, 37, 48, 49, 50, 54, 55, 56, 57, 58, 59, 81, 87 };
+    PlaySpeech(cheechTracks, 15);
 
     /// 
     ///  Active state
