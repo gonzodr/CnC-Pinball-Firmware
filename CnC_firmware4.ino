@@ -4106,14 +4106,24 @@ void Gift() {
 //// Bridge LOW
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
-void BridgeLow() {
-  if (BrdgLowActive == LOW) {
-    leds[24] = CRGB::Black; // Left ramp
-    leds[25] = CRGB::Black; // Left ramp
+// Kozos hidkezelo: a ket ~180 soros, majdnem azonos BridgeLow/High rutin
+// egy parameterezett fuggvenybe vonva. FONTOS aszimmetriak, amiket megoriz:
+//  - a ket hid KOMBOZIK egymassal: comboReadT/comboWriteT kereszthivatkozas
+//  - a multiball-jackpot tabla KULONBOZO (lasd a ket wrappert)
+//  - az elso talalat (nem-kombo) hangja kulonbozo (firstHitSound)
+void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
+                  boolean* active, uint8_t ledActA, uint8_t ledActB,
+                  uint8_t ledAmbA, uint8_t ledAmbB,
+                  unsigned long* comboReadT, unsigned long* comboWriteT,
+                  uint8_t firstHitSound,
+                  const unsigned long* jpScr, const unsigned long* jpBns) {
+  if (*active == LOW) {
+    leds[ledActA] = CRGB::Black;
+    leds[ledActB] = CRGB::Black;
 
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
+    if (SimDigitalRead(swPin) == LOW && *swFlag == 0) {
+      *swFlag = 1;
+      *swT = millis();
 
       if (hurryUp == HIGH) {
         Score(5000, 500);
@@ -4121,159 +4131,92 @@ void BridgeLow() {
         delay(20);
       }
       else {
-
-        if (millis() - 4000 > comboTimerH) {
+        if (millis() - 4000 > *comboReadT) {
           comboCounter = 0;
           Score(500, 50);
-          wTrig.trackPlayPoly(9);
+          wTrig.trackPlayPoly(firstHitSound);
         }
-
-        if (millis() - 4000 < comboTimerH) { /// Ha még nem telt el 4 másodperc a kishíd óta
-          comboCounter ++; // kombók száma
+        if (millis() - 4000 < *comboReadT) { // ha meg nem telt el 4 mp a masik hid ota
+          comboCounter++;
           if (comboCounter > 6) {
             comboCounter = 6;
           }
-          if (comboCounter == 1) {
-            Score(2500, 300);
-            Serial.println("Combo1");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 2) {
-            Score(5000, 300);
-            Serial.println("Combo2");
-            wTrig.trackPlayPoly(96);
-          }
-          if (comboCounter == 3) {
-            Score(7500, 300);
-            Serial.println("Combo3");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 4) {
-            Score(10000, 300);
-            Serial.println("Combo4");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 5) {
-            Score(15000, 300);
-            Serial.println("Combo5");
-            wTrig.trackPlayPoly(96);
-          }
-          if (comboCounter == 6) {
-            Score(20000, 300);
-            Serial.println("Combo6");
-            wTrig.trackPlayPoly(95);
-          }
+          if (comboCounter == 1) { Score(2500, 300);  Serial.println("Combo1"); wTrig.trackPlayPoly(95); }
+          if (comboCounter == 2) { Score(5000, 300);  Serial.println("Combo2"); wTrig.trackPlayPoly(96); }
+          if (comboCounter == 3) { Score(7500, 300);  Serial.println("Combo3"); wTrig.trackPlayPoly(95); }
+          if (comboCounter == 4) { Score(10000, 300); Serial.println("Combo4"); wTrig.trackPlayPoly(95); }
+          if (comboCounter == 5) { Score(15000, 300); Serial.println("Combo5"); wTrig.trackPlayPoly(96); }
+          if (comboCounter == 6) { Score(20000, 300); Serial.println("Combo6"); wTrig.trackPlayPoly(95); }
         }
-        comboTimerL = millis();
+        *comboWriteT = millis();
       }
-
     }
-    if (BrdgLowSw == 1 && millis() - 1000 < BrdgLowT) {
+
+    if (*swFlag == 1 && millis() - 1000 < *swT) {
       if (ledState == LOW) {
-        leds[23] = CRGB::Red; // Left ramp ambient
-        leds[17] = CRGB::Yellow; // CnC ambient
+        leds[ledAmbA] = CRGB::Red;
+        leds[ledAmbB] = CRGB::Yellow;
       }
       if (ledState == HIGH) {
-        leds[23] = CRGB::Yellow; // Left ramp ambient
-        leds[17] = CRGB::Red; // CnC ambient
+        leds[ledAmbA] = CRGB::Yellow;
+        leds[ledAmbB] = CRGB::Red;
       }
     }
     else {
-      BrdgLowSw = 0;
-      leds[23] = CRGB::White; // Left ramp ambient
-      leds[17] = CRGB::White; // CnC ambient
+      *swFlag = 0;
+      leds[ledAmbA] = CRGB::White;
+      leds[ledAmbB] = CRGB::White;
     }
   }
 
-  if (BrdgLowActive == HIGH || multiball != 0) {
+  if (*active == HIGH || multiball != 0) {
     if (effect == LOW) {
       if (ledState == LOW) {
-        leds[24] = CRGB::Yellow; // Left ramp
-        leds[25] = CRGB::Green; // Left ramp
+        leds[ledActA] = CRGB::Yellow;
+        leds[ledActB] = CRGB::Green;
       }
       if (ledState == HIGH) {
-        leds[24] = CRGB::Green; // Left ramp
-        leds[25] = CRGB::Yellow; // Left ramp
+        leds[ledActA] = CRGB::Green;
+        leds[ledActB] = CRGB::Yellow;
       }
     }
 
-
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 0) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(5000, 200);
-      wTrig.trackPlayPoly(92);
-      Serial.println("Point2");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 1) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(10000, 200);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot2");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 2) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(15000, 200);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot3");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 3) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(20000, 200);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot4");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 4) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(25000, 200);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot5");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0 && multiball == 5) {
-      BrdgLowSw = 1;
-      BrdgLowT = millis();
-      Score(30000, 200);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot6");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-
-
-
-
-    if (BrdgLowSw == 1 && millis() > BrdgLowT + 1000) {
-      BrdgLowSw = 0;
+    // multiball 0..5 -> jackpot-tabla indexe (a 0 = sima "Point2" hidtalalat)
+    if (SimDigitalRead(swPin) == LOW && *swFlag == 0) {
+      *swFlag = 1;
+      *swT = millis();
+      Score(jpScr[multiball], jpBns[multiball]);
       if (multiball == 0) {
-        BrdgLowActive = LOW;
+        wTrig.trackPlayPoly(92);
+        Serial.println("Point2");
       }
-      leds[24] = CRGB::Black; // Left ramp
-      leds[25] = CRGB::Black; // Left ramp
+      else {
+        wTrig.trackPlayPoly(73);
+        Serial.print("Jackpot");
+        Serial.println(multiball + 1); // Jackpot2..Jackpot6
+      }
+      delay(20);
+      effect = HIGH;
+      effectID = 5;
+    }
+
+    if (*swFlag == 1 && millis() > *swT + 1000) {
+      *swFlag = 0;
+      if (multiball == 0) {
+        *active = LOW;
+      }
+      leds[ledActA] = CRGB::Black;
+      leds[ledActB] = CRGB::Black;
     }
   }
+}
 
-
+void BridgeLow() {
+  //                                    mb: 0     1      2      3      4      5
+  static const unsigned long jpScr[6] = { 5000, 10000, 15000, 20000, 25000, 30000 };
+  static const unsigned long jpBns[6] = {  200,   200,   200,   200,   200,   200 };
+  BridgeCommon(bridgeLowSwitch, &BrdgLowSw, &BrdgLowT, &BrdgLowActive,
+               24, 25, 23, 17, &comboTimerH, &comboTimerL, 9, jpScr, jpBns);
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -4287,174 +4230,11 @@ void BridgeLow() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 void BridgeHigh() {
-  if (BrdgHighActive == LOW) {
-    leds[36] = CRGB::Black; // Left ramp
-    leds[37] = CRGB::Black; // Left ramp
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-
-      if (hurryUp == HIGH) {
-        Score(5000, 500);
-        Serial.println("Point2");
-        delay(20);
-      }
-      else {
-
-        if (millis() - 4000 > comboTimerL) {
-          comboCounter = 0;
-          Score(500, 50);
-          wTrig.trackPlayPoly(36);
-        }
-
-        if (millis() - 4000 < comboTimerL) { /// Ha még nem telt el 4 másodperc a kishíd óta
-          comboCounter ++; // kombók száma
-          if (comboCounter > 6) {
-            comboCounter = 6;
-          }
-          if (comboCounter == 1) {
-            Score(2500, 300);
-            Serial.println("Combo1");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 2) {
-            Score(5000, 300);
-            Serial.println("Combo2");
-            wTrig.trackPlayPoly(96);
-          }
-          if (comboCounter == 3) {
-            Score(7500, 300);
-            Serial.println("Combo3");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 4) {
-            Score(10000, 300);
-            Serial.println("Combo4");
-            wTrig.trackPlayPoly(95);
-          }
-          if (comboCounter == 5) {
-            Score(15000, 300);
-            Serial.println("Combo5");
-            wTrig.trackPlayPoly(96);
-          }
-          if (comboCounter == 6) {
-            Score(20000, 300);
-            Serial.println("Combo6");
-            wTrig.trackPlayPoly(95);
-          }
-
-        }
-        comboTimerH = millis();
-      }
-
-
-    }
-
-    if (BrdgHighSw == 1 && millis() - 1000 < BrdgHighT) {
-      if (ledState == LOW) {
-        leds[50] = CRGB::Red; // Left ramp ambient
-        leds[51] = CRGB::Yellow; // CnC ambient
-      }
-      if (ledState == HIGH) {
-        leds[50] = CRGB::Yellow; // Left ramp ambient
-        leds[51] = CRGB::Red; // CnC ambient
-      }
-    }
-    else {
-      BrdgHighSw = 0;
-      leds[50] = CRGB::White; // Left ramp ambient
-      leds[51] = CRGB::White; // CnC ambient
-    }
-  }
-
-  if (BrdgHighActive == HIGH || multiball != 0) {
-    if (effect == LOW) {
-      if (ledState == LOW) {
-        leds[36] = CRGB::Yellow; // Left ramp
-        leds[37] = CRGB::Green; // Left ramp
-      }
-      if (ledState == HIGH) {
-        leds[36] = CRGB::Green; // Left ramp
-        leds[37] = CRGB::Yellow; // Left ramp
-      }
-    }
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 0) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(5000, 200);
-      wTrig.trackPlayPoly(92);
-      Serial.println("Point2");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 1) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(10000, 500);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot2");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 2) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(15000, 500);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot3");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 3) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(20000, 500);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot4");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 4) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(20000, 500);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot5");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-    if (SimDigitalRead(bridgeHighSwitch) == LOW && BrdgHighSw == 0 && multiball == 5) {
-      BrdgHighSw = 1;
-      BrdgHighT = millis();
-      Score(20000, 500);
-      wTrig.trackPlayPoly(73);
-      Serial.println("Jackpot6");
-      delay(20);
-      effect = HIGH;
-      effectID = 5;
-    }
-
-
-
-
-
-    if (BrdgHighSw == 1 && millis() > BrdgHighT + 1000) {
-      BrdgHighSw = 0;
-      if (multiball == 0) {
-        BrdgHighActive = LOW;
-      }
-      leds[36] = CRGB::Black; // Left ramp
-      leds[37] = CRGB::Black; // Left ramp
-    }
-  }
-
-
+  //                                    mb: 0     1      2      3      4      5
+  static const unsigned long jpScr[6] = { 5000, 10000, 15000, 20000, 20000, 20000 };
+  static const unsigned long jpBns[6] = {  200,   500,   500,   500,   500,   500 };
+  BridgeCommon(bridgeHighSwitch, &BrdgHighSw, &BrdgHighT, &BrdgHighActive,
+               36, 37, 50, 51, &comboTimerL, &comboTimerH, 36, jpScr, jpBns);
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
