@@ -3249,43 +3249,27 @@ void Weedspinner() {
       weedtableindicator = HIGH;
       weedtableindicatortimer = millis();
 
-      if (weedm[player] == 0) {
-        weedmeter[player] = weedmeter[player] - 25;
-        if (weedmeter[player] <= 0) {
-          weedmeter[player] = 180;
-          weedm[player] = 1;
-          BIP = 2;
-          Score(10000, 500);
-          Serial.println("Multiball1");
-          delay(20);
-          multiball = 1;
-          ballsavetimer = millis() + 30000;
-          ballsaversw = HIGH;
-          ballsavetime = 30000;
-          ufosw = 0;
-          effect = HIGH;
-          effectID = 2;
-          wTrig.trackPause(1);
-          wTrig.trackPlayPoly(69);
-          wTrig.trackLoop(89, 1);
-          wTrig.trackPlayPoly(89);
-          spinnersw = 2;
-          multiloopsw = 1;
-          BrdgLowActive = HIGH;
-          BrdgHighActive = HIGH;
-        }
-      }
+      // A 4 multiball-szint (weedm 0->1->2->3->4) kozos logikaja. Szintenkent
+      // csak a mero-levonas, a pontszam es a hangok kulonboznek -> tablak.
+      int lvl = weedm[player];
+      if (lvl >= 0 && lvl <= 3) {
+        static const int8_t         mbDecr[4]  = { 25, 15, 10, 8 };
+        static const unsigned long  mbScr[4]   = { 10000, 20000, 30000, 40000 };
+        static const unsigned long  mbBns[4]   = {   500,  1000,  1500,  2000 };
+        static const uint8_t        mbPoly1[4] = { 69, 71, 64, 65 }; // elso hang
+        static const uint8_t        mbLoop[4]  = { 89, 88, 64, 65 }; // loopolt zene
+        static const uint8_t        mbPoly2[4] = { 89, 88, 68, 70 }; // masodik hang
 
-      if (weedm[player] == 1) {
-        weedmeter[player] = weedmeter[player] - 15;
+        weedmeter[player] = weedmeter[player] - mbDecr[lvl];
         if (weedmeter[player] <= 0) {
           weedmeter[player] = 180;
-          weedm[player] = 2;
-          Score(20000, 1000);
-          BIP = 3;
-          Serial.println("Multiball2");
+          weedm[player] = lvl + 1;
+          BIP = lvl + 2;
+          Score(mbScr[lvl], mbBns[lvl]);
+          Serial.print("Multiball");
+          Serial.println(lvl + 1); // Multiball1..Multiball4
           delay(20);
-          multiball = 2;
+          multiball = lvl + 1;
           ballsavetimer = millis() + 30000;
           ballsaversw = HIGH;
           ballsavetime = 30000;
@@ -3293,63 +3277,9 @@ void Weedspinner() {
           effect = HIGH;
           effectID = 2;
           wTrig.trackPause(1);
-          wTrig.trackPlayPoly(71);
-          wTrig.trackLoop(88, 1);
-          wTrig.trackPlayPoly(88);
-          spinnersw = 2;
-          multiloopsw = 1;
-          BrdgLowActive = HIGH;
-          BrdgHighActive = HIGH;
-        }
-      }
-
-      if (weedm[player] == 2) {
-        weedmeter[player] = weedmeter[player] - 10;
-        if (weedmeter[player] <= 0) {
-          weedmeter[player] = 180;
-          weedm[player] = 3;
-          BIP = 4;
-          Score(30000, 1500);
-          Serial.println("Multiball3");
-          delay(20);
-          multiball = 3;
-          ballsavetimer = millis() + 30000;
-          ballsaversw = HIGH;
-          ballsavetime = 30000;
-          ufosw = 0;
-          effect = HIGH;
-          effectID = 2;
-          wTrig.trackPause(1);
-          wTrig.trackPlayPoly(64);
-          wTrig.trackLoop(64, 1);
-          wTrig.trackPlayPoly(68);
-          spinnersw = 2;
-          multiloopsw = 1;
-          BrdgLowActive = HIGH;
-          BrdgHighActive = HIGH;
-        }
-      }
-
-      if (weedm[player] == 3) {
-        weedmeter[player] = weedmeter[player] - 8;
-        if (weedmeter[player] <= 0) {
-          weedmeter[player] = 180;
-          weedm[player] = 4;
-          Serial.println("Multiball4");
-          delay(20);
-          BIP = 5;
-          Score(40000, 2000);
-          multiball = 4;
-          ballsavetimer = millis() + 30000;
-          ballsaversw = HIGH;
-          ballsavetime = 30000;
-          ufosw = 0;
-          effect = HIGH;
-          effectID = 2;
-          wTrig.trackPause(1);
-          wTrig.trackPlayPoly(65);
-          wTrig.trackLoop(65, 1);
-          wTrig.trackPlayPoly(70);
+          wTrig.trackPlayPoly(mbPoly1[lvl]);
+          wTrig.trackLoop(mbLoop[lvl], 1);
+          wTrig.trackPlayPoly(mbPoly2[lvl]);
           spinnersw = 2;
           multiloopsw = 1;
           BrdgLowActive = HIGH;
@@ -3417,29 +3347,12 @@ void Weedspinner() {
 
   }
 
-  if (weedm[player] == 1) {
-    leds[59] = CRGB::Gray; // Michoakan
-    leds[60] = CRGB::Green; // Acapulco Gold
-    leds[62] = CRGB::Gray; // Thai stick
-    leds[63] = CRGB::Gray; // Labrador
-  }
-  if (weedm[player] == 2) {
-    leds[59] = CRGB::Green; // Michoakan
-    leds[60] = CRGB::Green; // Acapulco Gold
-    leds[62] = CRGB::Gray; // Thai stick
-    leds[63] = CRGB::Gray; // Labrador
-  }
-  if (weedm[player] == 3) {
-    leds[59] = CRGB::Green; // Michoakan
-    leds[60] = CRGB::Green; // Acapulco Gold
-    leds[62] = CRGB::Green; // Thai stick
-    leds[63] = CRGB::Gray; // Labrador
-  }
-  if (weedm[player] == 4) {
-    leds[59] = CRGB::Green; // Michoakan
-    leds[60] = CRGB::Green; // Acapulco Gold
-    leds[62] = CRGB::Green; // Thai stick
-    leds[63] = CRGB::Green; // Labrador
+  // Weed-mero kijelzo: progressziv zold kitoltes a szinttel. A vilagitas
+  // sorrendje: Acapulco(60), Michoakan(59), Thai(62), Labrador(63) - az elso
+  // weedm[player] darab zold, a tobbi szurke.
+  static const uint8_t weedMeterLeds[4] = { 60, 59, 62, 63 };
+  for (uint8_t i = 0; i < 4; i++) {
+    leds[weedMeterLeds[i]] = (i < weedm[player]) ? CRGB::Green : CRGB::Gray;
   }
 
 
