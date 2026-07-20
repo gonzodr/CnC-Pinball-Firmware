@@ -32,7 +32,7 @@
 //
 // !!! ELES GEPRE FELTOLTES ELOTT A SIM_MODE DEFINE-T KI KELL VENNI !!!
 
-// #ifdef SIM_MODE
+#ifdef SIM_MODE
 
 // ---- szimulalt allapotok ----
 int8_t simD[70];                // -1 = valodi pin, 0/1 = szimulalt
