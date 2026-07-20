@@ -98,7 +98,8 @@ const SimEvent simScript[] = {
   { TRIG_TIME,   400, SIMCMD_PRESS, 38, 100 },
   { TRIG_TIME,   400, SIMCMD_PRESS, 38, 100 },
   { TRIG_TIME,   400, SIMCMD_PRESS, 38, 100 },  // -> MULTIBALL 1 (2 golyo)
-  { TRIG_TIME,  6000, SIMCMD_PRESS, 53, 120 },  // kis hid = JACKPOT
+  { TRIG_TIME,  6000, SIMCMD_PRESS, 53, 120 },  // kis hid = JACKPOT (BridgeLow)
+  { TRIG_TIME,  2500, SIMCMD_PRESS, 52, 120 },  // nagy hid = JACKPOT (BridgeHigh, tesztlefedettseg)
   { TRIG_TIME, 32000, SIMCMD_DRAIN,  0,   0 },  // multiball-ballsave lejart
   { TRIG_TIME,   700, SIMCMD_DRAIN,  0,   0 },  // 2. golyo gyorsan: BIS>=4 teszt!
   // --- P2 / B2: gyors kor ---
