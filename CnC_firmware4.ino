@@ -1653,6 +1653,14 @@ void SendData() {
 void Score(unsigned long scr, unsigned long bns) {
   bonus = bonus + bns;
   score[player] = score[player] + scr;
+#ifdef SIM_MODE
+  // Tesztpadi trace: minden pontozas lathato a sorosonn (choke-point,
+  // ezen fut at az osszes alrendszer). Eles buildben nincs itt semmi.
+  char tb[52];
+  snprintf(tb, sizeof(tb), "T,score,p%d,scr=%lu,bns=%lu,tot=%lu",
+           player, scr, bns, score[player]);
+  Serial.println(tb);
+#endif
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////

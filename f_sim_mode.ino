@@ -32,7 +32,7 @@
 //
 // !!! ELES GEPRE FELTOLTES ELOTT A SIM_MODE DEFINE-T KI KELL VENNI !!!
 
-#ifdef SIM_MODE
+// #ifdef SIM_MODE
 
 // ---- szimulalt allapotok ----
 int8_t simD[70];                // -1 = valodi pin, 0/1 = szimulalt
@@ -179,6 +179,11 @@ void SimInit() {
   simPrevFire = millis();
   simScriptIx = 0;
   simLaneAnchor = 0;
+  // DETERMINIZMUS: fix RNG-mag, hogy a demo minden lefutasa BITRE azonos
+  // legyen (a jatek 6 helyen hasznal random()-ot) - enelkul a golden-diff
+  // hasznalhatatlan zajt adna. Eles buildben (SIM_MODE ki) ez a sor sincs,
+  // ott marad a valodi valtozatossag.
+  randomSeed(0xC0FFEE);
   Serial.println("SIM,aktiv,demo indul");
 }
 
