@@ -2180,255 +2180,93 @@ void Loopshoot() {
 /////////////////////////////////////////////////
 
 void Weed() {
-
+  static const uint8_t weedPin[4]   = { 11, 10, 9, 8 }; // d11, d10, d9, d8
+  static const uint8_t weedSound[4] = { 5, 39, 40, 41 };
+  static const uint8_t weedLed[4]   = { 29, 30, 31, 32 };
+  int* wsw[4]                = { &weedswitch1, &weedswitch2, &weedswitch3, &weedswitch4 };
+  boolean* whsw[4]           = { &weedhurryswitch1, &weedhurryswitch2, &weedhurryswitch3, &weedhurryswitch4 };
+  unsigned long* whtimer[4]  = { &weedhurrytimer1, &weedhurrytimer2, &weedhurrytimer3, &weedhurrytimer4 };
 
   if (hurryUp == LOW) {
-    /// Normal mode
-    if (SimDigitalRead(d11) == LOW && weedswitch1 == 0) {
-      weedswitch1 = 1;
-      Score(1000, 50);
-      wTrig.trackPlayPoly(5);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(d10) == LOW && weedswitch2 == 0) {
-      weedswitch2 = 1;
-      Score(1000, 50);
-      wTrig.trackPlayPoly(39);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(d9) == LOW && weedswitch3 == 0) {
-      weedswitch3 = 1;
-      Score(1000, 50);
-      wTrig.trackPlayPoly(40);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(d8) == LOW && weedswitch4 == 0) {
-      weedswitch4 = 1;
-      Score(1000, 50);
-      wTrig.trackPlayPoly(41);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
+    // Normal mod
+    for (uint8_t i = 0; i < 4; i++) {
+      if (SimDigitalRead(weedPin[i]) == LOW && *wsw[i] == 0) {
+        *wsw[i] = 1;
+        Score(1000, 50);
+        wTrig.trackPlayPoly(weedSound[i]);
+        if (giftsw == 1) { giftsw = 0; Gift(); }
       }
     }
   }
 
   if (hurryUp == HIGH) {
-    /// HurryUp mode
-    if (SimDigitalRead(d11) == LOW && weedhurryswitch1 == 0) {
-      weedhurryswitch1 = 1;
-      weedhurrytimer1 = millis();
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-      wTrig.trackPlayPoly(5);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
+    // HurryUp mod
+    for (uint8_t i = 0; i < 4; i++) {
+      if (SimDigitalRead(weedPin[i]) == LOW && *whsw[i] == 0) {
+        *whsw[i] = 1;
+        *whtimer[i] = millis();
+        effect = HIGH;
+        effectID = 6;
+        Score(2500, 100);
+        Serial.println("Point1");
+        delay(20);
+        wTrig.trackPlayPoly(weedSound[i]);
+        if (giftsw == 1) { giftsw = 0; Gift(); }
       }
     }
-    if (SimDigitalRead(d10) == LOW && weedhurryswitch2 == 0) {
-      weedhurryswitch2 = 1;
-      weedhurrytimer2 = millis();
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-      wTrig.trackPlayPoly(39);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
+    for (uint8_t i = 0; i < 4; i++) {
+      if (millis() - 350 > *whtimer[i]) {
+        *whsw[i] = 0;
       }
-    }
-    if (SimDigitalRead(d9) == LOW && weedhurryswitch3 == 0) {
-      weedhurryswitch3 = 1;
-      weedhurrytimer3 = millis();
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-      wTrig.trackPlayPoly(40);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(d8) == LOW && weedhurryswitch4 == 0) {
-      weedhurryswitch4 = 1;
-      weedhurrytimer4 = millis();
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-      wTrig.trackPlayPoly(41);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (millis() - 350 > weedhurrytimer1) {
-      weedhurryswitch1 = 0;
-    }
-    if (millis() - 350 > weedhurrytimer2) {
-      weedhurryswitch2 = 0;
-    }
-    if (millis() - 350 > weedhurrytimer3) {
-      weedhurryswitch3 = 0;
-    }
-    if (millis() - 350 > weedhurrytimer4) {
-      weedhurryswitch4 = 0;
     }
   }
 
-  /// Random gift
-  if (giftsw == 1 ) {
-    if (SimDigitalRead(d11) == LOW && weedswitch1 == 2) {
-      weedswitch1 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(5);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-    if (SimDigitalRead(d10) == LOW && weedswitch2 == 2) {
-      weedswitch2 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(39);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-    if (SimDigitalRead(d9) == LOW && weedswitch3 == 2) {
-      weedswitch3 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(40);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-    if (SimDigitalRead(d8) == LOW && weedswitch4 == 2) {
-      weedswitch4 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(41);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Serial.println("Point2");
-      giftsw = 3;
+  // Random gift: ha a sorsolt weed-celpont (== 2) talalodik el
+  if (giftsw == 1) {
+    for (uint8_t i = 0; i < 4; i++) {
+      if (SimDigitalRead(weedPin[i]) == LOW && *wsw[i] == 2) {
+        *wsw[i] = 1;
+        Score(5000, 100);
+        wTrig.trackPlayPoly(weedSound[i]);
+        wTrig.trackPlayPoly(36);
+        wTrig.trackPlayPoly(42);
+        Serial.println("Point2");
+        giftsw = 3;
+      }
     }
   }
 
-  /// End random gift
-
+  // Celpont-LED-ek
   if (effect == LOW) {
-    if (weedswitch1 == 1) {
-      leds[29] = CRGB::White; // C
-    }
-    if (weedswitch2 == 1) {
-      leds[30] = CRGB::White; // C
-    }
-    if (weedswitch3 == 1) {
-      leds[31] = CRGB::White; // C
-    }
-    if (weedswitch4 == 1) {
-      leds[32] = CRGB::White; // C
-    }
-    if (weedswitch1 == 0) {
-      leds[29] = CRGB::Black; // C
-    }
-    if (weedswitch2 == 0) {
-      leds[30] = CRGB::Black; // C
-    }
-    if (weedswitch3 == 0) {
-      leds[31] = CRGB::Black; // C
-    }
-    if (weedswitch4 == 0) {
-      leds[32] = CRGB::Black; // C
-    }
-
-
-    /// Random gift
-    if (giftsw == 1 ) {
-      if (weedswitch1 == 2) {
-        if (ledState == HIGH) {
-          leds[29] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[29] = CRGB::Yellow; // C
-        }
+    for (uint8_t i = 0; i < 4; i++) {
+      if (*wsw[i] == 1) {
+        leds[weedLed[i]] = CRGB::White;
       }
-      if (weedswitch2 == 2) {
-        if (ledState == HIGH) {
-          leds[30] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[30] = CRGB::Yellow; // C
-        }
+      if (*wsw[i] == 0) {
+        leds[weedLed[i]] = CRGB::Black;
       }
-      if (weedswitch3 == 2) {
-        if (ledState == HIGH) {
-          leds[31] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[31] = CRGB::Yellow; // C
-        }
-      }
-      if (weedswitch4 == 2) {
-        if (ledState == HIGH) {
-          leds[32] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[32] = CRGB::Yellow; // C
+    }
+    if (giftsw == 1) {
+      for (uint8_t i = 0; i < 4; i++) {
+        if (*wsw[i] == 2) {
+          leds[weedLed[i]] = (ledState == HIGH) ? CRGB::Green : CRGB::Yellow;
         }
       }
     }
-
   }
 
-  if (weedswitch1 == 1 && weedswitch2 == 1 && weedswitch3 == 1 && weedswitch4 == 1 && weedoff == 0) {
+  // WEED kigyujtve (mind a 4 celpont == 1) -> multiball-mero elesites + hang
+  if (*wsw[0] == 1 && *wsw[1] == 1 && *wsw[2] == 1 && *wsw[3] == 1 && weedoff == 0) {
     weedtimer = millis();
     weedoff = 1;
     effect = HIGH;
     effectID = 3;
     wTrig.trackPlayPoly(72);
     spsound = random(1, 5);
-    if (spsound == 1) {
-      wTrig.trackPlayPoly(67); // I love weed
-      Serial.println("Weed");
-      delay(10);
-    }
-    if (spsound == 2) {
-      wTrig.trackPlayPoly(66);
-      Serial.println("Weed");
-      delay(10);
-    }
-    if (spsound == 3) {
-        wTrig.trackPlayPoly(115);
-        Serial.println("Weed");
-        delay(10);
-    }
-    if (spsound == 4) {
-        wTrig.trackPlayPoly(116);
-        Serial.println("Weed");
-        delay(10);
-    }
-
+    static const uint8_t weedDoneSound[4] = { 67, 66, 115, 116 };
+    wTrig.trackPlayPoly(weedDoneSound[spsound - 1]);
+    Serial.println("Weed");
+    delay(10);
   }
 
   if (weedoff == 1) {
@@ -2441,20 +2279,9 @@ void Weed() {
 
     if (millis() - 1000 < weedtimer) {
       Blinktimer();
-      if (ledState == HIGH) {
-        leds[29] = CRGB::Green; // C
-        leds[30] = CRGB::Green; // C
-        leds[31] = CRGB::Green; // C
-        leds[32] = CRGB::Green; // C
+      for (uint8_t i = 0; i < 4; i++) {
+        leds[weedLed[i]] = (ledState == HIGH) ? CRGB::Green : CRGB::Yellow;
       }
-      if (ledState == LOW) {
-        leds[29] = CRGB::Yellow; // C
-        leds[30] = CRGB::Yellow; // C
-        leds[31] = CRGB::Yellow; // C
-        leds[32] = CRGB::Yellow; // C
-      }
-
-
     }
 
     if (millis() - 1100 > weedtimer) {
