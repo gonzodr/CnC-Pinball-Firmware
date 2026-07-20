@@ -33,6 +33,10 @@ T,score,p1,scr=1000,bns=500,tot=44840
 T,score,p1,scr=40000,bns=2000,tot=84840
 Ufo9
 Next
+T,speech,9
+T,score,p2,scr=200,bns=50,tot=410
+T,speech,54
+T,score,p2,scr=200,bns=50,tot=610
 End
 FLIPPER_LEFT
 FLIPPER_RIGHT
