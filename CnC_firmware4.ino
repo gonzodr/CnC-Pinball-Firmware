@@ -774,6 +774,7 @@ void loop() {
     BridgeHigh();
     HurryUp();
     Tilt();
+    GiftRunlight();   // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
     RunLightEffect(); // fenyeffekt-motor (d_light_effects.ino), effect == HIGH eseten fut
   }
 
@@ -2455,6 +2456,45 @@ void Fishtank() {
 //// End Fishtank Rutin
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
+
+/////////////////////////////////////////////////
+//// Gift-fazis futofeny
+/////////////////////////////////////////////////
+// Amig a gift aktiv (giftsw == 1) es nincs eppen nagy effekt, ket sarga,
+// halvanyulo fenycsova fut ki a weed kozepetol - balra a CnC fele, jobbra
+// a Fishtank fele. 1 mp sopres, majd 2 mp sotetseg (3 mp-es ciklus).
+// CSAK inaktiv (fekete) postra rajzol, igy a zolden villogo gift-postot
+// (es a mar meglott feher postokat) sosem irja felul.
+// FONTOS: a subsystem-kijelzok (Weed/CnC/Fishtank) UTAN kell hivni a loopban!
+void GiftRunlight() {
+  if (giftsw != 1 || effect != LOW) {
+    return;
+  }
+  unsigned long t = millis() % 3000;
+  if (t >= 1000) {
+    return; // 2 mp sotetseg (a postok feketen maradnak)
+  }
+
+  static const uint8_t trail1[] = { LED_WEED_E1, LED_WEED_W, LED_CNC_C1, LED_CNC_AMP, LED_CNC_C2 };
+  static const uint8_t trail2[] = { LED_WEED_E2, LED_WEED_D, LED_FISH, LED_TANK };
+  const uint8_t TAIL = 4; // csova-hossz LED-ben
+
+  for (uint8_t pass = 0; pass < 2; pass++) {
+    const uint8_t* trail = (pass == 0) ? trail1 : trail2;
+    uint8_t n = (pass == 0) ? sizeof(trail1) : sizeof(trail2);
+    // fejpozicio *16 fixpontban, 1000 ms alatt 0 -> (n+TAIL)
+    long head16 = (long)t * (n + TAIL) * 16 / 1000;
+    for (uint8_t i = 0; i < n; i++) {
+      long d16 = head16 - (long)i * 16; // tavolsag a fejtol, *16
+      if (d16 >= 0 && d16 < (long)TAIL * 16) {
+        uint8_t bri = 255 - (uint8_t)(d16 * 255 / (TAIL * 16)); // fejnel fenyes
+        if (leds[trail[i]] == CRGB::Black) { // csak inaktiv post
+          leds[trail[i]] = CHSV(HUE_YELLOW, 255, bri);
+        }
+      }
+    }
+  }
+}
 
 
 
