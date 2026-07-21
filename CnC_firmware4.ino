@@ -3167,39 +3167,14 @@ void UFOO() {
         delay(20);
       }
 
-      if (lottery  == 7) {
-        Score(40000, 2000);
-        Serial.println("Ufo9");
-        delay(20);
-      }
-
-      if (lottery  == 2) {
-        Score(5000, 100);
-        Serial.println("Ufo7");
-        delay(20);
-      }
-
-      if (lottery  == 3) {
-        Score(15000, 100);
-        Serial.println("Ufo1");
-        delay(20);
-      }
-
-      if (lottery  == 4) {
-        Score(20000, 150);
-        Serial.println("Ufo2");
-        delay(20);
-      }
-
-      if (lottery  == 5) {
-        Score(30000, 250);
-        Serial.println("Ufo4");
-        delay(20);
-      }
-
-      if (lottery  == 6) {
-        Score(25000, 250);
-        Serial.println("Ufo3");
+      // lottery 2..7: pontszam + video-trigger (a video-nevek szandekosan
+      // kevertek - a regi Unity-korszakbol, lasd VIDEO_MAP.md). Index = lottery-2.
+      if (lottery >= 2 && lottery <= 7) {
+        static const unsigned long lotScr[6] = { 5000, 15000, 20000, 30000, 25000, 40000 };
+        static const unsigned long lotBns[6] = {  100,   100,   150,   250,   250,  2000 };
+        static const char* const   lotVid[6] = { "Ufo7", "Ufo1", "Ufo2", "Ufo4", "Ufo3", "Ufo9" };
+        Score(lotScr[lottery - 2], lotBns[lottery - 2]);
+        Serial.println(lotVid[lottery - 2]);
         delay(20);
       }
 
