@@ -50,6 +50,69 @@ int simForceLottery = 0; // a kovetkezo UFO-lotto kenyszeritett erteke (7 = Spac
 //////////////////////////////////////////////////////////////////////
 
 #define NUM_LEDS 115
+
+// --- LED-index nevek (az Initlights() autoritativ terkepebol) ---
+#define LED_DAVE_V               2
+#define LED_DAVE_E               3
+#define LED_BONUS_X8             6
+#define LED_BONUS_X6             7
+#define LED_BALLSAVE             8
+#define LED_BONUS_X4             9
+#define LED_BONUS_X2             10
+#define LED_DAVE_A               15
+#define LED_DAVE_D               16
+#define LED_CNC_AMBIENT          17
+#define LED_CNC_C1               18
+#define LED_CNC_AMP              19
+#define LED_CNC_C2               20
+#define LED_LEFT_LOOP_1          21
+#define LED_LEFT_LOOP_2          22
+#define LED_LEFT_RAMP_AMBIENT    23
+#define LED_LEFT_RAMP_1          24
+#define LED_LEFT_RAMP_2          25
+#define LED_CHONG_IND            26
+#define LED_GET_HIGH_1           27
+#define LED_GET_HIGH_2           28
+#define LED_WEED_W               29
+#define LED_WEED_E1              30
+#define LED_WEED_E2              31
+#define LED_WEED_D               32
+#define LED_CHEECH_IND           33
+#define LED_RRAMP_ARROW_22       34
+#define LED_RRAMP_ARROW_21       35
+#define LED_RRAMP_ARROW_12       36
+#define LED_RRAMP_ARROW_11       37
+#define LED_CHEECH_WHEEL         38
+#define LED_CHONG_PIPE           39
+#define LED_CHONG_ROACH          40
+#define LED_CHEECH_CIGAR         41
+#define LED_UFO_ARROW_1          42
+#define LED_UFO_ARROW_2          43
+#define LED_RIGHT_LOOP_2         44
+#define LED_RIGHT_LOOP_1         45
+#define LED_MUF_DVR              46
+#define LED_CHONG_KEY            47
+#define LED_FISH                 48
+#define LED_TANK                 49
+#define LED_FISHTANK_AMBIENT     50
+#define LED_RIGHT_RAMP_AMBIENT   51
+#define LED_GATE3_AMBIENT        52
+#define LED_GATE3                53
+#define LED_GATE32_AMBIENT       54
+#define LED_GATE2                55
+#define LED_GATE21_AMBIENT       56
+#define LED_GATE1                57
+#define LED_GATE1_AMBIENT        58
+#define LED_MICHOAKAN            59
+#define LED_ACAPULCO             60
+#define LED_HIGHTABLE_FLASHER    61
+#define LED_THAI                 62
+#define LED_LABRADOR             63
+#define LED_POP1                 64
+#define LED_POP2                 65
+#define LED_POP3                 66
+#define LED_CAR_AMBIENT          67
+
 #define DATA_PIN 3
 #define BRIGHTNESS  64
 #define LED_TYPE    WS2812B
@@ -1019,10 +1082,10 @@ void Ballsave() {
   if (ballsaversw == HIGH && ballsavetimer != 0 && millis() - ballsavetimer < (unsigned long)ballsavetime) {
     Blinktimer();
     if (ledState == LOW) {
-      leds[8] = CRGB::Black; // x4
+      leds[LED_BALLSAVE] = CRGB::Black; // x4
     }
     if (ledState == HIGH) {
-      leds[8] = CRGB::Red; // x4
+      leds[LED_BALLSAVE] = CRGB::Red; // x4
     }
   }
   else {
@@ -1032,7 +1095,7 @@ void Ballsave() {
     sidelaneBallsaverSw = LOW;
   }
   if (ballsaversw == LOW) {
-    leds[8] = CRGB::Black; // x4
+    leds[LED_BALLSAVE] = CRGB::Black; // x4
   }
 }
 
@@ -1694,72 +1757,72 @@ void Initlights() {
   if (initlight == 1) {
     leds[0] = CRGB::White;
     leds[1] = CRGB::White;
-    //leds[2] = CRGB::Black; // V
-    //leds[3] = CRGB::Black; // E
+    //leds[LED_DAVE_V] = CRGB::Black; // V
+    //leds[LED_DAVE_E] = CRGB::Black; // E
     leds[4] = CRGB::White;
     leds[5] = CRGB::White;
-    //leds[6] = CRGB::Black; // x8
-    //leds[7] = CRGB::Black; // x6
-    //leds[8] = CRGB::Black; // Ballsave
-    //leds[9] = CRGB::Black; // x4
-    //leds[10] = CRGB::Black; // x2
+    //leds[LED_BONUS_X8] = CRGB::Black; // x8
+    //leds[LED_BONUS_X6] = CRGB::Black; // x6
+    //leds[LED_BALLSAVE] = CRGB::Black; // Ballsave
+    //leds[LED_BONUS_X4] = CRGB::Black; // x4
+    //leds[LED_BONUS_X2] = CRGB::Black; // x2
     leds[11] = CRGB::White;
     leds[12] = CRGB::White;
     leds[13] = CRGB::White;
     leds[14] = CRGB::White;
-    //leds[15] = CRGB::Black; // A
-    //leds[16] = CRGB::Black; // D
-    leds[17] = CRGB::White; // CnC ambient
-    //leds[18] = CRGB::Black; // C
-    //leds[19] = CRGB::Black; // &
-    //leds[20] = CRGB::Black; // C
-    leds[21] = CRGB::Black; // Left loop
-    leds[22] = CRGB::Black; // Left loop
-    leds[23] = CRGB::White; // Left ramp ambient
-    leds[24] = CRGB::Black; // Left ramp
-    leds[25] = CRGB::Black; // Left ramp
-    leds[26] = CRGB::Black; // Chong indicator
-    leds[27] = CRGB::Black; // Get High
-    leds[28] = CRGB::Black; // Get high
-    //leds[29] = CRGB::Black; // W
-    //leds[30] = CRGB::Black; // E
-    //leds[31] = CRGB::Black; // E
-    //leds[32] = CRGB::Black; // D
-    leds[33] = CRGB::Black; // Cheech indicator
-    leds[34] = CRGB::Black; // Right ramp arrow 2/2
-    leds[35] = CRGB::Black; // Right ramp arrow 2/1
-    leds[36] = CRGB::Black; // Right ramp arrow 1/1
-    leds[37] = CRGB::Black; // Right ramp arrow 1/1
-    //leds[38] = CRGB::Orange; // Cheech wheel
-    //leds[39] = CRGB::Orange; // Chong Pipe
-    //leds[40] = CRGB::Orange; // Chong Cockroach
-    //leds[41] = CRGB::Orange; // Cheech cigar
-    leds[42] = CRGB::Black; // UFO arrow 1
-    leds[43] = CRGB::Black; // UFO arrow 2
-    leds[44] = CRGB::Black; // Right loop 2
-    leds[45] = CRGB::Black; // Right loop 1
-    //leds[46] = CRGB::Orange; // MUF dvr
-    //leds[47] = CRGB::Orange; // Chong plunger key
-    leds[48] = CRGB::Black; // Fish
-    leds[49] = CRGB::Black; // Tank
-    leds[50] = CRGB::White; // Fishtank ambient
-    leds[51] = CRGB::White; // Right ramp ambient
-    leds[52] = CRGB::Green; // Gate 3 ambient
-    leds[53] = CRGB::Black; // Gate 3
-    leds[54] = CRGB::Green; // Gate 32 ambient
-    leds[55] = CRGB::White; // Gate 2
-    leds[56] = CRGB::Green; // Gate 21 ambient
-    leds[57] = CRGB::Black; // Gate 1
-    leds[58] = CRGB::Green; // Gate 1 ambient
-    leds[59] = CRGB::Gray; // Michoakan
-    leds[60] = CRGB::Gray; // Acapulco Gold
-    leds[61] = CRGB::Gray; // Hightable flasher
-    leds[62] = CRGB::Gray; // Thai stick
-    leds[63] = CRGB::Gray; // Labrador
-    leds[64] = CRGB::Blue; // Pop1
-    leds[65] = CRGB::Blue; // Pop2
-    leds[66] = CRGB::Blue; // Pop3
-    leds[67] = CRGB::Yellow; // Car ambient
+    //leds[LED_DAVE_A] = CRGB::Black; // A
+    //leds[LED_DAVE_D] = CRGB::Black; // D
+    leds[LED_CNC_AMBIENT] = CRGB::White; // CnC ambient
+    //leds[LED_CNC_C1] = CRGB::Black; // C
+    //leds[LED_CNC_AMP] = CRGB::Black; // &
+    //leds[LED_CNC_C2] = CRGB::Black; // C
+    leds[LED_LEFT_LOOP_1] = CRGB::Black; // Left loop
+    leds[LED_LEFT_LOOP_2] = CRGB::Black; // Left loop
+    leds[LED_LEFT_RAMP_AMBIENT] = CRGB::White; // Left ramp ambient
+    leds[LED_LEFT_RAMP_1] = CRGB::Black; // Left ramp
+    leds[LED_LEFT_RAMP_2] = CRGB::Black; // Left ramp
+    leds[LED_CHONG_IND] = CRGB::Black; // Chong indicator
+    leds[LED_GET_HIGH_1] = CRGB::Black; // Get High
+    leds[LED_GET_HIGH_2] = CRGB::Black; // Get high
+    //leds[LED_WEED_W] = CRGB::Black; // W
+    //leds[LED_WEED_E1] = CRGB::Black; // E
+    //leds[LED_WEED_E2] = CRGB::Black; // E
+    //leds[LED_WEED_D] = CRGB::Black; // D
+    leds[LED_CHEECH_IND] = CRGB::Black; // Cheech indicator
+    leds[LED_RRAMP_ARROW_22] = CRGB::Black; // Right ramp arrow 2/2
+    leds[LED_RRAMP_ARROW_21] = CRGB::Black; // Right ramp arrow 2/1
+    leds[LED_RRAMP_ARROW_12] = CRGB::Black; // Right ramp arrow 1/1
+    leds[LED_RRAMP_ARROW_11] = CRGB::Black; // Right ramp arrow 1/1
+    //leds[LED_CHEECH_WHEEL] = CRGB::Orange; // Cheech wheel
+    //leds[LED_CHONG_PIPE] = CRGB::Orange; // Chong Pipe
+    //leds[LED_CHONG_ROACH] = CRGB::Orange; // Chong Cockroach
+    //leds[LED_CHEECH_CIGAR] = CRGB::Orange; // Cheech cigar
+    leds[LED_UFO_ARROW_1] = CRGB::Black; // UFO arrow 1
+    leds[LED_UFO_ARROW_2] = CRGB::Black; // UFO arrow 2
+    leds[LED_RIGHT_LOOP_2] = CRGB::Black; // Right loop 2
+    leds[LED_RIGHT_LOOP_1] = CRGB::Black; // Right loop 1
+    //leds[LED_MUF_DVR] = CRGB::Orange; // MUF dvr
+    //leds[LED_CHONG_KEY] = CRGB::Orange; // Chong plunger key
+    leds[LED_FISH] = CRGB::Black; // Fish
+    leds[LED_TANK] = CRGB::Black; // Tank
+    leds[LED_FISHTANK_AMBIENT] = CRGB::White; // Fishtank ambient
+    leds[LED_RIGHT_RAMP_AMBIENT] = CRGB::White; // Right ramp ambient
+    leds[LED_GATE3_AMBIENT] = CRGB::Green; // Gate 3 ambient
+    leds[LED_GATE3] = CRGB::Black; // Gate 3
+    leds[LED_GATE32_AMBIENT] = CRGB::Green; // Gate 32 ambient
+    leds[LED_GATE2] = CRGB::White; // Gate 2
+    leds[LED_GATE21_AMBIENT] = CRGB::Green; // Gate 21 ambient
+    leds[LED_GATE1] = CRGB::Black; // Gate 1
+    leds[LED_GATE1_AMBIENT] = CRGB::Green; // Gate 1 ambient
+    leds[LED_MICHOAKAN] = CRGB::Gray; // Michoakan
+    leds[LED_ACAPULCO] = CRGB::Gray; // Acapulco Gold
+    leds[LED_HIGHTABLE_FLASHER] = CRGB::Gray; // Hightable flasher
+    leds[LED_THAI] = CRGB::Gray; // Thai stick
+    leds[LED_LABRADOR] = CRGB::Gray; // Labrador
+    leds[LED_POP1] = CRGB::Blue; // Pop1
+    leds[LED_POP2] = CRGB::Blue; // Pop2
+    leds[LED_POP3] = CRGB::Blue; // Pop3
+    leds[LED_CAR_AMBIENT] = CRGB::Yellow; // Car ambient
     fasz = 68;
     currentPalette = RainbowColors_p;
     initlight = 0;
@@ -1909,10 +1972,10 @@ void CnC() {
   if (SimDigitalRead(cncLetterC3rd) == HIGH) {
     Blinktimer();
     if (effect == LOW) {
-      leds[18] = CRGB::Yellow;
+      leds[LED_CNC_C1] = CRGB::Yellow;
     }
     if (ledState == LOW) {
-      leds[18] = CRGB::Black;
+      leds[LED_CNC_C1] = CRGB::Black;
     }
   }
 
@@ -2008,14 +2071,14 @@ void CnC() {
     if (millis() - 1000 < cnctimer) {
       Blinktimer();
       if (ledState == HIGH) {
-        leds[18] = CRGB::Green; // C
-        leds[19] = CRGB::Green; // C
-        leds[20] = CRGB::Green; // C
+        leds[LED_CNC_C1] = CRGB::Green; // C
+        leds[LED_CNC_AMP] = CRGB::Green; // C
+        leds[LED_CNC_C2] = CRGB::Green; // C
       }
       if (ledState == LOW) {
-        leds[18] = CRGB::Yellow; // C
-        leds[19] = CRGB::Yellow; // C
-        leds[20] = CRGB::Yellow; // C
+        leds[LED_CNC_C1] = CRGB::Yellow; // C
+        leds[LED_CNC_AMP] = CRGB::Yellow; // C
+        leds[LED_CNC_C2] = CRGB::Yellow; // C
       }
 
 
@@ -2073,17 +2136,17 @@ void Loopshoot() {
   }
   if (multiloopsw == 1) {
     if (ledState == HIGH) {
-      leds[21] = CRGB::Red; // Left loop
-      leds[22] = CRGB::Yellow; // Left loop
+      leds[LED_LEFT_LOOP_1] = CRGB::Red; // Left loop
+      leds[LED_LEFT_LOOP_2] = CRGB::Yellow; // Left loop
     }
     if (ledState == LOW) {
-      leds[21] = CRGB::Yellow; // Left loop
-      leds[22] = CRGB::Red; // Left loop
+      leds[LED_LEFT_LOOP_1] = CRGB::Yellow; // Left loop
+      leds[LED_LEFT_LOOP_2] = CRGB::Red; // Left loop
     }
   }
   if (multiloopsw == 0) {
-    leds[21] = CRGB::Black; // Left loop
-    leds[22] = CRGB::Black; // Left loop
+    leds[LED_LEFT_LOOP_1] = CRGB::Black; // Left loop
+    leds[LED_LEFT_LOOP_2] = CRGB::Black; // Left loop
   }
 }
 
@@ -2298,33 +2361,33 @@ void Fishtank() {
 
   if (effect == LOW) {
     if (fishTankLightState1 == 1) {
-      leds[48] = CRGB::White; // C
+      leds[LED_FISH] = CRGB::White; // C
     }
     if (fishTankLightState2 == 1) {
-      leds[49] = CRGB::White; // C
+      leds[LED_TANK] = CRGB::White; // C
     }
 
     if (fishTankLightState1 == 0) {
-      leds[48] = CRGB::Black; // C
+      leds[LED_FISH] = CRGB::Black; // C
     }
     if (fishTankLightState2 == 0) {
-      leds[49] = CRGB::Black; // C
+      leds[LED_TANK] = CRGB::Black; // C
     }
     if (giftsw == 1 ) {
       if (fishTankLightState1 == 2) {
         if (ledState == HIGH) {
-          leds[48] = CRGB::Green; // C
+          leds[LED_FISH] = CRGB::Green; // C
         }
         if (ledState == LOW) {
-          leds[48] = CRGB::Yellow; // C
+          leds[LED_FISH] = CRGB::Yellow; // C
         }
       }
       if (fishTankLightState2 == 2) {
         if (ledState == HIGH) {
-          leds[49] = CRGB::Green; // C
+          leds[LED_TANK] = CRGB::Green; // C
         }
         if (ledState == LOW) {
-          leds[49] = CRGB::Yellow; // C
+          leds[LED_TANK] = CRGB::Yellow; // C
         }
       }
     }
@@ -2353,12 +2416,12 @@ void Fishtank() {
     if (millis() - 1000 < fishtimer) {
       Blinktimer();
       if (ledState == HIGH) {
-        leds[48] = CRGB::Green; // C
-        leds[49] = CRGB::Green; // C
+        leds[LED_FISH] = CRGB::Green; // C
+        leds[LED_TANK] = CRGB::Green; // C
       }
       if (ledState == LOW) {
-        leds[48] = CRGB::Yellow; // C
-        leds[49] = CRGB::Yellow; // C
+        leds[LED_FISH] = CRGB::Yellow; // C
+        leds[LED_TANK] = CRGB::Yellow; // C
       }
 
     }
@@ -2423,28 +2486,28 @@ void Dave_switch() {
 
   if (effect == LOW) {
     if (davearr[1] == 1) {
-      leds[16] = CRGB::White; // D
+      leds[LED_DAVE_D] = CRGB::White; // D
     }
     if (davearr[2] == 1) {
-      leds[15] = CRGB::White; // A
+      leds[LED_DAVE_A] = CRGB::White; // A
     }
     if (davearr[3] == 1) {
-      leds[2] = CRGB::White; // D
+      leds[LED_DAVE_V] = CRGB::White; // D
     }
     if (davearr[4] == 1) {
-      leds[3] = CRGB::White; // D
+      leds[LED_DAVE_E] = CRGB::White; // D
     }
     if (davearr[1] == 0) {
-      leds[16] = CRGB::Black; // D
+      leds[LED_DAVE_D] = CRGB::Black; // D
     }
     if (davearr[2] == 0) {
-      leds[15] = CRGB::Black; // A
+      leds[LED_DAVE_A] = CRGB::Black; // A
     }
     if (davearr[3] == 0) {
-      leds[2] = CRGB::Black; // D
+      leds[LED_DAVE_V] = CRGB::Black; // D
     }
     if (davearr[4] == 0) {
-      leds[3] = CRGB::Black; // D
+      leds[LED_DAVE_E] = CRGB::Black; // D
     }
   }
 
@@ -2499,16 +2562,16 @@ void Dave_switch() {
     if (millis() - 1000 < davetimer) {
       Blinktimer();
       if (ledState == HIGH) {
-        leds[16] = CRGB::White; // D
-        leds[15] = CRGB::White; // A
-        leds[2] = CRGB::White; // D
-        leds[3] = CRGB::White; // D
+        leds[LED_DAVE_D] = CRGB::White; // D
+        leds[LED_DAVE_A] = CRGB::White; // A
+        leds[LED_DAVE_V] = CRGB::White; // D
+        leds[LED_DAVE_E] = CRGB::White; // D
       }
       if (ledState == LOW) {
-        leds[16] = CRGB::Black; // D
-        leds[15] = CRGB::Black; // A
-        leds[2] = CRGB::Black; // D
-        leds[3] = CRGB::Black; // D
+        leds[LED_DAVE_D] = CRGB::Black; // D
+        leds[LED_DAVE_A] = CRGB::Black; // A
+        leds[LED_DAVE_V] = CRGB::Black; // D
+        leds[LED_DAVE_E] = CRGB::Black; // D
       }
 
     }
@@ -2609,63 +2672,63 @@ void Gate() {
   // Gateamb
   if (effect == LOW) {
     if (gateamb1 == HIGH ) {
-      leds[56] = CRGB::Orange; // D
-      leds[58] = CRGB::Orange; // D
+      leds[LED_GATE21_AMBIENT] = CRGB::Orange; // D
+      leds[LED_GATE1_AMBIENT] = CRGB::Orange; // D
     }
     else if (millis() - 1000 > gateambtimer) {
-      leds[56] = CRGB::Green; // D
-      leds[58] = CRGB::Green; // D
+      leds[LED_GATE21_AMBIENT] = CRGB::Green; // D
+      leds[LED_GATE1_AMBIENT] = CRGB::Green; // D
     }
     if (gateamb2 == HIGH ) {
-      leds[56] = CRGB::Orange; // D
-      leds[54] = CRGB::Orange; // D
+      leds[LED_GATE21_AMBIENT] = CRGB::Orange; // D
+      leds[LED_GATE32_AMBIENT] = CRGB::Orange; // D
     }
     else if (millis() - 1000 > gateambtimer) {
-      leds[56] = CRGB::Green; // D
-      leds[54] = CRGB::Green; // D
+      leds[LED_GATE21_AMBIENT] = CRGB::Green; // D
+      leds[LED_GATE32_AMBIENT] = CRGB::Green; // D
     }
     if (gateamb3 == HIGH ) {
-      leds[54] = CRGB::Orange; // D
-      leds[52] = CRGB::Orange; // D
+      leds[LED_GATE32_AMBIENT] = CRGB::Orange; // D
+      leds[LED_GATE3_AMBIENT] = CRGB::Orange; // D
     }
     else if (millis() - 1000 > gateambtimer) {
-      leds[54] = CRGB::Green; // D
-      leds[52] = CRGB::Green; // D
+      leds[LED_GATE32_AMBIENT] = CRGB::Green; // D
+      leds[LED_GATE3_AMBIENT] = CRGB::Green; // D
     }
   }
 
   if (effect == LOW) {
     if (gatearr[1] == 1) {
-      leds[57] = CRGB::White; // D
+      leds[LED_GATE1] = CRGB::White; // D
     }
     if (gatearr[2] == 1) {
-      leds[55] = CRGB::White; // A
+      leds[LED_GATE2] = CRGB::White; // A
     }
     if (gatearr[3] == 1) {
-      leds[53] = CRGB::White; // D
+      leds[LED_GATE3] = CRGB::White; // D
     }
 
 
     if (gatearr[1] == 2) {
-      leds[57] = CRGB::Orange; // D
+      leds[LED_GATE1] = CRGB::Orange; // D
     }
     if (gatearr[2] == 2) {
-      leds[55] = CRGB::Orange; // A
+      leds[LED_GATE2] = CRGB::Orange; // A
     }
     if (gatearr[3] == 2) {
-      leds[53] = CRGB::Orange; // D
+      leds[LED_GATE3] = CRGB::Orange; // D
     }
 
 
 
     if (gatearr[1] == 0) {
-      leds[57] = CRGB::Black; // D
+      leds[LED_GATE1] = CRGB::Black; // D
     }
     if (gatearr[2] == 0) {
-      leds[55] = CRGB::Black; // A
+      leds[LED_GATE2] = CRGB::Black; // A
     }
     if (gatearr[3] == 0) {
-      leds[53] = CRGB::Black; // D
+      leds[LED_GATE3] = CRGB::Black; // D
     }
   }
 
@@ -2678,14 +2741,14 @@ void Gate() {
   if (gateoffsw == 1 && millis() - 1000 < gateofftimer) {
     Blinktimer();
     if (ledState == LOW) {
-      leds[57] = CRGB::Black; // D
-      leds[55] = CRGB::Black; // A
-      leds[53] = CRGB::Black; // D
+      leds[LED_GATE1] = CRGB::Black; // D
+      leds[LED_GATE2] = CRGB::Black; // A
+      leds[LED_GATE3] = CRGB::Black; // D
     }
     if (ledState == HIGH) {
-      leds[57] = CRGB::Red; // D
-      leds[55] = CRGB::Red; // A
-      leds[53] = CRGB::Red; // D
+      leds[LED_GATE1] = CRGB::Red; // D
+      leds[LED_GATE2] = CRGB::Red; // A
+      leds[LED_GATE3] = CRGB::Red; // D
     }
 
   }
@@ -2695,9 +2758,9 @@ void Gate() {
 
   if (gateoffsw == 1 && millis() - 1000 > gateofftimer) {
 
-    leds[57] = CRGB::Black; // D
-    leds[55] = CRGB::Black; // A
-    leds[53] = CRGB::Black; // D
+    leds[LED_GATE1] = CRGB::Black; // D
+    leds[LED_GATE2] = CRGB::Black; // A
+    leds[LED_GATE3] = CRGB::Black; // D
     gatearr[1] = 0;
     gatearr[2] = 0;
     gatearr[3] = 0;
@@ -2817,10 +2880,10 @@ void Pops() {
 
 void BonusXLed() {
   if (bonusx == 0) {
-    leds[6] = CRGB::Black; // x8
-    leds[7] = CRGB::Black; // x6
-    leds[9] = CRGB::Black; // x4
-    leds[10] = CRGB::Black; // x2
+    leds[LED_BONUS_X8] = CRGB::Black; // x8
+    leds[LED_BONUS_X6] = CRGB::Black; // x6
+    leds[LED_BONUS_X4] = CRGB::Black; // x4
+    leds[LED_BONUS_X2] = CRGB::Black; // x2
   }
   // Uj bonusx-szint elerese -> egyszeri hang + "BonusN" trigger.
   // (A lentebbi kijelzo-blokkok szandekosan valtozatlanok: tobb szint-sw
@@ -2845,25 +2908,25 @@ void BonusXLed() {
   if (bonusx1sw == 1 && millis() - 1000 < bonusxtimer1) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
     if (ledState == LOW) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::Black; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::Black; // x2
     }
 
   }
   if (effect == LOW) {
     if (bonusx1sw == 1 && millis() - 1000 > bonusxtimer1) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
   }
 
@@ -2871,77 +2934,77 @@ void BonusXLed() {
   if (bonusx2sw == 1 && millis() - 1000 < bonusxtimer2) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
     if (ledState == LOW) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::Black; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::Black; // x2
     }
 
   }
   if (effect == LOW) {
     if (bonusx2sw == 1 && millis() - 1000 > bonusxtimer2) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
   }
 
   if (bonusx3sw == 1 && millis() - 1000 < bonusxtimer3) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::White; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::White; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
     if (ledState == LOW) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::Black; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::Black; // x2
     }
 
   }
 
   if (effect == LOW) {
     if (bonusx3sw == 1 && millis() - 1000 > bonusxtimer3) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::White; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::White; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
   }
 
   if (bonusx4sw == 1 && millis() - 1000 < bonusxtimer4) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[6] = CRGB::White; // x8
-      leds[7] = CRGB::White; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::White; // x8
+      leds[LED_BONUS_X6] = CRGB::White; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
     if (ledState == LOW) {
-      leds[6] = CRGB::Black; // x8
-      leds[7] = CRGB::Black; // x6
-      leds[9] = CRGB::Black; // x4
-      leds[10] = CRGB::Black; // x2
+      leds[LED_BONUS_X8] = CRGB::Black; // x8
+      leds[LED_BONUS_X6] = CRGB::Black; // x6
+      leds[LED_BONUS_X4] = CRGB::Black; // x4
+      leds[LED_BONUS_X2] = CRGB::Black; // x2
     }
 
   }
 
   if (effect == LOW) {
     if (bonusx4sw == 1 && millis() - 1000 > bonusxtimer4) {
-      leds[6] = CRGB::White; // x8
-      leds[7] = CRGB::White; // x6
-      leds[9] = CRGB::White; // x4
-      leds[10] = CRGB::White; // x2
+      leds[LED_BONUS_X8] = CRGB::White; // x8
+      leds[LED_BONUS_X6] = CRGB::White; // x6
+      leds[LED_BONUS_X4] = CRGB::White; // x4
+      leds[LED_BONUS_X2] = CRGB::White; // x2
     }
   }
 
@@ -3031,30 +3094,30 @@ void Weedspinner() {
   if (spinnersw == 1) {
     Blinktimer();
     if (ledState ==  HIGH) {
-      leds[27] = CRGB::Green; // Get High
-      leds[28] = CRGB::Orange; // Get high
+      leds[LED_GET_HIGH_1] = CRGB::Green; // Get High
+      leds[LED_GET_HIGH_2] = CRGB::Orange; // Get high
     }
     if (ledState ==  LOW) {
-      leds[27] = CRGB::Orange; // Get High
-      leds[28] = CRGB::Green; // Get high
+      leds[LED_GET_HIGH_1] = CRGB::Orange; // Get High
+      leds[LED_GET_HIGH_2] = CRGB::Green; // Get high
     }
   }
 
   if (spinnersw == 2) {
     Blinktimer();
     if (ledState ==  HIGH) {
-      leds[27] = CRGB::Red; // Get High
-      leds[28] = CRGB::Black; // Get high
+      leds[LED_GET_HIGH_1] = CRGB::Red; // Get High
+      leds[LED_GET_HIGH_2] = CRGB::Black; // Get high
     }
     if (ledState ==  LOW) {
-      leds[27] = CRGB::Black; // Get High
-      leds[28] = CRGB::Pink; // Get high
+      leds[LED_GET_HIGH_1] = CRGB::Black; // Get High
+      leds[LED_GET_HIGH_2] = CRGB::Pink; // Get high
     }
   }
 
   if (spinnersw == 0) {
-    leds[27] = CRGB::Black; // Get High
-    leds[28] = CRGB::Black; // Get high
+    leds[LED_GET_HIGH_1] = CRGB::Black; // Get High
+    leds[LED_GET_HIGH_2] = CRGB::Black; // Get high
   }
 
   if (cigar > 0 && cigarState == HIGH && cigartime + 1000 < millis()) {
@@ -3064,16 +3127,16 @@ void Weedspinner() {
 
   if (weedtableindicator == HIGH && millis() - 1000 < weedtableindicatortimer) {
     if (ledState == HIGH) {
-      leds[61] = CRGB::Red; // Hightable flasher
+      leds[LED_HIGHTABLE_FLASHER] = CRGB::Red; // Hightable flasher
 
     }
     else {
-      leds[61] = CRGB::Green; // Hightable flasher
+      leds[LED_HIGHTABLE_FLASHER] = CRGB::Green; // Hightable flasher
 
     }
   }
   else {
-    leds[61] = CRGB::Gray; // Hightable flasher
+    leds[LED_HIGHTABLE_FLASHER] = CRGB::Gray; // Hightable flasher
 
   }
 
@@ -3371,12 +3434,12 @@ void UFOO() {
   if (ufosw == 1) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[42] = CRGB::Green; // C
-      leds[43] = CRGB::Black; // C
+      leds[LED_UFO_ARROW_1] = CRGB::Green; // C
+      leds[LED_UFO_ARROW_2] = CRGB::Black; // C
     }
     if (ledState == LOW) {
-      leds[42] = CRGB::Black; // C
-      leds[43] = CRGB::Green; // C
+      leds[LED_UFO_ARROW_1] = CRGB::Black; // C
+      leds[LED_UFO_ARROW_2] = CRGB::Green; // C
     }
 
   }
@@ -3460,15 +3523,15 @@ void Chong_switch() {
   if (chongLightActiveSw == HIGH) {
       Blinktimer();
       if (ledState == HIGH) {
-      leds[26] = CRGB::Red; // C
+      leds[LED_CHONG_IND] = CRGB::Red; // C
     }
     if (ledState == LOW) {
-      leds[26] = CRGB::Yellow; // C
+      leds[LED_CHONG_IND] = CRGB::Yellow; // C
     }
   }
   if (chongLightActiveSw == LOW) {
-          leds[26] = CRGB::Black; // C
-          leds[33] = CRGB::Black; // C
+          leds[LED_CHONG_IND] = CRGB::Black; // C
+          leds[LED_CHEECH_IND] = CRGB::Black; // C
   }
 
 }
@@ -3544,15 +3607,15 @@ void Cheech_switch() {
   if (cheechLightActiveSw == HIGH) {
     Blinktimer();
     if (ledState == HIGH) {
-      leds[33] = CRGB::Yellow; // C
+      leds[LED_CHEECH_IND] = CRGB::Yellow; // C
     }
     if (ledState == LOW) {
-      leds[33] = CRGB::Red; // C
+      leds[LED_CHEECH_IND] = CRGB::Red; // C
     }
   }
   if (cheechLightActiveSw == LOW) {
-      leds[26] = CRGB::Black; // C
-      leds[33] = CRGB::Black; // C
+      leds[LED_CHONG_IND] = CRGB::Black; // C
+      leds[LED_CHEECH_IND] = CRGB::Black; // C
   }
 }
 /////////////////////////////////////////////////
@@ -3568,62 +3631,62 @@ void Cheech_switch() {
 /////////////////////////////////////////////////
 void Collectives() {
   if (cheechCollectives[player] == 0) {
-    leds[38] = CRGB::Orange; // Cheech wheel
-    leds[41] = CRGB::Orange; // Cheech cigar
-    leds[46] = CRGB::Orange; // MUF dvr
+    leds[LED_CHEECH_WHEEL] = CRGB::Orange; // Cheech wheel
+    leds[LED_CHEECH_CIGAR] = CRGB::Orange; // Cheech cigar
+    leds[LED_MUF_DVR] = CRGB::Orange; // MUF dvr
   }
   if (chongCollectives[player] == 0) {
-    leds[39] = CRGB::Orange; // Chong Pipe
-    leds[40] = CRGB::Orange; // Chong Cockroach
-    leds[47] = CRGB::Orange; // Chong plunger key
+    leds[LED_CHONG_PIPE] = CRGB::Orange; // Chong Pipe
+    leds[LED_CHONG_ROACH] = CRGB::Orange; // Chong Cockroach
+    leds[LED_CHONG_KEY] = CRGB::Orange; // Chong plunger key
   }
   if (cheechCollectives[player] == 1) {
-    leds[38] = CRGB::White; // Cheech wheel
-    leds[41] = CRGB::Orange; // Cheech cigar
-    leds[46] = CRGB::Orange; // MUF dvr
+    leds[LED_CHEECH_WHEEL] = CRGB::White; // Cheech wheel
+    leds[LED_CHEECH_CIGAR] = CRGB::Orange; // Cheech cigar
+    leds[LED_MUF_DVR] = CRGB::Orange; // MUF dvr
   }
   if (chongCollectives[player] == 1) {
-    leds[39] = CRGB::White; // Chong Pipe
-    leds[40] = CRGB::Orange; // Chong Cockroach
-    leds[47] = CRGB::Orange; // Chong plunger key
+    leds[LED_CHONG_PIPE] = CRGB::White; // Chong Pipe
+    leds[LED_CHONG_ROACH] = CRGB::Orange; // Chong Cockroach
+    leds[LED_CHONG_KEY] = CRGB::Orange; // Chong plunger key
   }
   if (cheechCollectives[player] == 2) {
-    leds[38] = CRGB::White; // Cheech wheel
-    leds[41] = CRGB::White; // Cheech cigar
-    leds[46] = CRGB::Orange; // MUF dvr
+    leds[LED_CHEECH_WHEEL] = CRGB::White; // Cheech wheel
+    leds[LED_CHEECH_CIGAR] = CRGB::White; // Cheech cigar
+    leds[LED_MUF_DVR] = CRGB::Orange; // MUF dvr
   }
   if (chongCollectives[player] == 2) {
-    leds[39] = CRGB::White; // Chong Pipe
-    leds[40] = CRGB::White; // Chong Cockroach
-    leds[47] = CRGB::Orange; // Chong plunger key
+    leds[LED_CHONG_PIPE] = CRGB::White; // Chong Pipe
+    leds[LED_CHONG_ROACH] = CRGB::White; // Chong Cockroach
+    leds[LED_CHONG_KEY] = CRGB::Orange; // Chong plunger key
   }
   if (cheechCollectives[player] == 3) {
-    leds[38] = CRGB::White; // Cheech wheel
-    leds[41] = CRGB::White; // Cheech cigar
-    leds[46] = CRGB::White; // MUF dvr
+    leds[LED_CHEECH_WHEEL] = CRGB::White; // Cheech wheel
+    leds[LED_CHEECH_CIGAR] = CRGB::White; // Cheech cigar
+    leds[LED_MUF_DVR] = CRGB::White; // MUF dvr
   }
   if (chongCollectives[player] == 3) {
-    leds[39] = CRGB::White; // Chong Pipe
-    leds[40] = CRGB::White; // Chong Cockroach
-    leds[47] = CRGB::White; // Chong plunger key
+    leds[LED_CHONG_PIPE] = CRGB::White; // Chong Pipe
+    leds[LED_CHONG_ROACH] = CRGB::White; // Chong Cockroach
+    leds[LED_CHONG_KEY] = CRGB::White; // Chong plunger key
   }
 
   if (CollectSw == 1 && millis() - 1000 < CollectTimer) {
     if (ledState == HIGH) {
-      leds[38] = CRGB::White; // Cheech wheel
-      leds[41] = CRGB::White; // Cheech cigar
-      leds[46] = CRGB::White; // MUF dvr
-      leds[39] = CRGB::White; // Chong Pipe
-      leds[40] = CRGB::White; // Chong Cockroach
-      leds[47] = CRGB::White; // Chong plunger key
+      leds[LED_CHEECH_WHEEL] = CRGB::White; // Cheech wheel
+      leds[LED_CHEECH_CIGAR] = CRGB::White; // Cheech cigar
+      leds[LED_MUF_DVR] = CRGB::White; // MUF dvr
+      leds[LED_CHONG_PIPE] = CRGB::White; // Chong Pipe
+      leds[LED_CHONG_ROACH] = CRGB::White; // Chong Cockroach
+      leds[LED_CHONG_KEY] = CRGB::White; // Chong plunger key
     }
     if (ledState == LOW) {
-      leds[38] = CRGB::Yellow; // Cheech wheel
-      leds[41] = CRGB::Yellow; // Cheech cigar
-      leds[46] = CRGB::Yellow; // MUF dvr
-      leds[39] = CRGB::Yellow; // Chong Pipe
-      leds[40] = CRGB::Yellow; // Chong Cockroach
-      leds[47] = CRGB::Yellow; // Chong plunger key
+      leds[LED_CHEECH_WHEEL] = CRGB::Yellow; // Cheech wheel
+      leds[LED_CHEECH_CIGAR] = CRGB::Yellow; // Cheech cigar
+      leds[LED_MUF_DVR] = CRGB::Yellow; // MUF dvr
+      leds[LED_CHONG_PIPE] = CRGB::Yellow; // Chong Pipe
+      leds[LED_CHONG_ROACH] = CRGB::Yellow; // Chong Cockroach
+      leds[LED_CHONG_KEY] = CRGB::Yellow; // Chong plunger key
     }
   }
   else {
@@ -3848,16 +3911,16 @@ void HurryUp()
   if (hurryUp == HIGH && millis() - 80000 < hurryUpTimer)
   {
     if (ledState == LOW) {
-      leds[23] = CRGB::White; // Left ramp ambient
-      leds[50] = CRGB::White; // Fishtank ambient
-      leds[51] = CRGB::Black; // Right ramp ambient
-      leds[17] = CRGB::Black; // CnC ambient
+      leds[LED_LEFT_RAMP_AMBIENT] = CRGB::White; // Left ramp ambient
+      leds[LED_FISHTANK_AMBIENT] = CRGB::White; // Fishtank ambient
+      leds[LED_RIGHT_RAMP_AMBIENT] = CRGB::Black; // Right ramp ambient
+      leds[LED_CNC_AMBIENT] = CRGB::Black; // CnC ambient
     }
     if (ledState == HIGH) {
-      leds[23] = CRGB::Black; // Left ramp ambient
-      leds[50] = CRGB::Black; // Fishtank ambient
-      leds[51] = CRGB::White; // Right ramp ambient
-      leds[17] = CRGB::White; // CnC ambient
+      leds[LED_LEFT_RAMP_AMBIENT] = CRGB::Black; // Left ramp ambient
+      leds[LED_FISHTANK_AMBIENT] = CRGB::Black; // Fishtank ambient
+      leds[LED_RIGHT_RAMP_AMBIENT] = CRGB::White; // Right ramp ambient
+      leds[LED_CNC_AMBIENT] = CRGB::White; // CnC ambient
     }
     if (hurryUpState == LOW) {
       SetupBlackAndWhiteStripedPalette();
