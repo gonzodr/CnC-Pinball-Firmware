@@ -1918,160 +1918,78 @@ void CnC() {
 
 
 
+  static const uint8_t cncPin[3]   = { 25, 15, 14 }; // C3rd, N, C1st
+  static const uint8_t cncSound[3] = { 12, 13, 14 };
+  static const uint8_t cncLed[3]   = { 18, 19, 20 };
+  int* csw[3]                = { &cncswitch3, &cncswitch2, &cncswitch1 };
+  boolean* chsw[3]           = { &cnchurryswitch3, &cnchurryswitch2, &cnchurryswitch1 };
+  unsigned long* chtimer[3]  = { &cnchurryTimer3, &cnchurryTimer2, &cnchurryTimer1 };
+
   if (hurryUp == LOW) {
-    /// Normal mode
-    if (SimDigitalRead(cncLetterC3rd) == LOW && cncswitch3 == 0) {
-      cncswitch3 = 1;
-      wTrig.trackPlayPoly(12);
-      Score(1500, 50);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(cncLetterN) == LOW && cncswitch2 == 0) {
-      cncswitch2 = 1;
-      wTrig.trackPlayPoly(13);
-      Score(1500, 50);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
-      }
-    }
-    if (SimDigitalRead(cncLetterC1st) == LOW && cncswitch1 == 0) {
-      cncswitch1 = 1;
-      wTrig.trackPlayPoly(14);
-      Score(1500, 50);
-      if (giftsw == 1) {
-        giftsw = 0;
-        Gift();
+    // Normal mod
+    for (uint8_t i = 0; i < 3; i++) {
+      if (SimDigitalRead(cncPin[i]) == LOW && *csw[i] == 0) {
+        *csw[i] = 1;
+        wTrig.trackPlayPoly(cncSound[i]);
+        Score(1500, 50);
+        if (giftsw == 1) { giftsw = 0; Gift(); }
       }
     }
   }
 
   if (hurryUp == HIGH) {
-    /// HurryUp mode
-    if (SimDigitalRead(cncLetterC3rd) == LOW && cnchurryswitch3 == 0) {
-      cnchurryswitch3 = 1;
-      cnchurryTimer3 = millis();
-      wTrig.trackPlayPoly(12);
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 500);
-      Serial.println("Point1");
+    // HurryUp mod
+    for (uint8_t i = 0; i < 3; i++) {
+      if (SimDigitalRead(cncPin[i]) == LOW && *chsw[i] == 0) {
+        *chsw[i] = 1;
+        *chtimer[i] = millis();
+        wTrig.trackPlayPoly(cncSound[i]);
+        effect = HIGH;
+        effectID = 6;
+        Score(2500, 500);
+        Serial.println("Point1");
+        if (i == 2) {
+          Score(1500, 50); // az eredetiben CSAK a C1st betu ad plusz pontot (megorizve)
+        }
+      }
     }
-    if (SimDigitalRead(cncLetterN) == LOW && cnchurryswitch2 == 0) {
-      cnchurryswitch2 = 1;
-      cnchurryTimer2 = millis();
-      wTrig.trackPlayPoly(13);
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 500);
-      Serial.println("Point1");
-    }
-    if (SimDigitalRead(cncLetterC1st) == LOW && cnchurryswitch1 == 0) {
-      cnchurryswitch1 = 1;
-      cnchurryTimer1 = millis();
-      wTrig.trackPlayPoly(14);
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 500);
-      Serial.println("Point1");
-      Score(1500, 50);
-    }
-
-    if (millis() - 350 > cnchurryTimer1) {
-      cnchurryswitch1 = 0;
-    }
-    if (millis() - 350 > cnchurryTimer2) {
-      cnchurryswitch2 = 0;
-    }
-    if (millis() - 350 > cnchurryTimer3) {
-      cnchurryswitch3 = 0;
-    }
-
-  }
-
-
-
-  /// Random gift
-  if (giftsw == 1 ) {
-    if (SimDigitalRead(cncLetterC3rd) == LOW && cncswitch3 == 2) {
-      cncswitch3 = 1;
-      wTrig.trackPlayPoly(12);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Score(5000, 500);
-      delay(10);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-    if (SimDigitalRead(cncLetterN) == LOW && cncswitch2 == 2) {
-      cncswitch2 = 1;
-      wTrig.trackPlayPoly(13);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Score(5000, 500);
-      delay(10);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-    if (SimDigitalRead(cncLetterC1st) == LOW && cncswitch1 == 2) {
-      cncswitch1 = 1;
-      wTrig.trackPlayPoly(14);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
-      Score(5000, 500);
-      delay(10);
-      Serial.println("Point2");
-      giftsw = 3;
+    for (uint8_t i = 0; i < 3; i++) {
+      if (millis() - 350 > *chtimer[i]) {
+        *chsw[i] = 0;
+      }
     }
   }
-  /// End random gift
 
+  // Random gift: ha a sorsolt betu (== 2) talalodik el
+  if (giftsw == 1) {
+    for (uint8_t i = 0; i < 3; i++) {
+      if (SimDigitalRead(cncPin[i]) == LOW && *csw[i] == 2) {
+        *csw[i] = 1;
+        wTrig.trackPlayPoly(cncSound[i]);
+        wTrig.trackPlayPoly(36);
+        wTrig.trackPlayPoly(42);
+        Score(5000, 500);
+        delay(10);
+        Serial.println("Point2");
+        giftsw = 3;
+      }
+    }
+  }
+
+  // Betu-LED-ek
   if (effect == LOW) {
-    if (cncswitch3 == 1) {
-      leds[18] = CRGB::White; // C
-    }
-    if (cncswitch2 == 1) {
-      leds[19] = CRGB::White; // C
-    }
-    if (cncswitch1 == 1) {
-      leds[20] = CRGB::White; // C
-    }
-    if (cncswitch3 == 0) {
-      leds[18] = CRGB::Black; // C
-    }
-    if (cncswitch2 == 0) {
-      leds[19] = CRGB::Black; // C
-    }
-    if (cncswitch1 == 0) {
-      leds[20] = CRGB::Black; // C
-    }
-    /// Random gift
-    if (giftsw == 1 ) {
-      if (cncswitch3 == 2) {
-        if (ledState == HIGH) {
-          leds[18] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[18] = CRGB::Yellow; // C
-        }
+    for (uint8_t i = 0; i < 3; i++) {
+      if (*csw[i] == 1) {
+        leds[cncLed[i]] = CRGB::White;
       }
-      if (cncswitch2 == 2) {
-        if (ledState == HIGH) {
-          leds[19] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[19] = CRGB::Yellow; // C
-        }
+      if (*csw[i] == 0) {
+        leds[cncLed[i]] = CRGB::Black;
       }
-      if (cncswitch1 == 2) {
-        if (ledState == HIGH) {
-          leds[20] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[20] = CRGB::Yellow; // C
+    }
+    if (giftsw == 1) {
+      for (uint8_t i = 0; i < 3; i++) {
+        if (*csw[i] == 2) {
+          leds[cncLed[i]] = (ledState == HIGH) ? CRGB::Green : CRGB::Yellow;
         }
       }
     }
