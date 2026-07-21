@@ -21,8 +21,10 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
     kapcsolo ul - fotoval ellenorizve 2026-07-11)
 [ ] DAVE "D" kapcsolo:  Mega 19-es pin  ->  Mega 49-es pin
 [ ] WAV Trigger RX:     Mega 46-os pin  ->  Mega 18-as pin (TX1)
-[ ] WAV Trigger TX (ha be volt kotve a 48-asra): -> Mega 19 (RX1)
-    (ha nem volt bekotve, hagyd ugy)
+    EZ AZ EGYETLEN WAV-DROT, AMI KELL! A firmware csak KULD a WAV
+    Triggernek (trackPlayPoly stb.), sosem olvas vissza - a visszaut
+    (WAV TX -> Mega 19/RX1) nincs bekotve es nem is szukseges.
+    (kodbol ellenorizve 2026-07-21: 0 db visszaolvaso wTrig-hivas)
 
 ---------------------------------------------------------------------
 2) wavTrigger LIBRARY ATIRASA (a fejleszto gepen!)
