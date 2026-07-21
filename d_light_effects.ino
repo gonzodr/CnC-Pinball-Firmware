@@ -17,18 +17,24 @@
 //    effect = HIGH; effectID = n;
 // A motor a vegen magatol all vissza (effect = LOW + Initlights).
 //
-// Effekt ID-k:
-//  1 = Kiloves (EffectID1 maszk, 7 kocka, feher)
-//  2 = Weed multiball (EffectID2 maszk, 4 kocka x 4 szin)
-//  3 = Weedblast (EffectID3 tobbszinu maszk, 6 kocka)
-//  4 = Looplight (teljes palya, 4 szin villanasai)
-//  5 = Hid (EffectID5 maszk, 4x feher + 4x piros)
-//  6 = HurryUp talalat (teljes palya, sorsolt szin, 4 villanas)
+// KETFELE effekt fut ezen a motoron:
+//
+//  A) Proceduralis effektek (ID 1..6) - a regi, kodban leirt effektek.
+//     Maszk-tabla + szin-logika + fadeToBlackBy utofeny. Ezek maradnak.
+//       1 = Kiloves        2 = Weed multiball   3 = Weedblast
+//       4 = Looplight      5 = Hid              6 = HurryUp talalat
+//
+//  B) Baked-frame effektek (ID 10-tol) - a KULSO SZERKESZTO gyartja.
+//     Teljes RGB kepkockak (cellankent kesz szin/fenyero), a motor csak
+//     kirakja oket. Adat + leiro: effect_data.h (ott a reszletes formatum).
+//     Uj effekt = data-tomb + egy sor a bakedEffects[] tablaba, a fo kod
+//     bantasa nelkul. Inditas: effect = HIGH; effectID = 10 (11, 12 ...).
 
 #define EFFECT_LEDS 68        // a jatekter LED-jei (0..67)
-#define EFFECT_FRAME_MS 60    // egy lepes idotartama
+#define EFFECT_FRAME_MS 60    // egy lepes idotartama (a regi 1-6 effektnel)
 #define EFFECT_FADE_MS 700    // utofeny a vegen, mielott visszaall az alap
 #define EFFECT_FADE_AMOUNT 25 // halvanyitas loop-koronkent (nagyobb = gyorsabb kihunyas)
+#define BAKED_ID_BASE 10      // ettol az effectID-tol a baked (szerkesztos) effektek
 
 int runningEffect = 0;
 unsigned long effectStartT = 0;
@@ -73,6 +79,37 @@ void EffectFill(CRGB color) {
   fill_solid(leds, EFFECT_LEDS, color);
 }
 
+// ---- Baked-frame lejatszo (a szerkeszto altal gyartott effektek) ----
+// A formatumot lasd az effect_data.h tetejen. Roviden: minden effekt egy
+// PROGMEM bajt-tomb, kocka-major, kockankent 68 LED x 3 bajt (R,G,B). A
+// szerkeszto MINDENT belesut (szin, fenyero/opacity, per-LED kialvas), a
+// motor csak kirakja a kepkockat -> nincs itt fade, nincs proc. logika.
+// Az effektek leiroja: bakedEffects[] (effect_data.h). ID = 10 + tabla-index.
+void RunBakedEffect(uint8_t idx) {
+  if (idx >= bakedEffectCount) { // ismeretlen -> azonnal lezar
+    effect = LOW; effectID = 0; runningEffect = 0;
+    initlight = HIGH; Initlights();
+    return;
+  }
+  const EffectDef& e = bakedEffects[idx];
+  unsigned long elapsed = millis() - effectStartT;
+  unsigned int  step    = (e.frameMs > 0) ? (elapsed / e.frameMs) : 0;
+  unsigned int  total   = (unsigned int)e.frames * (e.loops ? e.loops : 1);
+
+  if (step < total) {
+    uint16_t frame = step % e.frames;
+    const uint8_t* p = e.data + (uint32_t)frame * EFFECT_LEDS * 3;
+    for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
+      leds[i] = CRGB(pgm_read_byte(p), pgm_read_byte(p + 1), pgm_read_byte(p + 2));
+      p += 3;
+    }
+  }
+  else { // lejart -> vissza a normal jatek-fenyre
+    effect = LOW; effectID = 0; runningEffect = 0;
+    initlight = HIGH; Initlights();
+  }
+}
+
 void RunLightEffect() {
   if (effect != HIGH) {
     runningEffect = 0;
@@ -86,6 +123,13 @@ void RunLightEffect() {
     if (effectID == 6) {
       hurryColor = hurryPalette[random(0, 6)]; // szin EGYSZER sorsolva, nem villodzik
     }
+  }
+
+  // Baked-frame effektek (szerkeszto, ID >= 10): sajat lejatszo, nincs proc.
+  // logika es nincs fadeToBlackBy - a szerkeszto mindent belesut a kockakba.
+  if (runningEffect >= BAKED_ID_BASE) {
+    RunBakedEffect(runningEffect - BAKED_ID_BASE);
+    return;
   }
 
   unsigned long elapsed = millis() - effectStartT;
