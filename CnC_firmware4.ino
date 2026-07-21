@@ -872,7 +872,7 @@ void Ballhandler() {
       kick = 1;
       kicktimer = millis();
       AutoKick = HIGH;
-      ballsavetimer = millis() + 30000;
+      ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
       ballsaversw = HIGH;
       ballsavetime = 15000;
     }
@@ -1013,7 +1013,10 @@ void MIV(boolean m) {
 /////////////////////////////////////////////////
 
 void Ballsave() {
-  if (ballsaversw == HIGH && millis() + 30000 - ballsavetime < ballsavetimer) {
+  // kanonikus, rollover-biztos forma: eltelt-e mar a ballsave-ido?
+  // A '!= 0' ort azert kell, hogy a be-nem-allitott (0) timer inaktivnak
+  // szamitson - pont ugy, ahogy a regi '+30000'-es forma is tette.
+  if (ballsaversw == HIGH && ballsavetimer != 0 && millis() - ballsavetimer < (unsigned long)ballsavetime) {
     Blinktimer();
     if (ledState == LOW) {
       leds[8] = CRGB::Black; // x4
@@ -2567,7 +2570,7 @@ void Dave_switch() {
   if (daveoff == 0 && davearr[1] == 1 && davearr[2] == 1 && davearr[3] == 1 && davearr[4] == 1) {
     daveoff = 1;
     davetimer = millis();
-    ballsavetimer = millis() + 30000;
+    ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
     if (ballsaversw == LOW) {
       ballsaversw = HIGH;
       ballsavetime = 5000;
@@ -3097,7 +3100,7 @@ void Weedspinner() {
           Serial.println(lvl + 1); // Multiball1..Multiball4
           delay(20);
           multiball = lvl + 1;
-          ballsavetimer = millis() + 30000;
+          ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
           ballsaversw = HIGH;
           ballsavetime = 30000;
           ufosw = 0;
@@ -3430,7 +3433,7 @@ void UFOO() {
         fasz = 68;
         initlight = 1;
         Initlights();
-        ballsavetimer = millis() + 30000;
+        ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
         ballsaversw = HIGH;
         if (lottery == 7) {
           ballsavetime = 30000;
