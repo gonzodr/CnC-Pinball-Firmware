@@ -115,6 +115,73 @@ int simForceLottery = 0; // a kovetkezo UFO-lotto kenyszeritett erteke (7 = Spac
 
 #define DATA_PIN 3
 #define BRIGHTNESS  64
+
+// --- wTrig track-nevek (a WAV-fajlnevekbol) ---
+#define TRK_THEME              1
+#define TRK_BEER               2
+#define TRK_PLUMB              3
+#define TRK_CHINGA             4
+#define TRK_BLOB               6
+#define TRK_PING               10
+#define TRK_LARDASS            11
+#define TRK_WEED               15
+#define TRK_CHEECHYEAH         17
+#define TRK_UFO                18
+#define TRK_BANANA             19
+#define TRK_DAVE               23
+#define TRK_GATESUCCESS        27
+#define TRK_KVAKK              28
+#define TRK_BIGYONG            29
+#define TRK_CHEECHBEAUTY       36
+#define TRK_CHEECHFART         37
+#define TRK_NOWEEDUFO          38
+#define TRK_SHOOTOUTUFO        42
+#define TRK_GETOUTUFO          43
+#define TRK_UFOALARM           44
+#define TRK_HAPPYUFO           45
+#define TRK_MISSU              46
+#define TRK_LETSPLAY           47
+#define TRK_DAVENOTHERE        51
+#define TRK_MUS_TRIPLE_LOOP3   64
+#define TRK_MUS_SWING_LOOP4    65
+#define TRK_WEEDFULL           72
+#define TRK_JACKPOT            73
+#define TRK_EXTRABALL          74
+#define TRK_SCORE_15000        75
+#define TRK_SCORE_20000        76
+#define TRK_SPACECOKEMULTI     77
+#define TRK_SCORE_30000        78
+#define TRK_MUS_ROCKFIGHT      88
+#define TRK_MUS_STRAWBERRY2    89
+#define TRK_BOOT               90
+#define TRK_FIREWORK           91
+#define TRK_SCORE_5000         92
+#define TRK_SCORE_25000        94
+#define TRK_COMBO1             95
+#define TRK_COMBO2             96
+#define TRK_SHOOTBRIDGE        98
+#define TRK_HURRYUP            101
+#define TRK_HISCORE_SKIP       102
+#define TRK_ADDPLAYER          103
+#define TRK_ADDSCORE           104
+#define TRK_KEYLEFT            105
+#define TRK_KEYRIGHT           106
+#define TRK_NEXTLETTER         107
+#define TRK_MUS_HURRY          108
+#define TRK_MUS_SPACECOKE      109
+#define TRK_CHEECH_SPACECOKE   110
+#define TRK_MELLOWOUT          111
+#define TRK_TILT1              112
+#define TRK_TILT2              113
+#define TRK_TILT3              114
+#define TRK_CHAINWHEEL         117
+#define TRK_BIGJOINT           118
+#define TRK_LICENSEPLATE       119
+#define TRK_WEEDPIPE           120
+#define TRK_COCKROACH          121
+#define TRK_PIPEWRENCH         122
+#define TRK_COLLECT            123
+
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER RGB
 #define UPDATES_PER_SECOND 100
@@ -660,7 +727,7 @@ void setup() {
   delay(1000);
   wTrig.stopAllTracks();
   wTrig.masterGain(0);
-  wTrig.trackPlayPoly(90);
+  wTrig.trackPlayPoly(TRK_BOOT);
 
   
   CoilGuardInit(); // tekercsvedelem (e_coil_guard.ino) - a pinMode-ok UTAN kell!
@@ -745,7 +812,7 @@ void Ballhandler() {
         shoottimer = millis();
         shoottimer2 = millis();
         shoot = 1;
-        wTrig.trackPlayPoly(17);
+        wTrig.trackPlayPoly(TRK_CHEECHYEAH);
       }
     }
 
@@ -841,13 +908,13 @@ void Ballhandler() {
         if (numofplayers == player && ball == 3 && extraball == 0) {
           Serial.println("End");
           delay(20);
-          wTrig.trackPlayPoly(46);
+          wTrig.trackPlayPoly(TRK_MISSU);
         }
         else {
           Serial.println("Next");
           delay(20);
           Serial.flush();
-          wTrig.trackPlaySolo(11);
+          wTrig.trackPlaySolo(TRK_LARDASS);
           delay(4500);
         }
         shoottimer = millis();
@@ -902,7 +969,7 @@ void Ballhandler() {
         else {
           extraball = extraball - 1;
           shoot = 1;
-          wTrig.trackPlaySolo(74);
+          wTrig.trackPlaySolo(TRK_EXTRABALL);
           startmus = HIGH;
           firstplay = HIGH;
         }
@@ -957,7 +1024,7 @@ void Ballhandler() {
       digitalWrite(shooterlaneCoil, LOW);
 
       if (startmus == HIGH) {
-        wTrig.trackPlayPoly(1);
+        wTrig.trackPlayPoly(TRK_THEME);
         effect = HIGH;
         effectID = 1;
       }
@@ -1107,29 +1174,29 @@ void Multiball() {
   // egybol 5-re ugrik es a == 4 sosem teljesulne -> a multiball beragadna!
   if (multiball != 0 && ballsaversw == LOW && BIS >= 4) {
     if (multiball == 1) {
-      wTrig.trackPause(89);
-      wTrig.trackLoop(89, 0);
-      wTrig.trackResume(1);
+      wTrig.trackPause(TRK_MUS_STRAWBERRY2);
+      wTrig.trackLoop(TRK_MUS_STRAWBERRY2, 0);
+      wTrig.trackResume(TRK_THEME);
     }
     if (multiball == 2) {
-      wTrig.trackPause(88);
-      wTrig.trackLoop(88, 0);
-      wTrig.trackResume(1);
+      wTrig.trackPause(TRK_MUS_ROCKFIGHT);
+      wTrig.trackLoop(TRK_MUS_ROCKFIGHT, 0);
+      wTrig.trackResume(TRK_THEME);
     }
     if (multiball == 3) {
-      wTrig.trackPause(64);
-      wTrig.trackLoop(64, 0);
-      wTrig.trackResume(1);
+      wTrig.trackPause(TRK_MUS_TRIPLE_LOOP3);
+      wTrig.trackLoop(TRK_MUS_TRIPLE_LOOP3, 0);
+      wTrig.trackResume(TRK_THEME);
     }
     if (multiball == 4) {
-      wTrig.trackPause(65);
-      wTrig.trackLoop(65, 0);
-      wTrig.trackResume(1);
+      wTrig.trackPause(TRK_MUS_SWING_LOOP4);
+      wTrig.trackLoop(TRK_MUS_SWING_LOOP4, 0);
+      wTrig.trackResume(TRK_THEME);
     }
     if (multiball == 5) {
-      wTrig.trackPause(109);
-      wTrig.trackLoop(109, 0);
-      wTrig.trackResume(1);
+      wTrig.trackPause(TRK_MUS_SPACECOKE);
+      wTrig.trackLoop(TRK_MUS_SPACECOKE, 0);
+      wTrig.trackResume(TRK_THEME);
     }
     ufosw = 1;
     multiball = 0;
@@ -1418,7 +1485,7 @@ void intmMode() {
       heysoundtimer = millis();
       if(heysoundcounter == 36){
         heysoundcounter = 0;
-        wTrig.trackPlayPoly(37);
+        wTrig.trackPlayPoly(TRK_CHEECHFART);
         }
       }
 
@@ -1426,7 +1493,7 @@ void intmMode() {
     if (SimDigitalRead(startButton) == LOW) {
       // 1. start: jatekosvalaszto mod - a jatek meg NEM indul!
       // (V2-es CharmMode logika visszahozva)
-      wTrig.trackPlayPoly(47);
+      wTrig.trackPlayPoly(TRK_LETSPLAY);
       Serial.println("Start"); // GUI: kilep az attractbol a SCORE kepernyore
       delay(20);
       numofplayers = 1;
@@ -1459,13 +1526,13 @@ void intmMode() {
       if (numofplayers == 5) {
         numofplayers = 1;
       }
-      wTrig.trackPlayPoly(103);
+      wTrig.trackPlayPoly(TRK_ADDPLAYER);
       SendData();
     }
 
     // 2. start: jatek inditasa a kivalasztott jatekosszammal
     if (selArmSw == HIGH && SimDigitalRead(startButton) == LOW) {
-      wTrig.trackPlayPoly(15);
+      wTrig.trackPlayPoly(TRK_WEED);
       Serial.println("Zero");
       delay(300);
       intmon = 0;
@@ -1536,7 +1603,7 @@ void intmMode() {
     if (SimDigitalRead(leftFlipperButton) == LOW && lfHscSw == 0) {
       lfHscSw = 1;
       lfHscTimer = millis();
-      wTrig.trackPlayPoly(105);
+      wTrig.trackPlayPoly(TRK_KEYLEFT);
       Serial.println("FLIPPER_LEFT"); // Python GUI protokoll (regi Unity-nev: "Right")
       delay(20);
     }
@@ -1547,7 +1614,7 @@ void intmMode() {
     if (SimDigitalRead(rightflipperButton) == LOW && rfHscSw == 0) {
       rfHscSw = 1;
       rfHscTimer = millis();
-      wTrig.trackPlayPoly(106);
+      wTrig.trackPlayPoly(TRK_KEYRIGHT);
       Serial.println("FLIPPER_RIGHT"); // Python GUI protokoll (regi Unity-nev: "Left")
       delay(20);
     }
@@ -1558,7 +1625,7 @@ void intmMode() {
     if (SimDigitalRead(ballShooterButton) == LOW && shHscSw == 0) {
       shHscSw = 1;
       shHscTimer = millis();
-      wTrig.trackPlayPoly(107);
+      wTrig.trackPlayPoly(TRK_NEXTLETTER);
       Serial.println("PLAYER_PRESS"); // Python GUI protokoll: betu kivalasztasa
       delay(20);
     }
@@ -1581,11 +1648,11 @@ void intmMode() {
         digitalWrite(PIN_A13, LOW);
     }
     if (incomeMsg == "Exit1") {
-        wTrig.trackPlayPoly(102);
+        wTrig.trackPlayPoly(TRK_HISCORE_SKIP);
         digitalWrite(PIN_A13, LOW);
     }
     if (incomeMsg == "Exit2") {
-      wTrig.trackPlayPoly(104);
+      wTrig.trackPlayPoly(TRK_ADDSCORE);
       digitalWrite(PIN_A13, LOW);
     }
     if (SimDigitalRead(startButton) == LOW && SimDigitalRead(ballShooterButton) == LOW) {
@@ -1887,7 +1954,7 @@ void Right_Slingshot() {
   if (SimDigitalRead(rightSlingshotSwitch) == LOW && slingr == 0) {
     slingr = 1;
     slingrtimer = millis();
-    wTrig.trackPlayPoly(29);
+    wTrig.trackPlayPoly(TRK_BIGYONG);
     ufoInactivesw = 1;
     ufoInactiveTimer = millis();
     ballHandlerSkip = 1;
@@ -1927,7 +1994,7 @@ void Left_Slingshot() {
   if (SimDigitalRead(leftSlingshotSwitch) == LOW && slingl == 0) {
     slingl = 1;
     slingltimer = millis();
-    wTrig.trackPlayPoly(29);
+    wTrig.trackPlayPoly(TRK_BIGYONG);
     ufoInactivesw = 1;
     ufoInactiveTimer = millis();
     ballHandlerSkip = 1;
@@ -2029,8 +2096,8 @@ void CnC() {
       if (SimDigitalRead(cncPin[i]) == LOW && *csw[i] == 2) {
         *csw[i] = 1;
         wTrig.trackPlayPoly(cncSound[i]);
-        wTrig.trackPlayPoly(36);
-        wTrig.trackPlayPoly(42);
+        wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         Score(5000, 500);
         delay(10);
         Serial.println("Point2");
@@ -2111,14 +2178,14 @@ void Loopshoot() {
     looptimer = millis();
     loopswt = millis();
     loopsw = HIGH;
-    wTrig.trackPlayPoly(19);
+    wTrig.trackPlayPoly(TRK_BANANA);
   }
   if (SimDigitalRead(loopSwitchSide) == LOW && millis() - 1000 < looptimer && loopsw == LOW) {
     if (multiloopsw == 1) {
       Serial.println("Jackpot6");
-      wTrig.trackPlayPoly(73);
+      wTrig.trackPlayPoly(TRK_JACKPOT);
     }
-    wTrig.trackPlayPoly(6);
+    wTrig.trackPlayPoly(TRK_BLOB);
     if (multiloopsw == 1) {
       Score(30000, 2000);
     }
@@ -2212,8 +2279,8 @@ void Weed() {
         *wsw[i] = 1;
         Score(5000, 100);
         wTrig.trackPlayPoly(weedSound[i]);
-        wTrig.trackPlayPoly(36);
-        wTrig.trackPlayPoly(42);
+        wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         Serial.println("Point2");
         giftsw = 3;
       }
@@ -2245,7 +2312,7 @@ void Weed() {
     weedoff = 1;
     effect = HIGH;
     effectID = 3;
-    wTrig.trackPlayPoly(72);
+    wTrig.trackPlayPoly(TRK_WEEDFULL);
     spsound = random(1, 5);
     static const uint8_t weedDoneSound[4] = { 67, 66, 115, 116 };
     wTrig.trackPlayPoly(weedDoneSound[spsound - 1]);
@@ -2304,7 +2371,7 @@ void Fishtank() {
     else {
       Score(1500, 10);
     }
-    wTrig.trackPlayPoly(10);
+    wTrig.trackPlayPoly(TRK_PING);
     if (giftsw == 1) {
       giftsw = 0;
       Gift();
@@ -2322,7 +2389,7 @@ void Fishtank() {
     else {
       Score(1500, 10);
     }
-    wTrig.trackPlayPoly(2);
+    wTrig.trackPlayPoly(TRK_BEER);
     if (giftsw == 1) {
       giftsw = 0;
       Gift();
@@ -2334,9 +2401,9 @@ void Fishtank() {
     if (SimDigitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 2) {
       fishTankLightState1 = 1;
       Score(5000, 100);
-      wTrig.trackPlayPoly(10);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
+      wTrig.trackPlayPoly(TRK_PING);
+      wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
+      wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
       Serial.println("Point2");
       giftsw = 3;
     }
@@ -2345,9 +2412,9 @@ void Fishtank() {
     if (SimDigitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 2) {
       fishTankLightState2 = 1;
       Score(5000, 100);
-      wTrig.trackPlayPoly(2);
-      wTrig.trackPlayPoly(36);
-      wTrig.trackPlayPoly(42);
+      wTrig.trackPlayPoly(TRK_BEER);
+      wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
+      wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
       Serial.println("Point2");
       giftsw = 3;
     }
@@ -2406,7 +2473,7 @@ void Fishtank() {
     if (beerCollect == 3) {
       Serial.println("Beer3");
       BrdgLowActive = HIGH;
-      wTrig.trackPlayPoly(98);
+      wTrig.trackPlayPoly(TRK_SHOOTBRIDGE);
       beerCollect = 0;
     }
   }
@@ -2449,7 +2516,7 @@ void Fishtank() {
 
 void Dave_switch() {
   if (SimDigitalRead(daveLaneSwitchD) == LOW && sltimesw == LOW) {
-    wTrig.trackPlayPoly(23);
+    wTrig.trackPlayPoly(TRK_DAVE);
     davearr[1] = 1;
     sltimesw = HIGH;
     sltimer = millis();
@@ -2458,19 +2525,19 @@ void Dave_switch() {
     }
   }
   if (SimDigitalRead(daveLaneSwitchA) == LOW && sltimesw == LOW) {
-    wTrig.trackPlayPoly(23);
+    wTrig.trackPlayPoly(TRK_DAVE);
     davearr[2] = 1;
     sltimesw = HIGH;
     sltimer = millis();
   }
   if (SimDigitalRead(daveLaneSwitchV) == LOW && sltimesw == LOW) {
-    wTrig.trackPlayPoly(23);
+    wTrig.trackPlayPoly(TRK_DAVE);
     davearr[3] = 1;
     sltimesw = HIGH;
     sltimer = millis();
   }
   if (SimDigitalRead(daveLaneSwitchE) == LOW && sltimesw == LOW) {
-    wTrig.trackPlayPoly(23);
+    wTrig.trackPlayPoly(TRK_DAVE);
     davearr[4] = 1;
     sltimesw = HIGH;
     sltimer = millis();
@@ -2582,7 +2649,7 @@ void Dave_switch() {
       davearr[3] = 0;
       davearr[4] = 0;
       daveoff = 0;
-      wTrig.trackPlayPoly(51);
+      wTrig.trackPlayPoly(TRK_DAVENOTHERE);
     }
   }
 
@@ -2602,11 +2669,11 @@ void Dave_switch() {
 void Gate() {
 
   if (SimDigitalRead(gateSwitch1) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(28);
+    wTrig.trackPlayPoly(TRK_KVAKK);
     if (gatearr[1] == 2) {
       Score(1500, 50);
-      wTrig.trackPlayPoly(17);
-      wTrig.trackPlayPoly(72);
+      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
+      wTrig.trackPlayPoly(TRK_WEEDFULL);
       Serial.println("Drift");
       delay(20);
     }
@@ -2622,11 +2689,11 @@ void Gate() {
   }
 
   if (SimDigitalRead(gateSwitch2) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(28);
+    wTrig.trackPlayPoly(TRK_KVAKK);
     if (gatearr[2] == 2) {
       Score(1500, 50);
-      wTrig.trackPlayPoly(17);
-      wTrig.trackPlayPoly(72);
+      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
+      wTrig.trackPlayPoly(TRK_WEEDFULL);
       Serial.println("Drift");
       delay(20);
     }
@@ -2642,11 +2709,11 @@ void Gate() {
   }
 
   if (SimDigitalRead(gateSwitch3) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(28);
+    wTrig.trackPlayPoly(TRK_KVAKK);
     if (gatearr[3] == 2) {
       Score(1500, 50);
-      wTrig.trackPlayPoly(17);
-      wTrig.trackPlayPoly(72);
+      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
+      wTrig.trackPlayPoly(TRK_WEEDFULL);
       Serial.println("Drift");
       delay(20);
     }
@@ -2764,7 +2831,7 @@ void Gate() {
     gatearr[1] = 0;
     gatearr[2] = 0;
     gatearr[3] = 0;
-    wTrig.trackPlayPoly(4);
+    wTrig.trackPlayPoly(TRK_CHINGA);
     gateoffsw = 0;
 
   }
@@ -2893,7 +2960,7 @@ void BonusXLed() {
   if (bonusx >= 1 && bonusx <= 4 && *bxsw[bonusx - 1] == 0) {
     *bxsw[bonusx - 1] = 1;
     *bxtimer[bonusx - 1] = millis();
-    wTrig.trackPlayPoly(27);
+    wTrig.trackPlayPoly(TRK_GATESUCCESS);
     Serial.print("Bonus");
     Serial.println(bonusx); // Bonus1..Bonus4
     delay(20);
@@ -3037,7 +3104,7 @@ void Weedspinner() {
     else {
       Score(0, 50);
     }
-    wTrig.trackPlayPoly(3);
+    wTrig.trackPlayPoly(TRK_PLUMB);
     if (spinnersw == 1) {
       weedtableindicator = HIGH;
       weedtableindicatortimer = millis();
@@ -3069,7 +3136,7 @@ void Weedspinner() {
           ufosw = 0;
           effect = HIGH;
           effectID = 2;
-          wTrig.trackPause(1);
+          wTrig.trackPause(TRK_THEME);
           wTrig.trackPlayPoly(mbPoly1[lvl]);
           wTrig.trackLoop(mbLoop[lvl], 1);
           wTrig.trackPlayPoly(mbPoly2[lvl]);
@@ -3184,8 +3251,8 @@ void UFOO() {
 
   if (ufoanalog < 100 && ufoshoot == 0) {
     if (ufosw == 1 && multiball == 0) {
-      wTrig.trackPause(1);
-      wTrig.trackPlayPoly(45);
+      wTrig.trackPause(TRK_THEME);
+      wTrig.trackPlayPoly(TRK_HAPPYUFO);
       fasz = 0;
       SetupPurpleAndGreenPalette();
       ufoshoot = 4;
@@ -3264,19 +3331,19 @@ void UFOO() {
     if (ufosw == 0 && multiball == 0 && hurryUp == 0) {
       ufoshoot = random(1, 4);
       if (ufoshoot == 1) {
-        wTrig.trackPause(1);
-        wTrig.trackPlayPoly(18);
-        wTrig.trackPlayPoly(38);
+        wTrig.trackPause(TRK_THEME);
+        wTrig.trackPlayPoly(TRK_UFO);
+        wTrig.trackPlayPoly(TRK_NOWEEDUFO);
         Serial.println("Ufo6");
         delay(20);
       }
       if (ufoshoot == 2) {
-        wTrig.trackPause(1);
-        wTrig.trackPlayPoly(43);
+        wTrig.trackPause(TRK_THEME);
+        wTrig.trackPlayPoly(TRK_GETOUTUFO);
       }
       if (ufoshoot == 3) {
-        wTrig.trackPause(1);
-        wTrig.trackPlayPoly(44);
+        wTrig.trackPause(TRK_THEME);
+        wTrig.trackPlayPoly(TRK_UFOALARM);
       }
     }
 
@@ -3297,11 +3364,11 @@ void UFOO() {
       digitalWrite(ufoCoil, LOW);
       if (millis() - 500 > ufoshoottimer + 4300) {
         ufoshoot = 0;
-        wTrig.trackPause(18);
+        wTrig.trackPause(TRK_UFO);
         if (multiball == 0) {
-          wTrig.trackResume(1);
+          wTrig.trackResume(TRK_THEME);
         }
-        wTrig.trackPlayPoly(42);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         Score(0, 300);
       }
     }
@@ -3314,9 +3381,9 @@ void UFOO() {
       if (millis() - 500 > ufoshoottimer + 2000) {
         ufoshoot = 0;
         if (multiball == 0) {
-          wTrig.trackResume(1);
+          wTrig.trackResume(TRK_THEME);
         }
-        wTrig.trackPlayPoly(42);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         Score(0, 300);
       }
     }
@@ -3329,9 +3396,9 @@ void UFOO() {
       if (millis() - 500 > ufoshoottimer + 1500) {
         ufoshoot = 0;
         if (multiball == 0) {
-          wTrig.trackResume(1);
+          wTrig.trackResume(TRK_THEME);
         }
-        wTrig.trackPlayPoly(42);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         Score(0, 300);
       }
     }
@@ -3345,50 +3412,50 @@ void UFOO() {
       digitalWrite(ufoCoil, LOW);
       if (millis() - 700 > ufoshoottimer + 4000) {
         if (lottery  == 1) {    /// ExtraBall
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(74);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_EXTRABALL);
         }
         if (lottery  == 2) {    /// HurryUp
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(101);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_HURRYUP);
           hurryUp = HIGH;
           hurryUpTimer = millis();
           spinnersw = 2;
           ufosw = 0;
         }
         if (lottery  == 3) {    /// 15000
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(75);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_SCORE_15000);
         }
         if (lottery  == 4) {    /// 20000
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(76);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_SCORE_20000);
         }
         if (lottery  == 6) {    /// 25000
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(94);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_SCORE_25000);
         }
         if (lottery  == 5) {    /// 30000
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(78);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_SCORE_30000);
         }
         if (lottery  == 7) {    /// SpaceCoke Multi
           BIP = 5;
           multiball = 5;
           effect = HIGH;
           effectID = 4;
-          wTrig.trackPlayPoly(77);
-          wTrig.trackPlayPoly(91);
-          wTrig.trackPlayPoly(109);
-          wTrig.trackPlayPoly(110);
+          wTrig.trackPlayPoly(TRK_SPACECOKEMULTI);
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_MUS_SPACECOKE);
+          wTrig.trackPlayPoly(TRK_CHEECH_SPACECOKE);
           ufosw = 0;
           spinnersw = 2;
           BrdgLowActive = HIGH;
           BrdgHighActive = HIGH;
         }
         if (lottery  == 8) {    /// Pontlopas (Ufo10..13)
-          wTrig.trackPlayPoly(91); // Firework
-          wTrig.trackPlayPoly(123 + ufoMinus); // 124..127 = kirabolt jatekos hangja
+          wTrig.trackPlayPoly(TRK_FIREWORK); // Firework
+          wTrig.trackPlayPoly(TRK_COLLECT + ufoMinus); // 124..127 = kirabolt jatekos hangja
           ufoMinus = 0;
         }
 
@@ -3407,13 +3474,13 @@ void UFOO() {
         ufoshoot = 0;
 
         if (lottery == 2) {
-          wTrig.trackPlayPoly(108);
-          wTrig.trackPlayPoly(42);
+          wTrig.trackPlayPoly(TRK_MUS_HURRY);
+          wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         }
         if (lottery == 1 || lottery == 3 || lottery == 4 || lottery == 5 || lottery == 6 || lottery == 8)
         {
-          wTrig.trackResume(1);
-          wTrig.trackPlayPoly(42);
+          wTrig.trackResume(TRK_THEME);
+          wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         }
         ufosw = 0;
       }
@@ -3483,22 +3550,22 @@ void Chong_switch() {
           Serial.println("ChongC1");
           delay(20);
           Score(10000, 500);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(120);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_WEEDPIPE);
       }
       if (chongCollectives[player] == 2) {
           Serial.println("ChongC2");
           delay(20);
           Score(15000, 1000);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(121);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_COCKROACH);
       }
       if (chongCollectives[player] == 3) {
           Serial.println("ChongC3");
           delay(20);
           Score(20000, 2000);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(122);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_PIPEWRENCH);
           chongCollectives[player] = 0;
       }
     }
@@ -3565,23 +3632,23 @@ void Cheech_switch() {
           Serial.println("CheechC1");
           delay(20);
           Score(10000, 500);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(117);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_CHAINWHEEL);
 
       }
       if (cheechCollectives[player] == 2) {
           Serial.println("CheechC2");
           delay(20);
           Score(15000, 1000);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(118);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_BIGJOINT);
       }
       if (cheechCollectives[player] == 3) {
           Serial.println("CheechC3");
           delay(20);
           Score(20000, 2000);
-          wTrig.trackPlayPoly(123);
-          wTrig.trackPlayPoly(119);
+          wTrig.trackPlayPoly(TRK_COLLECT);
+          wTrig.trackPlayPoly(TRK_LICENSEPLATE);
           cheechCollectives[player] = 0;
 
       }
@@ -3785,12 +3852,12 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
           if (comboCounter > 6) {
             comboCounter = 6;
           }
-          if (comboCounter == 1) { Score(2500, 300);  Serial.println("Combo1"); wTrig.trackPlayPoly(95); }
-          if (comboCounter == 2) { Score(5000, 300);  Serial.println("Combo2"); wTrig.trackPlayPoly(96); }
-          if (comboCounter == 3) { Score(7500, 300);  Serial.println("Combo3"); wTrig.trackPlayPoly(95); }
-          if (comboCounter == 4) { Score(10000, 300); Serial.println("Combo4"); wTrig.trackPlayPoly(95); }
-          if (comboCounter == 5) { Score(15000, 300); Serial.println("Combo5"); wTrig.trackPlayPoly(96); }
-          if (comboCounter == 6) { Score(20000, 300); Serial.println("Combo6"); wTrig.trackPlayPoly(95); }
+          if (comboCounter == 1) { Score(2500, 300);  Serial.println("Combo1"); wTrig.trackPlayPoly(TRK_COMBO1); }
+          if (comboCounter == 2) { Score(5000, 300);  Serial.println("Combo2"); wTrig.trackPlayPoly(TRK_COMBO2); }
+          if (comboCounter == 3) { Score(7500, 300);  Serial.println("Combo3"); wTrig.trackPlayPoly(TRK_COMBO1); }
+          if (comboCounter == 4) { Score(10000, 300); Serial.println("Combo4"); wTrig.trackPlayPoly(TRK_COMBO1); }
+          if (comboCounter == 5) { Score(15000, 300); Serial.println("Combo5"); wTrig.trackPlayPoly(TRK_COMBO2); }
+          if (comboCounter == 6) { Score(20000, 300); Serial.println("Combo6"); wTrig.trackPlayPoly(TRK_COMBO1); }
         }
         *comboWriteT = millis();
       }
@@ -3831,11 +3898,11 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
       *swT = millis();
       Score(jpScr[multiball], jpBns[multiball]);
       if (multiball == 0) {
-        wTrig.trackPlayPoly(92);
+        wTrig.trackPlayPoly(TRK_SCORE_5000);
         Serial.println("Point2");
       }
       else {
-        wTrig.trackPlayPoly(73);
+        wTrig.trackPlayPoly(TRK_JACKPOT);
         Serial.print("Jackpot");
         Serial.println(multiball + 1); // Jackpot2..Jackpot6
       }
@@ -3939,8 +4006,8 @@ void HurryUp()
     initlight = HIGH;
     Initlights();
     fasz = 68;
-    wTrig.trackPause(108);
-    wTrig.trackResume(1);
+    wTrig.trackPause(TRK_MUS_HURRY);
+    wTrig.trackResume(TRK_THEME);
     hurryUp = LOW;
     spinnersw = HIGH;
   }
@@ -3964,8 +4031,8 @@ void HurryUp()
 /////////////////////////////////////////////////
 void Tilt() {
     if (SimDigitalRead(PIN_A12) == 0 && tiltLogicSW == LOW) {
-        wTrig.trackPlayPoly(111);
-        wTrig.trackPlayPoly(112);
+        wTrig.trackPlayPoly(TRK_MELLOWOUT);
+        wTrig.trackPlayPoly(TRK_TILT1);
         tiltcounter = tiltcounter + 10;
         tilttimer = millis();
         tiltLogicSW = HIGH;
@@ -3983,9 +4050,9 @@ void Tilt() {
     if (tiltcounter > 15) {
         wTrig.stopAllTracks();
         Serial.println("Tilt");
-        wTrig.trackPlayPoly(112);
-        wTrig.trackPlayPoly(113);
-        wTrig.trackPlayPoly(114);
+        wTrig.trackPlayPoly(TRK_TILT1);
+        wTrig.trackPlayPoly(TRK_TILT2);
+        wTrig.trackPlayPoly(TRK_TILT3);
         for (int i = 0; i < 68; i++) {
                 leds[i] = CRGB::Black;
         }
