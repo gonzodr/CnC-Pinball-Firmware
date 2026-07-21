@@ -28,18 +28,19 @@ unsigned long effectStartT = 0;
 // Egy baked effekt lejatszasa (idx = a bakedEffects[] tablabeli sorszam).
 void RunBakedEffect(uint8_t idx) {
   const EffectDef& e = bakedEffects[idx];
-  uint16_t loopLen = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
-  uint8_t  loops   = e.loops ? e.loops : 1;
+  uint16_t loopLen  = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
+  uint8_t  loops    = e.loops ? e.loops : 1;
   uint16_t outroLen = e.frames - loopLen;
-  unsigned int cycleSteps = (unsigned int)loopLen * loops;
-  unsigned int totalSteps = cycleSteps + outroLen;
+  // uint32_t: AVR-en az int 16 bites, a loopLen*loops (es a step) tulcsordulhat
+  uint32_t cycleSteps = (uint32_t)loopLen * loops;
+  uint32_t totalSteps = cycleSteps + outroLen;
 
   unsigned long elapsed = millis() - effectStartT;
-  unsigned int  step    = (e.frameMs > 0) ? (elapsed / e.frameMs) : 0;
+  uint32_t      step    = (e.frameMs > 0) ? (elapsed / e.frameMs) : 0;
 
   if (step < totalSteps) {
-    uint16_t frame = (step < cycleSteps) ? (step % loopLen)          // ciklus
-                                         : (loopLen + (step - cycleSteps)); // outro (1x)
+    uint16_t frame = (step < cycleSteps) ? (uint16_t)(step % loopLen)          // ciklus
+                                         : (uint16_t)(loopLen + (step - cycleSteps)); // outro (1x)
     const uint8_t* p = e.data + (uint32_t)frame * EFFECT_LEDS * 3;
     for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
       leds[i] = CRGB(pgm_read_byte(p), pgm_read_byte(p + 1), pgm_read_byte(p + 2));
