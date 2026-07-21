@@ -1,64 +1,31 @@
 #pragma once
 // ==========================================================================
-//  Fenyeffekt-adatok (a d_light_effects.ino motorja hasznalja).
-//  Kulon fajlban, hogy uj effektsort a szerkesztobol IDE lehessen betolteni
+//  FENYEFFEKT-ADATOK  (a d_light_effects.ino baked-frame motorja hasznalja)
+//  Kulon fajlban, hogy a KULSO SZERKESZTO ide tudja tolteni az effekteket,
 //  a fo kod bantasa nelkul.
 // --------------------------------------------------------------------------
-//  Minden tabla FRAME db kepkockabol all, kepkockankent 68 ertek (a jatekter
-//  LED-jei, 0..67). Az ertek egy szinkod:
-//    - maszkos effektnel (ID 1/2/5): 0 = sotet, !=0 = a hivaskor megadott szin
-//    - tobbszinu Weedblast-nal (ID 3): 1..12 = a blastPalette szine
-//  UJ EFFEKT: told ide be a szerkesztobol az uj tablat, pl.
-//      const uint8_t EffectID7[] PROGMEM = { ... };
-//  majd a d_light_effects.ino switch-eben egy uj case-szel hivatkozz ra.
-// ==========================================================================
-
-// Shoot effect - ID=1
-const uint8_t EffectID1[] PROGMEM = { 0,0,0,0,1,1,1,1,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,1,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0};
-// Weedmultiball effect - ID=2
-const uint8_t EffectID2[] PROGMEM = { 0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,1,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,1,1,0,0,
-                    1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-// Weedblast effect - ID=3
-const uint8_t EffectID3[] PROGMEM = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,6,0,6,0,0,0,0,0,0,0,0,0,0,0,6,6,0,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,7,7,7,7,0,0,0,7,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,0,9,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,9,0,9,0,9,0,9,0,9,0,0,0,0,0,0,0,0,9,
-                    2,0,0,2,0,0,2,2,0,2,2,0,0,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,2,0,2,0,2,2,2,2,2,0,0,0,0,
-                    0,0,0,0,8,8,0,0,0,0,0,8,8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-// Bridge effect - ID=5
-const uint8_t EffectID5[] PROGMEM = { 0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,1,1,0,0,1,1,
-                    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,1,1,0,0,
-                    1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-
-// ==========================================================================
-//  BAKED-FRAME EFFEKTEK  (a szerkeszto ezeket gyartja)
-// --------------------------------------------------------------------------
-//  Formatum: minden effekt egy PROGMEM bajt-tomb, KOCKA-MAJOR sorrendben.
+//  FORMATUM: minden effekt egy PROGMEM bajt-tomb, KOCKA-MAJOR sorrendben.
 //  Kockankent 68 LED (index 0..67, lasd LEDMAP.md), LED-enkent 3 bajt: R,G,B
 //  (0..255). Egy kocka = 68*3 = 204 bajt. A tomb hossza = frames * 204.
-//  Az OPACITY / kialvas / per-LED fade MIND ide van "kisutve": a szerkeszto
+//  Az opacity / kialvas / per-LED fade MIND ide van "kisutve": a szerkeszto
 //  szamolja ki cellankent a vegso szint/fenyerot kockarol kockara - a motor
 //  csak kirakja. Igy barmilyen gorbe/utem lehetseges, es a motor buta marad.
 //
-//  Egy effekt hozzaadasa (ezt csinalja a szerkeszto):
+//  EGY EFFEKT HOZZAADASA (ezt csinalja a szerkeszto):
 //   1) a fenti formatumban egy tomb:   const uint8_t fx_NEV[] PROGMEM = {...};
 //   2) egy sor a bakedEffects[] tablaba: { "nev", fx_NEV, KOCKAK, KOCKA_MS, LOOP }
 //        - nev     : a szerkeszto azonositoja (a motor nem hasznalja)
 //        - KOCKAK  : kepkockak szama
 //        - KOCKA_MS: egy kocka idotartama ms-ban (effektenkent kulon sebesseg!)
 //        - LOOP    : hanyszor jatszodjon le (1 = egyszer)
-//  Az effekt ID-ja = 10 + a tablabeli sorszam (elso sor = ID 10, masodik = 11...).
-//  Inditas a jateklogikabol:  effect = HIGH; effectID = 10;
+//  Az effekt ID-ja = a tablabeli SORSZAM + 1 (elso sor = ID 1, masodik = ID 2...).
+//  Inditas a jateklogikabol:  effect = HIGH; effectID = 1;
+//
+//  A jatek jelenlegi trigger-pontjai (ezekhez varja a motor az effektet):
+//   ID 1 = Kiloves       ID 2 = Weed multiball   ID 3 = Weedblast
+//   ID 4 = Looplight     ID 5 = Hid              ID 6 = HurryUp talalat
+//   ID 7+ = szabad uj esemenyekhez
+//
 //  TIPP: a vegere tegyel par halvanyulo kockat, kulonben az utolso kocka
 //        "odacsattan" a normal jatek-fenyre visszaallaskor.
 // ==========================================================================
@@ -71,8 +38,8 @@ struct EffectDef {
   uint8_t  loops;        // hanyszor jatszodjon le (1 = egyszer)
 };
 
-// PELDA/sablon effekt (ID 10): 6 kockas szivarvany-villanas az egesz palyan.
-// A szerkeszto ezt lecsereli/bovi az igazi effektekkel.
+// PELDA/sablon effekt (ID 1): 6 kockas szivarvany-villanas az egesz palyan.
+// A szerkeszto ezt lecsereli az igazi effektekkel.
 const uint8_t fx_rainbow[] PROGMEM = {
   // 0. kocka
   255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0,
@@ -90,7 +57,7 @@ const uint8_t fx_rainbow[] PROGMEM = {
 
 const EffectDef bakedEffects[] = {
   //  nev          data         kockak  kocka_ms  loop     -> ID
-  { "rainbow",     fx_rainbow,      6,      100,    1 },  // ID 10
-  // ide told a szerkeszto uj effektjeit (ID 11, 12, ...)
+  { "rainbow",     fx_rainbow,      6,      100,    1 },  // ID 1 (sablon - csereld le)
+  // ide told a szerkeszto uj effektjeit (ID 2, 3, ...)
 };
 const uint8_t bakedEffectCount = sizeof(bakedEffects) / sizeof(bakedEffects[0]);
