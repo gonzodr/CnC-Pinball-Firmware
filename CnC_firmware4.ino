@@ -2822,36 +2822,18 @@ void BonusXLed() {
     leds[9] = CRGB::Black; // x4
     leds[10] = CRGB::Black; // x2
   }
-  if (bonusx == 1 && bonusx1sw == 0) {
-    bonusx1sw = 1;
-    bonusxtimer1 = millis();
+  // Uj bonusx-szint elerese -> egyszeri hang + "BonusN" trigger.
+  // (A lentebbi kijelzo-blokkok szandekosan valtozatlanok: tobb szint-sw
+  //  egyszerre aktiv lehet, egymast feluliro LED-mintakkal.)
+  boolean* bxsw[4]           = { &bonusx1sw, &bonusx2sw, &bonusx3sw, &bonusx4sw };
+  unsigned long* bxtimer[4]  = { &bonusxtimer1, &bonusxtimer2, &bonusxtimer3, &bonusxtimer4 };
+  if (bonusx >= 1 && bonusx <= 4 && *bxsw[bonusx - 1] == 0) {
+    *bxsw[bonusx - 1] = 1;
+    *bxtimer[bonusx - 1] = millis();
     wTrig.trackPlayPoly(27);
-    Serial.println("Bonus1");
+    Serial.print("Bonus");
+    Serial.println(bonusx); // Bonus1..Bonus4
     delay(20);
-  }
-  if (bonusx == 2 && bonusx2sw == 0) {
-    bonusx2sw = 1;
-    bonusxtimer2 = millis();
-    wTrig.trackPlayPoly(27);
-    Serial.println("Bonus2");
-    delay(20);
-
-  }
-  if (bonusx == 3 && bonusx3sw == 0) {
-    bonusx3sw = 1;
-    bonusxtimer3 = millis();
-    wTrig.trackPlayPoly(27);
-    Serial.println("Bonus3");
-    delay(20);
-
-  }
-  if (bonusx == 4 && bonusx4sw == 0) {
-    bonusx4sw = 1;
-    bonusxtimer4 = millis();
-    wTrig.trackPlayPoly(27);
-    Serial.println("Bonus4");
-    delay(20);
-
   }
   if (bonusx > 4) {
     bonusx = 4;
