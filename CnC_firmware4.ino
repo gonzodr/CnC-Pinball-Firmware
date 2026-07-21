@@ -2359,111 +2359,69 @@ void Weed() {
 /////////////////////////////////////////////////
 
 void Fishtank() {
-  if (SimDigitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 0) {
-    fishTankLightState1 = 1;
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-    }
-    else {
-      Score(1500, 10);
-    }
-    wTrig.trackPlayPoly(TRK_PING);
-    if (giftsw == 1) {
-      giftsw = 0;
-      Gift();
-    }
-  }
-  if (SimDigitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 0) {
-      fishTankLightState2 = 1;
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-    }
-    else {
-      Score(1500, 10);
-    }
-    wTrig.trackPlayPoly(TRK_BEER);
-    if (giftsw == 1) {
-      giftsw = 0;
-      Gift();
+  static const uint8_t fishPin[2]   = { 16, 17 }; // fishTankSwitch1, 2
+  static const uint8_t fishSound[2] = { TRK_PING, TRK_BEER };
+  static const uint8_t fishLed[2]   = { LED_FISH, LED_TANK };
+  int* fstate[2] = { &fishTankLightState1, &fishTankLightState2 };
+
+  // Talalat (normal / hurryUp)
+  for (uint8_t i = 0; i < 2; i++) {
+    if (SimDigitalRead(fishPin[i]) == LOW && *fstate[i] == 0) {
+      *fstate[i] = 1;
+      if (hurryUp == HIGH) {
+        effect = HIGH;
+        effectID = 6;
+        Score(2500, 100);
+        Serial.println("Point1");
+        delay(20);
+      }
+      else {
+        Score(1500, 10);
+      }
+      wTrig.trackPlayPoly(fishSound[i]);
+      if (giftsw == 1) { giftsw = 0; Gift(); }
     }
   }
 
   // Random gift
   if (giftsw == 1) {
-    if (SimDigitalRead(fishTankSwitch1) == LOW && fishTankLightState1 == 2) {
-      fishTankLightState1 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(TRK_PING);
-      wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
-      wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-      Serial.println("Point2");
-      giftsw = 3;
-    }
-
-
-    if (SimDigitalRead(fishTankSwitch2) == LOW && fishTankLightState2 == 2) {
-      fishTankLightState2 = 1;
-      Score(5000, 100);
-      wTrig.trackPlayPoly(TRK_BEER);
-      wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
-      wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-      Serial.println("Point2");
-      giftsw = 3;
+    for (uint8_t i = 0; i < 2; i++) {
+      if (SimDigitalRead(fishPin[i]) == LOW && *fstate[i] == 2) {
+        *fstate[i] = 1;
+        Score(5000, 100);
+        wTrig.trackPlayPoly(fishSound[i]);
+        wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
+        wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
+        Serial.println("Point2");
+        giftsw = 3;
+      }
     }
   }
 
-
-
-  // End random gift
-
-
-
+  // LED-ek
   if (effect == LOW) {
-    if (fishTankLightState1 == 1) {
-      leds[LED_FISH] = CRGB::White; // C
-    }
-    if (fishTankLightState2 == 1) {
-      leds[LED_TANK] = CRGB::White; // C
-    }
-
-    if (fishTankLightState1 == 0) {
-      leds[LED_FISH] = CRGB::Black; // C
-    }
-    if (fishTankLightState2 == 0) {
-      leds[LED_TANK] = CRGB::Black; // C
-    }
-    if (giftsw == 1 ) {
-      if (fishTankLightState1 == 2) {
-        if (ledState == HIGH) {
-          leds[LED_FISH] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[LED_FISH] = CRGB::Yellow; // C
-        }
+    for (uint8_t i = 0; i < 2; i++) {
+      if (*fstate[i] == 1) {
+        leds[fishLed[i]] = CRGB::White;
       }
-      if (fishTankLightState2 == 2) {
-        if (ledState == HIGH) {
-          leds[LED_TANK] = CRGB::Green; // C
-        }
-        if (ledState == LOW) {
-          leds[LED_TANK] = CRGB::Yellow; // C
+      if (*fstate[i] == 0) {
+        leds[fishLed[i]] = CRGB::Black;
+      }
+    }
+    if (giftsw == 1) {
+      for (uint8_t i = 0; i < 2; i++) {
+        if (*fstate[i] == 2) {
+          leds[fishLed[i]] = (ledState == HIGH) ? CRGB::Green : CRGB::Yellow;
         }
       }
     }
   }
 
+  // Mind a 2 celpont -> beer collect (3-nal kis hid elesites)
   if (fishTankLightState1 == 1 && fishTankLightState2 == 1 && fishoff == 0) {
     fishtimer = millis();
     fishoff = 1;
-    beerCollect ++;
+    beerCollect++;
     if (beerCollect == 1) {
       Serial.println("Beer1");
     }
@@ -2478,21 +2436,13 @@ void Fishtank() {
     }
   }
 
-
   if (fishoff == 1) {
     if (millis() - 1000 < fishtimer) {
       Blinktimer();
-      if (ledState == HIGH) {
-        leds[LED_FISH] = CRGB::Green; // C
-        leds[LED_TANK] = CRGB::Green; // C
+      for (uint8_t i = 0; i < 2; i++) {
+        leds[fishLed[i]] = (ledState == HIGH) ? CRGB::Green : CRGB::Yellow;
       }
-      if (ledState == LOW) {
-        leds[LED_FISH] = CRGB::Yellow; // C
-        leds[LED_TANK] = CRGB::Yellow; // C
-      }
-
     }
-
     if (millis() - 1100 > fishtimer) {
       fishTankLightState1 = 0;
       fishTankLightState2 = 0;
@@ -2667,65 +2617,33 @@ void Dave_switch() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 void Gate() {
+  static const uint8_t gatePin[3] = { 45, 44, 40 }; // gateSwitch1, 2, 3
+  boolean* gateamb[3] = { &gateamb1, &gateamb2, &gateamb3 };
 
-  if (SimDigitalRead(gateSwitch1) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(TRK_KVAKK);
-    if (gatearr[1] == 2) {
-      Score(1500, 50);
-      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
-      wTrig.trackPlayPoly(TRK_WEEDFULL);
-      Serial.println("Drift");
-      delay(20);
+  for (uint8_t i = 0; i < 3; i++) {
+    if (SimDigitalRead(gatePin[i]) == LOW && gatetimesw == 0) {
+      uint8_t g = i + 1; // gatearr-index (1..3)
+      wTrig.trackPlayPoly(TRK_KVAKK);
+      if (gatearr[g] == 2) { // megjelolt kapu -> drift-pont
+        Score(1500, 50);
+        wTrig.trackPlayPoly(TRK_CHEECHYEAH);
+        wTrig.trackPlayPoly(TRK_WEEDFULL);
+        Serial.println("Drift");
+        delay(20);
+      }
+      // ha barmelyik MASIK kapu meg van jelolve (==2), toroljuk mind a kettot
+      uint8_t o1 = (g == 1) ? 2 : 1;
+      uint8_t o2 = (g == 3) ? 2 : 3;
+      if (gatearr[o1] == 2 || gatearr[o2] == 2) {
+        gatearr[o1] = 0;
+        gatearr[o2] = 0;
+      }
+      gatearr[g] = 1;
+      gatetimesw = 1;
+      gatetimer = millis();
+      *gateamb[i] = HIGH;
+      gateambtimer = millis();
     }
-    if (gatearr[2] == 2 || gatearr[3] == 2) {
-      gatearr[2] = 0;
-      gatearr[3] = 0;
-    }
-    gatearr[1] = 1;
-    gatetimesw = 1;
-    gatetimer = millis();
-    gateamb1 = HIGH;
-    gateambtimer = millis();
-  }
-
-  if (SimDigitalRead(gateSwitch2) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(TRK_KVAKK);
-    if (gatearr[2] == 2) {
-      Score(1500, 50);
-      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
-      wTrig.trackPlayPoly(TRK_WEEDFULL);
-      Serial.println("Drift");
-      delay(20);
-    }
-    if (gatearr[1] == 2 || gatearr[3] == 2) {
-      gatearr[1] = 0;
-      gatearr[3] = 0;
-    }
-    gatearr[2] = 1;
-    gatetimesw = 1;
-    gatetimer = millis();
-    gateamb2 = HIGH;
-    gateambtimer = millis();
-  }
-
-  if (SimDigitalRead(gateSwitch3) == LOW && gatetimesw == 0) {
-    wTrig.trackPlayPoly(TRK_KVAKK);
-    if (gatearr[3] == 2) {
-      Score(1500, 50);
-      wTrig.trackPlayPoly(TRK_CHEECHYEAH);
-      wTrig.trackPlayPoly(TRK_WEEDFULL);
-      Serial.println("Drift");
-      delay(20);
-    }
-    if (gatearr[1] == 2 || gatearr[2] == 2) {
-      gatearr[1] = 0;
-      gatearr[2] = 0;
-    }
-    gatearr[3] = 1;
-    gatetimesw = 1;
-    gatetimer = millis();
-    gateamb3 = HIGH;
-    gateambtimer = millis();
   }
 
   if (millis() - 1000 > gatetimer) {
@@ -2765,37 +2683,12 @@ void Gate() {
   }
 
   if (effect == LOW) {
-    if (gatearr[1] == 1) {
-      leds[LED_GATE1] = CRGB::White; // D
-    }
-    if (gatearr[2] == 1) {
-      leds[LED_GATE2] = CRGB::White; // A
-    }
-    if (gatearr[3] == 1) {
-      leds[LED_GATE3] = CRGB::White; // D
-    }
-
-
-    if (gatearr[1] == 2) {
-      leds[LED_GATE1] = CRGB::Orange; // D
-    }
-    if (gatearr[2] == 2) {
-      leds[LED_GATE2] = CRGB::Orange; // A
-    }
-    if (gatearr[3] == 2) {
-      leds[LED_GATE3] = CRGB::Orange; // D
-    }
-
-
-
-    if (gatearr[1] == 0) {
-      leds[LED_GATE1] = CRGB::Black; // D
-    }
-    if (gatearr[2] == 0) {
-      leds[LED_GATE2] = CRGB::Black; // A
-    }
-    if (gatearr[3] == 0) {
-      leds[LED_GATE3] = CRGB::Black; // D
+    static const uint8_t gateLed[3] = { LED_GATE1, LED_GATE2, LED_GATE3 };
+    for (uint8_t i = 0; i < 3; i++) {
+      uint8_t g = i + 1;
+      if (gatearr[g] == 1) { leds[gateLed[i]] = CRGB::White; }
+      if (gatearr[g] == 2) { leds[gateLed[i]] = CRGB::Orange; }
+      if (gatearr[g] == 0) { leds[gateLed[i]] = CRGB::Black; }
     }
   }
 
