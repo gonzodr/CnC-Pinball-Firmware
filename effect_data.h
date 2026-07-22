@@ -15,13 +15,17 @@
 //  (frames - loopFrames) EGYSZER lejatszodo OUTRO. 0 vagy == frames -> nincs outro.
 //
 //  OVERLAY / CANVAS MOD (overlay flag):
-//   - overlay = 0 (FULL): az effekt atveszi a PALYAT; a (0,0,0) cella = fekete.
-//     Inditas a jateklogikabol:  effect = HIGH; effectID = ID;
-//   - overlay = 1 (OVERLAY/CANVAS): az effekt csak RARAJZOL a normal jatek-fenyre;
-//     a (0,0,0) cella = ATLATSZO (a motor NEM erinti, a jatek latszik alatta).
-//     Igy egy kis effekt (pl. CnC kigyujtve) nem sotetiti el a palya tobbi reszet!
-//     Inditas a jateklogikabol:  PlayOverlay(ID);
-//     (Ha overlay-modban egy LED-et tenyleg le akarsz oltani, hasznalj 1,1,1-et.)
+//   - overlay = 0 (FULL): az effekt atveszi a PALYAT (minden cella rajzolodik,
+//     a (0,0,0) = fekete). Inditas:  effect = HIGH; effectID = ID;
+//   - overlay = 1 (OVERLAY/CANVAS): az effekt RARAJZOL a normal jatek-fenyre,
+//     PER-CELLA / PER-KOCKA donthetsz. Inditas:  PlayOverlay(ID);
+//        magenta (255,0,255) = ATLATSZO -> a motor kihagyja, a jatek latszik alatta
+//        (0,0,0)             = FEKETE, OPAQUE -> elsotetiti azt a LED-et
+//        barmi mas           = szin
+//     Igy pl. egy villanas ELEJE csupa (0,0,0) (pillanatnyi elsotetites),
+//     a lefutasa meg szinek + magenta (a tobbi LED atlatszo). A szerkeszto
+//     "canvas mod"-ban az URES/radirozott cellakat magentakent (255,0,255)
+//     exportalja. (Sebesseg: cellankent 1 osszehasonlitas, elhanyagolhato.)
 //
 //  EGY EFFEKT (ezt csinalja a szerkeszto): egy fx_NEV[] tomb + egy sor a tablaba:
 //    { ID, "nev", fx_NEV, KOCKAK, KOCKA_MS, LOOPS, LOOPFRAMES, OVERLAY }

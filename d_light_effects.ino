@@ -20,6 +20,13 @@
 // tobbi 1x outro. A vegen a motor magatol all vissza.
 
 #define EFFECT_LEDS 68 // a jatekter LED-jei (0..67, lasd LEDMAP.md)
+// Overlay effektnel a per-cella ATLATSZO sentinel: magenta (255,0,255).
+// Ezt a cellat a motor kihagyja (a jatek latszik alatta). A (0,0,0) NEM
+// atlatszo -> az fekete (elsotetit). Igy per-cella/per-kocka donthetsz:
+// szin / fekete-elsotetites / atlatszo.
+#define FX_TR_R 255
+#define FX_TR_G 0
+#define FX_TR_B 255
 
 int  runningEffect = 0;
 unsigned long effectStartT = 0;
@@ -88,7 +95,9 @@ void RunOverlayEffect() {
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     uint8_t r = pgm_read_byte(p), g = pgm_read_byte(p + 1), b = pgm_read_byte(p + 2);
-    if (r || g || b) { // csak ha van szinadat -> (0,0,0) = atlatszo
+    // magenta (255,0,255) = ATLATSZO -> kihagyjuk (a jatek latszik alatta).
+    // minden mas rajzolodik, a (0,0,0) fekete is (elsotetit)!
+    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) {
       leds[i] = CRGB(r, g, b);
     }
     p += 3;
