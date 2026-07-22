@@ -1,53 +1,51 @@
 #pragma once
 // ==========================================================================
 //  FENYEFFEKT-ADATOK  (a d_light_effects.ino baked-frame motorja hasznalja)
-//  A KULSO SZERKESZTO ide tolti/innen olvassa az effekteket, a fo kod bantasa
-//  nelkul.
+//  A KULSO SZERKESZTO ide tolti/innen olvassa az effekteket.
 // --------------------------------------------------------------------------
 //  FORMATUM: minden effekt egy PROGMEM bajt-tomb, KOCKA-MAJOR sorrendben.
 //  Kockankent 68 LED (index 0..67, lasd LEDMAP.md), LED-enkent 3 bajt: R,G,B
 //  (0..255). Egy kocka = 68*3 = 204 bajt. A tomb hossza = frames * 204.
-//  Az opacity / kialvas / per-LED fade MIND ide van "kisutve" - a motor csak
-//  kirakja a kepkockat. Fix idokoz (frameMs) - nincs motor-oldali interpolacio.
+//  Minden (szin, fenyero/opacity, per-LED fade) ide van "kisutve"; fix idokoz.
 //
-//  FPS (frameMs egesz ms!):  20 fps = 50 ms (PONTOS, ez az alap)
-//                            25 fps = 40 ms (PONTOS)
-//                            30 fps = 33 ms (kb. 30.3 fps - nem pontos)
-//   (Pontos csak az 1000 osztoi: 20/25/40/50/100 fps. 24 es 30 nem az.)
+//  FPS (frameMs egesz ms!):  20 fps = 50 ms (PONTOS, alap) | 25 fps = 40 ms
+//   (Pontos csak az 1000 osztoi: 20/25/40/50/100. 24 es 30 nem az.)
 //
-//  LOOP + OUTRO: a "loopFrames" az elso N kocka = a CIKLUS, ami "loops"-szor
-//  ismetlodik; a tobbi (frames - loopFrames) EGYSZER lejatszodo OUTRO a vegen.
-//   - loopFrames == frames (vagy 0): az egesz a ciklus, nincs kulon outro.
-//   - pl. "lukteto 5x, majd egyszer elhalvanyul": loopFrames=<lukteto hossza>,
-//     loops=5, a maradek kocka a fade-out.
+//  LOOP + OUTRO: loopFrames = az elso N kocka = CIKLUS ("loops"-szor), a tobbi
+//  (frames - loopFrames) EGYSZER lejatszodo OUTRO. 0 vagy == frames -> nincs outro.
 //
-//  EGY EFFEKT (ezt csinalja a szerkeszto):
-//   1) const uint8_t fx_NEV[] PROGMEM = { ... };
-//   2) egy sor a bakedEffects[] tablaba:
-//        { ID, "nev", fx_NEV, KOCKAK, KOCKA_MS, LOOPS, LOOPFRAMES }
-//  Az ID a leiroban EXPLICIT (nem a sorrend adja) -> a szerkeszto szabadon
-//  rendezhet, az ID stabil marad. Inditas: effect = HIGH; effectID = ID;
+//  OVERLAY / CANVAS MOD (overlay flag):
+//   - overlay = 0 (FULL): az effekt atveszi a PALYAT; a (0,0,0) cella = fekete.
+//     Inditas a jateklogikabol:  effect = HIGH; effectID = ID;
+//   - overlay = 1 (OVERLAY/CANVAS): az effekt csak RARAJZOL a normal jatek-fenyre;
+//     a (0,0,0) cella = ATLATSZO (a motor NEM erinti, a jatek latszik alatta).
+//     Igy egy kis effekt (pl. CnC kigyujtve) nem sotetiti el a palya tobbi reszet!
+//     Inditas a jateklogikabol:  PlayOverlay(ID);
+//     (Ha overlay-modban egy LED-et tenyleg le akarsz oltani, hasznalj 1,1,1-et.)
 //
-//  A jatek jelenlegi trigger-pontjai (ezekhez az ID-khoz varja a motor):
-//   ID 1 = Kiloves    ID 2 = Weed multiball   ID 3 = Weedblast
-//   ID 4 = Looplight  ID 5 = Hid              ID 6 = HurryUp talalat
-//   ID 7+ = szabad uj esemenyekhez
+//  EGY EFFEKT (ezt csinalja a szerkeszto): egy fx_NEV[] tomb + egy sor a tablaba:
+//    { ID, "nev", fx_NEV, KOCKAK, KOCKA_MS, LOOPS, LOOPFRAMES, OVERLAY }
+//  Az ID EXPLICIT (nem a sorrend) -> szabadon rendezheto, az ID stabil.
+//
+//  Trigger-pontok (FULL effektek): ID 1=Kiloves 2=Weed-multiball 3=Weedblast
+//   4=Looplight 5=Hid 6=HurryUp. ID 7+ szabad. Az OVERLAY effektekhez a firmware
+//   megfelelo pontjaira PlayOverlay(ID) kerul (szolj, melyik esemenyhez).
 //
 //  MEMORIA: kockak * 68 * 3 bajt / effekt. Szabad flash kb. 200 KB.
 // ==========================================================================
 
 struct EffectDef {
-  uint8_t     id;         // firmware-ID (a jateklogika effectID-je ezt hivja)
+  uint8_t     id;         // firmware-ID (a jateklogika ezt hivja)
   const char* name;       // szerkeszto-nev (futasidoben nem kell)
   const uint8_t* data;    // PROGMEM: frames * 68 * 3 bajt (R,G,B, kocka-major)
   uint16_t    frames;     // osszes kocka
-  uint16_t    frameMs;    // kocka-idotartam ms (50=20fps, 40=25fps, 33=~30fps)
+  uint16_t    frameMs;    // kocka-idotartam ms (50=20fps, 40=25fps)
   uint8_t     loops;      // a ciklus hanyszor ismetlodjon (1 = egyszer)
-  uint16_t    loopFrames; // a ciklus hossza (elso N kocka); a tobbi = 1x outro.
-                          // 0 vagy == frames -> az egesz a ciklus (nincs outro)
+  uint16_t    loopFrames; // ciklus hossza (elso N kocka); a tobbi = 1x outro; 0/frames = nincs outro
+  uint8_t     overlay;    // 0 = full (atveszi a palyat); 1 = overlay (0,0,0 = atlatszo)
 };
 
-// PELDA/sablon (ID 1): 6 kockas szivarvany-villanas. A szerkeszto lecsereli.
+// PELDA/sablon (ID 1): 6 kockas szivarvany-villanas, FULL. A szerkeszto lecsereli.
 const uint8_t fx_rainbow[] PROGMEM = {
   // 0. kocka
   255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0, 255,0,0,
@@ -64,8 +62,8 @@ const uint8_t fx_rainbow[] PROGMEM = {
 };
 
 const EffectDef bakedEffects[] = {
-  // ID  nev          data        kockak  ms  loops loopFrames
-  {  1, "rainbow",   fx_rainbow,     6,   100,   1,     6 },  // sablon - csereld le
+  // ID  nev         data        kockak  ms  loops loopFrames overlay
+  {  1, "rainbow",  fx_rainbow,     6,   100,   1,     6,       0 },  // sablon - csereld le
   // ide told a szerkeszto uj effektjeit
 };
 const uint8_t bakedEffectCount = sizeof(bakedEffects) / sizeof(bakedEffects[0]);

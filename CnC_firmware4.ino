@@ -752,8 +752,9 @@ void loop() {
     BridgeHigh();
     HurryUp();
     Tilt();
-    GiftRunlight();   // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
-    RunLightEffect(); // fenyeffekt-motor (d_light_effects.ino), effect == HIGH eseten fut
+    GiftRunlight();     // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
+    RunOverlayEffect(); // overlay/canvas effekt: rarajzol a jatek-fenyre (subsystemek UTAN!)
+    RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
   }
 
   if (effect == LOW) {

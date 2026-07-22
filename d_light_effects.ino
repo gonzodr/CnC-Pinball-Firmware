@@ -5,54 +5,97 @@
 /////////////////////////////////////////////////
 //
 // Minden effekt "baked-frame": kesz RGB kepkockakbol all, amiket a KULSO
-// SZERKESZTO gyart. A szerkeszto cellankent kisut MINDENT (szin, fenyero/
-// opacity, per-LED kialvas, tetszoleges gorbe) - a motor csak kirakja a
-// kepkockat a szalagra. Nincs procedturalis logika, nincs fade a motorban.
+// SZERKESZTO gyart (cellankent kesz szin/fenyero, tetszoleges gorbe) - a
+// motor csak kirakja. Adat + leiro: effect_data.h (ott a teljes spec).
 //
-// Az effektek adata + leiroja az effect_data.h-ban van (ott a reszletes
-// formatum-specifikacio, az ID->esemeny terkep, az FPS-tabla es a loop/outro
-// leirasa is).
+// KETFELE lejatszas (a leiro overlay flagje donti el):
+//  - FULL (overlay=0): az effekt ATVESZI a palyat, a (0,0,0) = fekete.
+//    Inditas: effect = HIGH; effectID = ID;   (a jatek-LED-ek el vannak nyomva)
+//  - OVERLAY (overlay=1): az effekt csak RARAJZOL a normal jatek-fenyre, a
+//    (0,0,0) cella = ATLATSZO (a motor nem erinti). Igy egy kis effekt nem
+//    sotetiti el a palya tobbi reszet. Inditas: PlayOverlay(ID);
 //
-// Inditas a jateklogikabol (VALTOZATLAN interfesz):  effect = HIGH; effectID = ID;
-// Az effekt ID-ja EXPLICIT a leiroban (nem a tabla sorrendje) -> ID szerint
-// keresunk. A motor a vegen magatol all vissza (effect = LOW + Initlights).
-//
-// LOOP + OUTRO: a leiro loopFrames = a ciklus hossza (elso N kocka), ami loops-
-// szor ismetlodik; a maradek (frames - loopFrames) EGYSZER lejatszodo outro.
+// Az effekt ID-ja EXPLICIT a leiroban (nem a tabla-sorrend) -> ID szerint
+// keresunk. LOOP+OUTRO: loopFrames = a ciklus (elso N kocka, loops-szor), a
+// tobbi 1x outro. A vegen a motor magatol all vissza.
 
 #define EFFECT_LEDS 68 // a jatekter LED-jei (0..67, lasd LEDMAP.md)
 
-int runningEffect = 0;
+int  runningEffect = 0;
 unsigned long effectStartT = 0;
 
-// Egy baked effekt lejatszasa (idx = a bakedEffects[] tablabeli sorszam).
-void RunBakedEffect(uint8_t idx) {
-  const EffectDef& e = bakedEffects[idx];
+int8_t overlayIdx = -1;           // futo overlay effekt tabla-indexe (-1 = nincs)
+unsigned long overlayStartT = 0;
+
+// Az aktualis kockaindex (ciklus + outro logika). done = true ha az effekt lejart.
+uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done) {
   uint16_t loopLen  = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
   uint8_t  loops    = e.loops ? e.loops : 1;
   uint16_t outroLen = e.frames - loopLen;
-  // uint32_t: AVR-en az int 16 bites, a loopLen*loops (es a step) tulcsordulhat
   uint32_t cycleSteps = (uint32_t)loopLen * loops;
   uint32_t totalSteps = cycleSteps + outroLen;
+  uint32_t step = (e.frameMs > 0) ? ((millis() - startT) / e.frameMs) : 0;
+  if (step >= totalSteps) { done = true; return 0; }
+  done = false;
+  return (step < cycleSteps) ? (uint16_t)(step % loopLen)
+                             : (uint16_t)(loopLen + (step - cycleSteps));
+}
 
-  unsigned long elapsed = millis() - effectStartT;
-  uint32_t      step    = (e.frameMs > 0) ? (elapsed / e.frameMs) : 0;
+// Az effekt data-kezdopointere az adott kockahoz (PROGMEM).
+static inline const uint8_t* bakedFramePtr(const EffectDef& e, uint16_t frame) {
+  return e.data + (uint32_t)frame * EFFECT_LEDS * 3;
+}
 
-  if (step < totalSteps) {
-    uint16_t frame = (step < cycleSteps) ? (uint16_t)(step % loopLen)          // ciklus
-                                         : (uint16_t)(loopLen + (step - cycleSteps)); // outro (1x)
-    const uint8_t* p = e.data + (uint32_t)frame * EFFECT_LEDS * 3;
-    for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
-      leds[i] = CRGB(pgm_read_byte(p), pgm_read_byte(p + 1), pgm_read_byte(p + 2));
-      p += 3;
-    }
-  }
-  else { // lejart -> vissza a normal jatek-fenyre
+// FULL effekt: az egesz palyat felulirja (a (0,0,0) is fekete lesz).
+void RunBakedEffect(uint8_t idx) {
+  const EffectDef& e = bakedEffects[idx];
+  bool done;
+  uint16_t frame = bakedCurrentFrame(e, effectStartT, done);
+  if (done) { // vege -> vissza a normal jatek-fenyre
     effect = LOW; effectID = 0; runningEffect = 0;
     initlight = HIGH; Initlights();
+    return;
+  }
+  const uint8_t* p = bakedFramePtr(e, frame);
+  for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
+    leds[i] = CRGB(pgm_read_byte(p), pgm_read_byte(p + 1), pgm_read_byte(p + 2));
+    p += 3;
   }
 }
 
+// OVERLAY effekt inditasa a jateklogikabol (csak overlay-flages effektet fogad).
+void PlayOverlay(uint8_t id) {
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == id && bakedEffects[i].overlay) {
+      overlayIdx = i;
+      overlayStartT = millis();
+      return;
+    }
+  }
+}
+
+// OVERLAY effekt: csak a szinadatot hordozo (nem-(0,0,0)) cellakra rajzol,
+// a tobbi LED-et a jatek-kepen hagyja. A loop VEGEN a subsystemek utan hivando!
+void RunOverlayEffect() {
+  if (overlayIdx < 0 || effect == HIGH) { // full effekt alatt nincs overlay
+    return;
+  }
+  const EffectDef& e = bakedEffects[overlayIdx];
+  bool done;
+  uint16_t frame = bakedCurrentFrame(e, overlayStartT, done);
+  if (done) { overlayIdx = -1; return; } // vege - a jatek-feny megy tovabb
+
+  const uint8_t* p = bakedFramePtr(e, frame);
+  for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
+    uint8_t r = pgm_read_byte(p), g = pgm_read_byte(p + 1), b = pgm_read_byte(p + 2);
+    if (r || g || b) { // csak ha van szinadat -> (0,0,0) = atlatszo
+      leds[i] = CRGB(r, g, b);
+    }
+    p += 3;
+  }
+}
+
+// FULL effektek dispatchere (effect == HIGH). Az overlay kulon ut (RunOverlayEffect).
 void RunLightEffect() {
   if (effect != HIGH) {
     runningEffect = 0;
@@ -62,13 +105,11 @@ void RunLightEffect() {
     runningEffect = effectID;
     effectStartT = millis();
   }
-
-  // effekt keresese ID szerint (a leiro id mezoje, nem a tabla-sorrend)
   int8_t idx = -1;
   for (uint8_t i = 0; i < bakedEffectCount; i++) {
     if (bakedEffects[i].id == runningEffect) { idx = i; break; }
   }
-  if (idx < 0) { // nincs ilyen ID (meg) -> azonnal, biztonsagosan lezar
+  if (idx < 0) { // nincs ilyen ID (meg) -> biztonsagos lezaras
     effect = LOW; effectID = 0; runningEffect = 0;
     initlight = HIGH; Initlights();
     return;
