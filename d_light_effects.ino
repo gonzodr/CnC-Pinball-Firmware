@@ -125,6 +125,80 @@ void RunLightEffect() {
   }
   RunBakedEffect(idx);
 }
+
+/////////////////////////////////////////////////
+//// LIGHT TEST (szerviz menubol, soros parancs)
+/////////////////////////////////////////////////
+// A GUI szerviz menu "Light test" kepernyoje kuldi soroson:
+//   LT,<id>  -> az adott ID-ju effekt VEGTELENITVE (loop) jatszasa
+//   LT,S     -> stop (vissza a normal fenyre)
+// Csak VIZUALIS: a leds[]-et iratja felul a FastLED.show() elott, tekercset
+// / jateklogikat NEM erint. A parancs-olvaso nem-blokkolo (nem readString!),
+// es a main loop csak intmon != 2 mellett hivja (nem utkozik a nevbevitellel).
+
+int8_t lightTestIdx = -1;          // -1 = nincs teszt; egyebkent bakedEffects index
+unsigned long lightTestStartT = 0;
+
+void StartLightTest(uint8_t id) {
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == id) {
+      lightTestIdx = i;
+      lightTestStartT = millis();
+      return;
+    }
+  }
+  // ismeretlen id -> nem valtunk (marad, ami volt)
+}
+
+void StopLightTest() {
+  lightTestIdx = -1; // a kovetkezo kor magatol visszaall a normal fenyre
+}
+
+// A kivalasztott effektet loopolva rajzolja feketere torolt alapra,
+// sentinel-tudatosan (magenta = atlatszo -> fekete marad). Igy full ES
+// overlay effekt is helyesen nez ki. A FastLED.show() ELE hivando.
+void RunLightTest() {
+  if (lightTestIdx < 0) return;
+  const EffectDef& e = bakedEffects[lightTestIdx];
+  bool done;
+  uint16_t frame = bakedCurrentFrame(e, lightTestStartT, done);
+  if (done) {                    // loop: ujraindul
+    lightTestStartT = millis();
+    frame = 0;
+  }
+  for (uint8_t i = 0; i < EFFECT_LEDS; i++) leds[i] = CRGB::Black;
+  const uint8_t* p = bakedFramePtr(e, frame);
+  for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
+    uint8_t r = pgm_read_byte(p), g = pgm_read_byte(p + 1), b = pgm_read_byte(p + 2);
+    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(r, g, b);
+    p += 3;
+  }
+}
+
+// "LT,<id>" vagy "LT,S" feldolgozasa (mas sort csendben eldob).
+void HandleLightTestCmd(const char* s) {
+  if (s[0] != 'L' || s[1] != 'T' || s[2] != ',') return;
+  const char* arg = s + 3;
+  if (arg[0] == 'S' || arg[0] == 's') { StopLightTest(); return; }
+  StartLightTest((uint8_t)atoi(arg));
+}
+
+// Nem-blokkolo soros sor-olvaso a light-test parancsokhoz. A main loop
+// hivja minden korben (intmon != 2 mellett). Sorvegig gyujt, majd feldolgoz.
+char ltBuf[16];
+uint8_t ltLen = 0;
+void PollLightTestSerial() {
+  while (Serial.available() > 0) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (ltLen > 0) { ltBuf[ltLen] = '\0'; HandleLightTestCmd(ltBuf); ltLen = 0; }
+    } else if (ltLen < sizeof(ltBuf) - 1) {
+      ltBuf[ltLen++] = c;
+    } else {
+      ltLen = 0; // tullepes -> eldobjuk a sort
+    }
+  }
+}
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 //// End Fenyeffekt motor

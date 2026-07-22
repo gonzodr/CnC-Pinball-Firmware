@@ -718,6 +718,7 @@ void setup() {
 void loop() {
   CoilGuardReport(); // jelzi a sorosra, ha a tekercsvedelem kozbelepett
   SimPoll();         // probapadi szimulator lepteto - eles buildben ures
+  if (intmon != 2) PollLightTestSerial(); // szerviz-menu light test (LT,..) - nevbevitelkor NEM, hogy ne utkozzon
 
   if (intmon != 0) { // 1 = attract, 2 = hiscore/nevbevitel, 3 = player select
     intmMode();
@@ -764,6 +765,7 @@ void loop() {
 
     FillLEDsFromPaletteColors( startIndex);
   }
+  RunLightTest(); // szerviz-menu light test: ha aktiv, feluliria a leds[]-et (loopolva, csak vizualis)
   FastLED.show();
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 
