@@ -16,8 +16,10 @@
 //    sotetiti el a palya tobbi reszet. Inditas: PlayOverlay(ID);
 //
 // Az effekt ID-ja EXPLICIT a leiroban (nem a tabla-sorrend) -> ID szerint
-// keresunk. LOOP+OUTRO: loopFrames = a ciklus (elso N kocka, loops-szor), a
-// tobbi 1x outro. A vegen a motor magatol all vissza.
+// keresunk. INTRO+LOOP+OUTRO: introFrames = az elso N kocka EGYSZER lefut,
+// utana [introFrames, loopFrames) a ciklus (loops-szor), a tobbi 1x outro.
+// introFrames=0 -> nincs intro (a ciklus rogton a 0. kockatol indul, a regi
+// viselkedes). A vegen a motor magatol all vissza.
 
 #define EFFECT_LEDS 68 // a jatekter LED-jei (0..67, lasd LEDMAP.md)
 // Overlay effektnel a per-cella ATLATSZO sentinel: magenta (255,0,255).
@@ -49,18 +51,25 @@ unsigned long effectStartT = 0;
 int8_t overlayIdx = -1;           // futo overlay effekt tabla-indexe (-1 = nincs)
 unsigned long overlayStartT = 0;
 
-// Az aktualis kockaindex (ciklus + outro logika). done = true ha az effekt lejart.
+// Az aktualis kockaindex (intro + ciklus + outro logika). done = true ha az effekt lejart.
 uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done) {
-  uint16_t loopLen  = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
+  uint16_t introLen = (e.introFrames > e.frames) ? e.frames : e.introFrames;
+  uint16_t loopEnd  = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
+  if (loopEnd < introLen) loopEnd = introLen; // biztonsagi kapocs: a ciklus nem erhet veget az intro elott
+  uint16_t loopLen  = loopEnd - introLen;
   uint8_t  loops    = e.loops ? e.loops : 1;
-  uint16_t outroLen = e.frames - loopLen;
+  uint16_t outroLen = e.frames - loopEnd;
   uint32_t cycleSteps = (uint32_t)loopLen * loops;
-  uint32_t totalSteps = cycleSteps + outroLen;
+  uint32_t totalSteps = (uint32_t)introLen + cycleSteps + outroLen;
   uint32_t step = (e.frameMs > 0) ? ((millis() - startT) / e.frameMs) : 0;
   if (step >= totalSteps) { done = true; return 0; }
   done = false;
-  return (step < cycleSteps) ? (uint16_t)(step % loopLen)
-                             : (uint16_t)(loopLen + (step - cycleSteps));
+  if (step < introLen) return (uint16_t)step;
+  uint32_t afterIntro = step - introLen;
+  if (afterIntro < cycleSteps) {
+    return (uint16_t)(introLen + (loopLen ? (afterIntro % loopLen) : 0));
+  }
+  return (uint16_t)(loopEnd + (afterIntro - cycleSteps));
 }
 
 // Az effekt data-kezdopointere az adott kockahoz (PROGMEM).

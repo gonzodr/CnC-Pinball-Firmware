@@ -25,6 +25,7 @@ struct EffectDef {
   uint8_t loops;
   uint16_t loopFrames;
   uint8_t overlay;
+  uint16_t introFrames; // NEW: first N frames play ONCE before the loop starts (0 = no intro)
 };
 
 // Loop - Jackpot: 36 frames, 7344 bytes, 20.000 FPS; OVERLAY/CANVAS (FF00FF sentinel is transparent; black stays opaque).
@@ -291,9 +292,9 @@ const uint8_t fx_shooter[] PROGMEM = {
 // CNLIGHT_PROJECT_V1_END
 
 const EffectDef bakedEffects[] = {
-  // ID, name, data, frames, frameMs, loops, loopFrames, overlay
-  { 1, "Loop - Jackpot", fx_loop_jackpot, 36, 50, 1, 36, 1 },
-  { 2, "UFO Lottery", fx_ufo_lottery, 60, 50, 1, 60, 0 },
-  { 3, "Shooter", fx_shooter, 10, 50, 1, 10, 0 },
+  // ID, name, data, frames, frameMs, loops, loopFrames, overlay, introFrames
+  { 1, "Loop - Jackpot", fx_loop_jackpot, 36, 50, 1, 36, 1, 0 },
+  { 2, "UFO Lottery", fx_ufo_lottery, 60, 50, 1, 60, 0, 0 },
+  { 3, "Shooter", fx_shooter, 10, 50, 1, 10, 0, 0 },
 };
 const uint8_t bakedEffectCount = sizeof(bakedEffects) / sizeof(bakedEffects[0]);
