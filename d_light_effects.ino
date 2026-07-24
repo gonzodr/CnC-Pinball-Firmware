@@ -28,6 +28,16 @@
 #define FX_TR_G 0
 #define FX_TR_B 255
 
+// Az effect_data.h-ban a fx_* tablak XOR-maszkolva vannak TAROLVA. Ok: ezen a
+// panelen az USB-soros feltoltes a maszkolatlan bajtmintakon elhal (a flash
+// iras 28%-nal timeoutol), maszkolva viszont hibatlanul felmegy. A maszk csak
+// a tarolast erinti, olvasaskor a fx_read() visszafejti - a szinek valtozatlanok,
+// a magenta sentinel vizsgalat is a dekodolt ertekeken fut.
+// FIGYELEM: az effect_data.h GENERALT fajl. Ujrageneralas utan ujra le kell
+// futtatni a mask_effect_data.ps1-et, kulonben elszinezodnek az effektek!
+#define FX_DATA_MASK 0x5A
+static inline uint8_t fx_read(const uint8_t* p) { return pgm_read_byte(p) ^ FX_DATA_MASK; }
+
 int  runningEffect = 0;
 unsigned long effectStartT = 0;
 
@@ -65,7 +75,7 @@ void RunBakedEffect(uint8_t idx) {
   }
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
-    leds[i] = CRGB(pgm_read_byte(p), pgm_read_byte(p + 1), pgm_read_byte(p + 2));
+    leds[i] = CRGB(fx_read(p), fx_read(p + 1), fx_read(p + 2));
     p += 3;
   }
 }
@@ -94,7 +104,7 @@ void RunOverlayEffect() {
 
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
-    uint8_t r = pgm_read_byte(p), g = pgm_read_byte(p + 1), b = pgm_read_byte(p + 2);
+    uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
     // magenta (255,0,255) = ATLATSZO -> kihagyjuk (a jatek latszik alatta).
     // minden mas rajzolodik, a (0,0,0) fekete is (elsotetit)!
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) {
@@ -169,7 +179,7 @@ void RunLightTest() {
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) leds[i] = CRGB::Black;
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
-    uint8_t r = pgm_read_byte(p), g = pgm_read_byte(p + 1), b = pgm_read_byte(p + 2);
+    uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(r, g, b);
     p += 3;
   }
