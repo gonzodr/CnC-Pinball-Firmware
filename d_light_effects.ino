@@ -36,6 +36,11 @@
 // FIGYELEM: az effect_data.h GENERALT fajl. Ujrageneralas utan ujra le kell
 // futtatni a mask_effect_data.ps1-et, kulonben elszinezodnek az effektek!
 #define FX_DATA_MASK 0x5A
+// Maszkolatlan effect_data.h-val a firmware LEFORDULNA es FELMENNE, csak rossz
+// szinekkel - ezert ez itt fordulaskor elhasal helyette.
+#if !defined(FX_DATA_MASK_APPLIED) || (FX_DATA_MASK_APPLIED != FX_DATA_MASK)
+#error "effect_data.h is not XOR-masked (or uses a different mask) - run mask_effect_data.ps1"
+#endif
 static inline uint8_t fx_read(const uint8_t* p) { return pgm_read_byte(p) ^ FX_DATA_MASK; }
 
 int  runningEffect = 0;

@@ -9,11 +9,12 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
-// FX_DATA_XOR_MASKED: 0x5A
+// Must match FX_DATA_MASK in d_light_effects.ino; that file #errors if it doesn't.
+#define FX_DATA_MASK_APPLIED 0x5A
 // The fx_* tables below are stored XOR-masked; d_light_effects.ino undoes it in
 // fx_read(). Without the mask this board's USB-serial upload dies at 28% of the
 // flash write. If you regenerate this file with the CnC Light Editor, re-run
-// mask_effect_data.ps1 or the effects will come out with wrong colours.
+// mask_effect_data.ps1 or the build will stop with an #error.
 
 struct EffectDef {
   uint8_t id;
