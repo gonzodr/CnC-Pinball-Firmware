@@ -82,10 +82,16 @@ void RunBakedEffect(uint8_t idx) {
   const EffectDef& e = bakedEffects[idx];
   bool done;
   uint16_t frame = bakedCurrentFrame(e, effectStartT, done);
-  if (done) { // vege -> vissza a normal jatek-fenyre
-    effect = LOW; effectID = 0; runningEffect = 0;
-    initlight = HIGH; Initlights();
-    return;
+  if (done) {
+    // Hurry Up alatt az ID6 vegtelenitve loopol (a mod vegeig), nem all le.
+    if (hurryUp == HIGH && runningEffect == 6) {
+      effectStartT = millis();
+      frame = bakedCurrentFrame(e, effectStartT, done);
+    } else { // vege -> vissza a normal jatek-fenyre
+      effect = LOW; effectID = 0; runningEffect = 0;
+      initlight = HIGH; Initlights();
+      return;
+    }
   }
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {

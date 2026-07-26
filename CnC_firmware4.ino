@@ -758,12 +758,15 @@ void loop() {
     RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
   }
 
-  if (effect == LOW) {
-
+  {
     static int startIndex = 0;
     startIndex = startIndex + 1; /* motion speed */
 
-    FillLEDsFromPaletteColors( startIndex);
+    // A palettas futofeny mindig fut. effect==LOW: a fasz-tol (0 vagy 68 a
+    // jatekallapottol fuggoen). effect==HIGH: a baked effekt birtokolja a
+    // 0-67-et, de a 68-114 felso szalag TOVABB fut (start = 68), hogy ne
+    // alljon meg a baked animacio ~masodpercei alatt.
+    FillLEDsFromPaletteColors(startIndex, (effect == LOW) ? fasz : 68);
   }
   RunLightTest(); // szerviz-menu light test: ha aktiv, feluliria a leds[]-et (loopolva, csak vizualis)
   FastLED.show();
@@ -884,6 +887,7 @@ void Ballhandler() {
       digitalWrite(rightFlipperBat, LOW);
         wTrig.stopAllTracks();
         hurryUp = LOW;
+        if (effectID == 6) { effect = LOW; effectID = 0; } // ID6 loop leall
         maxBallSw = LOW;
         BIP = 1;
 
@@ -1005,14 +1009,18 @@ void Ballhandler() {
     if (millis() - 50 > kicktimer) {
       digitalWrite(shooterlaneCoil, LOW);
 
+      // Minden kilovesnel a Shooter (ID3) fenyeffekt szol. A jatekindito
+      // kilovesnel a startmus HIGH -> emellett a tema-zene is elindul;
+      // a fenyeffekt viszont MINDEN kilovesnel ID3 (korabban csak startmus
+      // eseten ment, effectID=1/Loop-Jackpot).
       if (startmus == HIGH) {
         wTrig.trackPlayPoly(TRK_THEME);
-        effect = HIGH;
-        effectID = 1;
       }
       else {
         startmus = LOW;
       }
+      effect = HIGH;
+      effectID = 3;
       kick = 0;
       shoot = 0;
       shootfail = 0;
@@ -1291,10 +1299,10 @@ void Blinktimer() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
-void FillLEDsFromPaletteColors(uint8_t colorIndex) {
+void FillLEDsFromPaletteColors(uint8_t colorIndex, int startLed) {
     uint8_t brightness = 255;
 
-    for (int i = fasz; i < NUM_LEDS; i++) {
+    for (int i = startLed; i < NUM_LEDS; i++) {
         leds[i] = ColorFromPalette(currentPalette, colorIndex, brightness, currentBlending);
         colorIndex += 3;
     }
@@ -2170,12 +2178,14 @@ void Loopshoot() {
     wTrig.trackPlayPoly(TRK_BLOB);
     if (multiloopsw == 1) {
       Score(30000, 2000);
+      effect = HIGH;
+      effectID = 1; // Loop-Jackpot - a multiball loop-jackpotnal
     }
     else {
       Score(2000, 500);
+      // sima felso loop: nincs baked effekt (az ID4/UFO FUCK mostmar
+      // kizarolag a UFO-no-weed esemenye)
     }
-    effect = HIGH;
-    effectID = 4;
     loopswt = millis();
     loopsw = HIGH;
     multiloopsw = 0;
@@ -2293,7 +2303,7 @@ void Weed() {
     weedtimer = millis();
     weedoff = 1;
     effect = HIGH;
-    effectID = 3;
+    effectID = 5; // Weedblast - a weed kigyulesekor (korabban ID3 volt)
     wTrig.trackPlayPoly(TRK_WEEDFULL);
     spsound = random(1, 5);
     static const uint8_t weedDoneSound[4] = { 67, 66, 115, 116 };
@@ -3048,8 +3058,9 @@ void Weedspinner() {
           ballsaversw = HIGH;
           ballsavetime = 30000;
           ufosw = 0;
-          effect = HIGH;
-          effectID = 2;
+          // Multiball szint-lepes: ide korabban ID2 (UFO Lottery) jott, de az
+          // mostmar kizarolag a UFO-VUK-weeddel esemenye. Egyelore nincs baked
+          // effekt -> tegyunk ide masikat, ha kell.
           wTrig.trackPause(TRK_THEME);
           wTrig.trackPlayPoly(mbPoly1[lvl]);
           wTrig.trackLoop(mbLoop[lvl], 1);
@@ -3167,7 +3178,13 @@ void UFOO() {
     if (ufosw == 1 && multiball == 0) {
       wTrig.trackPause(TRK_THEME);
       wTrig.trackPlayPoly(TRK_HAPPYUFO);
-      fasz = 0;
+      // UFO Lottery (weed kigyujtve): a baked ID2 animacio jatszik a 0-67-en,
+      // a 68-114 felso szalag kozben tovabb fut a palettas futofennyel.
+      // (Korabban fasz=0 + palettas futofeny volt az EGESZ szalagon, baked
+      // animacio helyett - ez volt a regi hack.)
+      effect = HIGH;
+      effectID = 2;
+      fasz = 68;
       SetupPurpleAndGreenPalette();
       ufoshoot = 4;
       if (numofplayers == 1) {
@@ -3219,6 +3236,8 @@ void UFOO() {
 
     if (ufosw == 0 && multiball == 0 && hurryUp == 0) {
       ufoshoot = random(1, 4);
+      effect = HIGH;
+      effectID = 4; // UFO FUCK - nincs kigyujtve a weed: hang + varas + visszadobas
       if (ufoshoot == 1) {
         wTrig.trackPause(TRK_THEME);
         wTrig.trackPlayPoly(TRK_UFO);
@@ -3309,6 +3328,8 @@ void UFOO() {
           wTrig.trackPlayPoly(TRK_HURRYUP);
           hurryUp = HIGH;
           hurryUpTimer = millis();
+          effect = HIGH; // az ID6 Hurry UP animacio azonnal indul es a mod
+          effectID = 6;  // vegeig loopol (lasd RunBakedEffect: hurryUp+ID6)
           spinnersw = 2;
           ufosw = 0;
         }
@@ -3331,8 +3352,9 @@ void UFOO() {
         if (lottery  == 7) {    /// SpaceCoke Multi
           BIP = 5;
           multiball = 5;
-          effect = HIGH;
-          effectID = 4;
+          // Ide korabban ID4 (UFO FUCK) jott, de az mostmar kizarolag a
+          // UFO-no-weed esemenye. Egyelore nincs baked effekt -> tegyunk ide
+          // masikat, ha kell (multiball-start).
           wTrig.trackPlayPoly(TRK_SPACECOKEMULTI);
           wTrig.trackPlayPoly(TRK_FIREWORK);
           wTrig.trackPlayPoly(TRK_MUS_SPACECOKE);
@@ -3892,12 +3914,13 @@ void HurryUp()
   }
   if (hurryUp == HIGH && millis() - 80000 > hurryUpTimer)
   {
+    hurryUp = LOW;
+    effect = LOW; effectID = 0; // az ID6 loop leall a Hurry Up vegen
     initlight = HIGH;
     Initlights();
     fasz = 68;
     wTrig.trackPause(TRK_MUS_HURRY);
     wTrig.trackResume(TRK_THEME);
-    hurryUp = LOW;
     spinnersw = HIGH;
   }
 
