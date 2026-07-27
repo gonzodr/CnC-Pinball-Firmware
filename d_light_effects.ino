@@ -95,7 +95,11 @@ void RunBakedEffect(uint8_t idx) {
   }
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
-    leds[i] = CRGB(fx_read(p), fx_read(p + 1), fx_read(p + 2));
+    // A baked adat R,G,B sorrendben all, de ezen a szalagon a baked szineknel
+    // a G es B csatorna fel van cserelve (piros->pink, zold->vilagoskek volt),
+    // ezert G/B cserevel irjuk ki: CRGB(R, B, G). A normal jatekfenyeket ez
+    // NEM erinti (azok kulon, a helyukon vannak).
+    leds[i] = CRGB(fx_read(p), fx_read(p + 2), fx_read(p + 1));
     p += 3;
   }
 }
@@ -128,7 +132,7 @@ void RunOverlayEffect() {
     // magenta (255,0,255) = ATLATSZO -> kihagyjuk (a jatek latszik alatta).
     // minden mas rajzolodik, a (0,0,0) fekete is (elsotetit)!
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) {
-      leds[i] = CRGB(r, g, b);
+      leds[i] = CRGB(r, b, g); // G/B csere a szalag baked-szinsorrendjehez
     }
     p += 3;
   }
@@ -200,7 +204,7 @@ void RunLightTest() {
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
-    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(r, g, b);
+    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(r, b, g); // G/B csere
     p += 3;
   }
 }
