@@ -45,6 +45,33 @@
 #endif
 static inline uint8_t fx_read(const uint8_t* p) { return pgm_read_byte(p) ^ FX_DATA_MASK; }
 
+// Gamma-korrekcio (2.2, az sRGB monitorhoz igazitva). A szerkeszto a
+// monitoron (gamma ~2.2) tervezi a szineket, a WS2812B viszont LINEARIS,
+// ezert a koztes ertekek (gradiens/feather/opacity) tul vilagosnak es
+// elszinezodve (piros->pink, zold->vilagoskek) jelentek meg. Ez a tabla a
+// baked szineket visszahuzza oda, ahogy a monitoron latszanak. A tiszta
+// szinek (0 es 255) valtozatlanok -> a normal jatekfenyeket NEM erinti.
+const uint8_t gamma8[256] PROGMEM = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2,
+  3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6,
+  6, 7, 7, 7, 8, 8, 8, 9, 9, 9, 10, 10, 11, 11, 11, 12,
+  12, 13, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19,
+  20, 20, 21, 22, 22, 23, 23, 24, 25, 25, 26, 26, 27, 28, 28, 29,
+  30, 30, 31, 32, 33, 33, 34, 35, 35, 36, 37, 38, 39, 39, 40, 41,
+  42, 43, 43, 44, 45, 46, 47, 48, 49, 49, 50, 51, 52, 53, 54, 55,
+  56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71,
+  73, 74, 75, 76, 77, 78, 79, 81, 82, 83, 84, 85, 87, 88, 89, 90,
+  91, 93, 94, 95, 97, 98, 99, 100, 102, 103, 105, 106, 107, 109, 110, 111,
+  113, 114, 116, 117, 119, 120, 121, 123, 124, 126, 127, 129, 130, 132, 133, 135,
+  137, 138, 140, 141, 143, 145, 146, 148, 149, 151, 153, 154, 156, 158, 159, 161,
+  163, 165, 166, 168, 170, 172, 173, 175, 177, 179, 181, 182, 184, 186, 188, 190,
+  192, 194, 196, 197, 199, 201, 203, 205, 207, 209, 211, 213, 215, 217, 219, 221,
+  223, 225, 227, 229, 231, 234, 236, 238, 240, 242, 244, 246, 248, 251, 253, 255,
+};
+static inline uint8_t gam(uint8_t v)        { return pgm_read_byte(&gamma8[v]); }
+static inline uint8_t fx_g(const uint8_t* p) { return gam(fx_read(p)); }
+
 int  runningEffect = 0;
 unsigned long effectStartT = 0;
 
@@ -99,7 +126,7 @@ void RunBakedEffect(uint8_t idx) {
     // a G es B csatorna fel van cserelve (piros->pink, zold->vilagoskek volt),
     // ezert G/B cserevel irjuk ki: CRGB(R, B, G). A normal jatekfenyeket ez
     // NEM erinti (azok kulon, a helyukon vannak).
-    leds[i] = CRGB(fx_read(p), fx_read(p + 2), fx_read(p + 1));
+    leds[i] = CRGB(fx_g(p), fx_g(p + 1), fx_g(p + 2)); // gamma-korrekcio
     p += 3;
   }
 }
@@ -132,7 +159,7 @@ void RunOverlayEffect() {
     // magenta (255,0,255) = ATLATSZO -> kihagyjuk (a jatek latszik alatta).
     // minden mas rajzolodik, a (0,0,0) fekete is (elsotetit)!
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) {
-      leds[i] = CRGB(r, b, g); // G/B csere a szalag baked-szinsorrendjehez
+      leds[i] = CRGB(gam(r), gam(g), gam(b)); // gamma-korrekcio
     }
     p += 3;
   }
@@ -204,7 +231,7 @@ void RunLightTest() {
   const uint8_t* p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
-    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(r, b, g); // G/B csere
+    if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(gam(r), gam(g), gam(b)); // gamma-korrekcio
     p += 3;
   }
 }
