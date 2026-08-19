@@ -420,6 +420,12 @@ int ball5 = 0;
 int ballsavetime = 15000;
 int extraball = 0;
 int multiball = 0;
+// A szenzoronkenti kuszobok a h_analog_test.ino-ban elnek (EEPROM-bol
+// toltve). Az Arduino preprocesszor csak FUGGVENY-prototipust general
+// automatikusan, valtozohoz nem - a .ino-k osszefuzesekor pedig ez a fajl
+// van elol, ezert kell ide az explicit extern.
+extern uint16_t analogThreshold[];
+
 int ballPresent1 = 0;
 int ballPresent2 = 0;
 int ballPresent3 = 0;
@@ -628,6 +634,7 @@ const long interval = 100; // Ledstate blinktime intervall
 
 
 void setup() {
+  AnalogThresholdsLoad(); // EEPROM-ban tarolt szenzor-kuszobok (h_analog_test.ino)
 
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
   FastLED.setBrightness(  BRIGHTNESS );
@@ -718,7 +725,8 @@ void setup() {
 void loop() {
   CoilGuardReport(); // jelzi a sorosra, ha a tekercsvedelem kozbelepett
   SimPoll();         // probapadi szimulator lepteto - eles buildben ures
-  if (intmon != 2) PollLightTestSerial(); // szerviz-menu light test (LT,..) - nevbevitelkor NEM, hogy ne utkozzon
+  AnalogTestPoll();  // analog teszt-stream a szerviz menunek (h_analog_test.ino)
+  if (intmon != 2) PollControlSerial(); // LT + MG_* soros protokoll; nevbevitelkor NEM, hogy ne utkozzon
 
   if (intmon != 0) { // 1 = attract, 2 = hiscore/nevbevitel, 3 = player select
     intmMode();
@@ -726,36 +734,43 @@ void loop() {
 
 
   if (intmon == LOW) {
-    Multiball();
-    Loopshoot();
-    Ballhandler();
-    Weed();
-    Pops();
-    Weedspinner();
-    Gate();
-    Initlights();
-    Blinktimer();
-    Left_Flipper();
-    Right_Flipper();
-    Right_Slingshot();
-    Left_Slingshot();
-    CnC();
-    Fishtank();
-    Chong_switch();
-    Cheech_switch();
-    UFOO();
-    Dave_switch();
-    BonusXLed();
-    SendData();
-    Ballsave();
-    Collectives();
-    BridgeLow();
-    BridgeHigh();
-    HurryUp();
-    Tilt();
-    GiftRunlight();     // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
-    RunOverlayEffect(); // overlay/canvas effekt: rarajzol a jatek-fenyre (subsystemek UTAN!)
-    RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
+    if (MunchiesOwnsGameLoop()) {
+      // A golyo a VUK-ban parkol: a fizikai jateklogika es a flippertekercsek
+      // szunetelnek, de a soros input, watchdog es tekercsvedelem tovabb fut.
+      MunchiesUpdate();
+    }
+    else {
+      Multiball();
+      Loopshoot();
+      Ballhandler();
+      Weed();
+      Pops();
+      Weedspinner();
+      Gate();
+      Initlights();
+      Blinktimer();
+      Left_Flipper();
+      Right_Flipper();
+      Right_Slingshot();
+      Left_Slingshot();
+      CnC();
+      Fishtank();
+      Chong_switch();
+      Cheech_switch();
+      UFOO();
+      Dave_switch();
+      BonusXLed();
+      SendData();
+      Ballsave();
+      Collectives();
+      BridgeLow();
+      BridgeHigh();
+      HurryUp();
+      Tilt();
+      GiftRunlight();     // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
+      RunOverlayEffect(); // overlay/canvas effekt: rarajzol a jatek-fenyre (subsystemek UTAN!)
+      RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
+    }
   }
 
   {
@@ -768,6 +783,7 @@ void loop() {
     // alljon meg a baked animacio ~masodpercei alatt.
     FillLEDsFromPaletteColors(startIndex, (effect == LOW) ? fasz : 68);
   }
+  RunMunchiesLights(); // minijatek alatt a legutolso jatekfeny-reteg
   RunLightTest(); // szerviz-menu light test: ha aktiv, feluliria a leds[]-et (loopolva, csak vizualis)
   FastLED.show();
   FastLED.delay(1000 / UPDATES_PER_SECOND);
@@ -1056,41 +1072,18 @@ void MIV(boolean m) {
     ball5 = SimAnalogRead(PIN_A4);
 
     // FORDITOTT logika (a gepben futott verziobol atveve):
-    // alacsony analog ertek (<100) = golyo ott van!
-    if (ball1 < 100){
-      ballPresent1 = 1;
-      }
-    if (ball1 > 100){
-      ballPresent1 = 0;
-      }
+    // alacsony analog ertek = golyo ott van! A kuszob mar nincs bedrotozva,
+    // szenzoronkent az EEPROM-bol jon (analogThreshold[], h_analog_test.ino),
+    // igy a szerviz menubol hangolhato ujraflashelés nelkul.
+    ballPresent1 = (ball1 < analogThreshold[0]) ? 1 : 0;
 
-    if (ball2 < 100){
-      ballPresent2 = 1;
-      }
-    if (ball2 > 100){
-      ballPresent2 = 0;
-      }
+    ballPresent2 = (ball2 < analogThreshold[1]) ? 1 : 0;
 
-    if (ball3 < 100){
-      ballPresent3 = 1;
-      }
-    if (ball3 > 100){
-      ballPresent3 = 0;
-      }
+    ballPresent3 = (ball3 < analogThreshold[2]) ? 1 : 0;
 
-    if (ball4 < 100){
-      ballPresent4 = 1;
-      }
-    if (ball4 > 100){
-      ballPresent4 = 0;
-      }
+    ballPresent4 = (ball4 < analogThreshold[3]) ? 1 : 0;
 
-    if (ball5 < 100){
-      ballPresent5 = 1;
-      }
-    if (ball5 > 100){
-      ballPresent5 = 0;
-      }
+    ballPresent5 = (ball5 < analogThreshold[4]) ? 1 : 0;
 
       if (BIP != 5){
       BIS = ballPresent1 + ballPresent2 + ballPresent3 + ballPresent4 + ballPresent5;
@@ -3175,6 +3168,21 @@ void UFOO() {
   }
 
   if (ufoanalog < 100 && ufoshoot == 0) {
+    // A kidobott golyo kapcsolojanak fel kell engednie, mielott ugyanazt a
+    // hosszu kapcsolojelet uj VUK-beerkezesnek tekintjuk.
+    if (MunchiesWaitingForUfoClear()) return;
+    // Normal, egygolyos jatekban az UFO most a Munchies Abduction VUK-ja.
+    // Multiball/hurry-up alatt nem allitjuk meg az egesz asztalt: ott megmarad
+    // a regi gyors kidobasi ag.
+    boolean startMunchies = (multiball == 0 && hurryUp == LOW);
+#ifdef SIM_MODE
+    // A probapadi demo cinkelt UFO-lotto agai tovabbra is tesztelhetok.
+    if (simForceLottery > 0) startMunchies = false;
+#endif
+    if (startMunchies) {
+      StartMunchiesMode();
+      return;
+    }
     if (ufosw == 1 && multiball == 0) {
       wTrig.trackPause(TRK_THEME);
       wTrig.trackPlayPoly(TRK_HAPPYUFO);

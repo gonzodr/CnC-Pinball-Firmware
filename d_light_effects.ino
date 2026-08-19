@@ -236,7 +236,7 @@ void RunLightTest() {
   }
 }
 
-// "LT,<id>" vagy "LT,S" feldolgozasa (mas sort csendben eldob).
+// "LT,<id>" vagy "LT,S" feldolgozasa.
 void HandleLightTestCmd(const char* s) {
   if (s[0] != 'L' || s[1] != 'T' || s[2] != ',') return;
   const char* arg = s + 3;
@@ -244,19 +244,39 @@ void HandleLightTestCmd(const char* s) {
   StartLightTest((uint8_t)atoi(arg));
 }
 
-// Nem-blokkolo soros sor-olvaso a light-test parancsokhoz. A main loop
-// hivja minden korben (intmon != 2 mellett). Sorvegig gyujt, majd feldolgoz.
-char ltBuf[16];
-uint8_t ltLen = 0;
-void PollLightTestSerial() {
+// Kozos, nem-blokkolo soros sor-olvaso. Az LT szervizparancsok es az MG_*
+// minijatek-protokoll ugyanazon az egyetlen parseren futnak, igy ket rutin
+// sosem tudja egymas elol "megenni" a byte-okat.
+char controlBuf[64];
+uint8_t controlLen = 0;
+
+void HandleControlCmd(const char* s) {
+  if (s[0] == 'L' && s[1] == 'T' && s[2] == ',') {
+    HandleLightTestCmd(s);
+    return;
+  }
+  if (s[0] == 'A' && s[1] == 'T' && s[2] == ',') {
+    HandleAnalogTestCmd(s);   // analog bemenet-teszt (h_analog_test.ino)
+    return;
+  }
+  if (s[0] == 'M' && s[1] == 'G' && s[2] == '_') {
+    HandleMunchiesCommand(s);
+  }
+}
+
+void PollControlSerial() {
   while (Serial.available() > 0) {
     char c = Serial.read();
     if (c == '\n' || c == '\r') {
-      if (ltLen > 0) { ltBuf[ltLen] = '\0'; HandleLightTestCmd(ltBuf); ltLen = 0; }
-    } else if (ltLen < sizeof(ltBuf) - 1) {
-      ltBuf[ltLen++] = c;
+      if (controlLen > 0) {
+        controlBuf[controlLen] = '\0';
+        HandleControlCmd(controlBuf);
+        controlLen = 0;
+      }
+    } else if (controlLen < sizeof(controlBuf) - 1) {
+      controlBuf[controlLen++] = c;
     } else {
-      ltLen = 0; // tullepes -> eldobjuk a sort
+      controlLen = 0; // tullepes -> eldobjuk a sort
     }
   }
 }
