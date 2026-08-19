@@ -4,3 +4,6 @@ Debug/
 Release/
 __vm/
 *.vcxproj.user
+
+# Az effect_data.h generalt (a Light Editor irja) - a .bak csak helyi mentes
+effect_data.h.bak
