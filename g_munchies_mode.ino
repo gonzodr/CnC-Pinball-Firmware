@@ -17,7 +17,7 @@
 //
 // mask bit0=bal flipper, bit1=jobb flipper, bit2=kilovo/vonosugar.
 // Az INPUT allapotvaltozaskor azonnal, egyebkent 50 ms-onkent megy. A Pi
-// heartbeatje nelkul 3 masodperc utan, abszolut 230 masodperc utan mindenkepp
+// heartbeatje nelkul 5 masodperc utan, abszolut 230 masodperc utan mindenkepp
 // biztonsagosan visszaadjuk a golyot.
 
 enum MunchiesModeState {
@@ -58,9 +58,14 @@ boolean MunchiesOwnsGameLoop() {
   return munchiesMode != MG_IDLE;
 }
 
+uint16_t MunchiesUfoReleaseThreshold() {
+  uint16_t releaseAt = analogThreshold[5] + 40U;
+  return releaseAt > 1023U ? 1023U : releaseAt;
+}
+
 boolean MunchiesWaitingForUfoClear() {
   if (!munchiesWaitForUfoClear) return false;
-  if (ufoanalog >= 100) {
+  if (ufoanalog >= MunchiesUfoReleaseThreshold()) {
     munchiesWaitForUfoClear = false;
     return false;
   }
@@ -269,8 +274,8 @@ void MunchiesUpdate() {
     }
     if (now - munchiesEjectAt >= 950UL) digitalWrite(ufoCoil, LOW);
     if (now - munchiesEjectAt >= 650UL) {
-      int sensor = SimAnalogRead(PIN_A5);
-      if (sensor < 100 && now - munchiesEjectAt < 1500UL) return;
+      int sensor = AnalogSensorReadStable(PIN_A5);
+      if (sensor < MunchiesUfoReleaseThreshold() && now - munchiesEjectAt < 1500UL) return;
       digitalWrite(ufoCoil, LOW);
       munchiesMode = MG_IDLE;
       munchiesLight = MG_LIGHT_IDLE;
@@ -279,7 +284,7 @@ void MunchiesUpdate() {
       ufoInactivesw = 1;
       ufoInactiveTimer = now;
       ufoanalog = sensor;
-      munchiesWaitForUfoClear = (sensor < 100);
+      munchiesWaitForUfoClear = (sensor < MunchiesUfoReleaseThreshold());
       initlight = HIGH;
       Initlights();
     }

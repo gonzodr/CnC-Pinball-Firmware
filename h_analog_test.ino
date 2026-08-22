@@ -12,8 +12,8 @@
 //                          AT_VAL,<e1>,...,<eN> (kb. 5 Hz), amig STOP nem jon
 //   AT,STOP             -> AT_STOPPED
 //   AT,GET              -> AT_THR,<k1>,...,<kN>
-//   AT,SET,<idx>,<ert>  -> AT_OK,<idx>,<ert>   (EEPROM-ba is beirja)
-//                          AT_ERR,RANGE        (rossz index/ertek)
+//   AT,SAVE,<k1>,...,<kN> -> AT_SAVED          (egyetlen EEPROM-mentes)
+//                            AT_ERR,RANGE       (rossz darabszam/ertek)
 //   Ha nem attract-ban vagyunk: AT_ERR,BUSY (lasd lentebb, miert).
 //
 // BIZTONSAG: a teszt-mod CSAK attract-bol (intmon == 1) indithato. Jatek
@@ -99,6 +99,20 @@ void AnalogThresholdsLoad() {
   }
 }
 
+// Az AVR ADC multiplexere csatornavaltas utan zajos elso mintat adhat. Az
+// elso olvasast eldobjuk, majd harom mintabol mediant veszunk. A SIM_MODE-ban
+// minden minta ugyanaz, igy a probapadi mukodes valtozatlan marad.
+int AnalogSensorReadStable(uint8_t pin) {
+  SimAnalogRead(pin);
+  int a = SimAnalogRead(pin);
+  int b = SimAnalogRead(pin);
+  int c = SimAnalogRead(pin);
+  if (a > b) { int t = a; a = b; b = t; }
+  if (b > c) { int t = b; b = c; c = t; }
+  if (a > b) { int t = a; a = b; b = t; }
+  return b;
+}
+
 // --- Teszt-mod ---------------------------------------------------------
 #define AT_STREAM_INTERVAL_MS  200UL     // ~5 Hz
 #define AT_STREAM_TIMEOUT_MS   600000UL  // 10 perc utan magatol leall
@@ -130,7 +144,7 @@ static void AnalogTestSendValues() {
   Serial.print("AT_VAL");
   for (uint8_t i = 0; i < ANALOG_SENSOR_COUNT; i++) {
     Serial.print(',');
-    Serial.print(SimAnalogRead(ANALOG_SENSORS[i].pin));
+    Serial.print(AnalogSensorReadStable(ANALOG_SENSORS[i].pin));
   }
   Serial.println();
 }
@@ -184,19 +198,36 @@ void HandleAnalogTestCmd(const char* s) {
     return;
   }
 
-  if (!strncmp(arg, "SET,", 4)) {
-    const char* p = arg + 4;
-    int idx = atoi(p);
-    const char* comma = strchr(p, ',');
-    if (!comma) { Serial.println("AT_ERR,RANGE"); return; }
-    int val = atoi(comma + 1);
-    if (idx < 0 || idx >= (int)ANALOG_SENSOR_COUNT || val < 0 || val > 1023) {
-      Serial.println("AT_ERR,RANGE");
+  if (!strncmp(arg, "SAVE,", 5)) {
+    if (intmon != 1 || !analogTestActive) {
+      Serial.println("AT_ERR,BUSY");
       return;
     }
-    analogThreshold[idx] = (uint16_t)val;
+
+    char work[64];
+    strncpy(work, arg + 5, sizeof(work) - 1);
+    work[sizeof(work) - 1] = '\0';
+    uint16_t staged[ANALOG_SENSOR_COUNT];
+    char* token = strtok(work, ",");
+    for (uint8_t i = 0; i < ANALOG_SENSOR_COUNT; i++) {
+      if (token == NULL) { Serial.println("AT_ERR,RANGE"); return; }
+      char* endp;
+      long value = strtol(token, &endp, 10);
+      if (*endp != '\0' || value < 0 || value > 1023) {
+        Serial.println("AT_ERR,RANGE");
+        return;
+      }
+      staged[i] = (uint16_t)value;
+      token = strtok(NULL, ",");
+    }
+    if (token != NULL) { Serial.println("AT_ERR,RANGE"); return; }
+
+    // Csak teljesen ervenyes csomag utan irunk RAM-ba es EEPROM-ba.
+    for (uint8_t i = 0; i < ANALOG_SENSOR_COUNT; i++) {
+      analogThreshold[i] = staged[i];
+    }
     AnalogThresholdsSave();
-    Serial.print("AT_OK,"); Serial.print(idx); Serial.print(','); Serial.println(val);
+    Serial.println("AT_SAVED");
     return;
   }
 

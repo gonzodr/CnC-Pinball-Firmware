@@ -499,6 +499,8 @@ int ufoMinus = 0; // pontlopasnal (lottery 8): a kirabolt jatekos sorszama
 unsigned long ufoInactiveTimer = 0;
 unsigned long ufoshoottimer = 0;
 unsigned long ufoshoottimer2 = 0;
+unsigned long ufoDetectStartedAt = 0;
+const unsigned long UFO_DETECT_STABLE_MS = 30UL;
 /////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////
@@ -3157,20 +3159,37 @@ void weedmetersend() {
 
 
 void UFOO() {
-
-  if (ufoInactivesw == 0) {
-    ufoanalog = SimAnalogRead(PIN_A5);
-    //Serial.println(ert);// put your main code here, to run repeatedly:
-  }
-
-  if (ufoInactivesw == 1 && millis() - 100 > ufoInactiveTimer) {
+  unsigned long now = millis();
+  if (ufoInactivesw == 1 && now - ufoInactiveTimer >= 100UL) {
     ufoInactivesw = 0;
   }
 
-  if (ufoanalog < 100 && ufoshoot == 0) {
-    // A kidobott golyo kapcsolojanak fel kell engednie, mielott ugyanazt a
-    // hosszu kapcsolojelet uj VUK-beerkezesnek tekintjuk.
-    if (MunchiesWaitingForUfoClear()) return;
+  // Csak addig merunk, amig egy uj golyot keresunk. Stabil talalat utan az
+  // ufoshoot/minigame allapot reteszeli az esemenyt; ujra csak a kidobasnal
+  // kell ranezni a szenzorra, hogy a golyo tenyleg elhagyta-e a VUK-ot.
+  boolean stableBallPresent = false;
+  if (ufoInactivesw == 0 && ufoshoot == 0) {
+    ufoanalog = AnalogSensorReadStable(PIN_A5);
+    if (MunchiesWaitingForUfoClear()) {
+      // A kidobas utan csak a felengedesre varunk. Uj golyot addig nem
+      // fogadunk el, es a 40 ADC-egyseges hiszterezis kiszuri a hataron
+      // billego mintakat.
+      ufoDetectStartedAt = 0;
+    }
+    else if (ufoanalog < analogThreshold[5]) {
+      if (ufoDetectStartedAt == 0) ufoDetectStartedAt = now;
+      stableBallPresent = (now - ufoDetectStartedAt >= UFO_DETECT_STABLE_MS);
+    }
+    else {
+      ufoDetectStartedAt = 0;
+    }
+  }
+  else {
+    ufoDetectStartedAt = 0;
+  }
+
+  if (stableBallPresent && ufoshoot == 0) {
+    ufoDetectStartedAt = 0;
     // Normal, egygolyos jatekban az UFO most a Munchies Abduction VUK-ja.
     // Multiball/hurry-up alatt nem allitjuk meg az egesz asztalt: ott megmarad
     // a regi gyors kidobasi ag.
