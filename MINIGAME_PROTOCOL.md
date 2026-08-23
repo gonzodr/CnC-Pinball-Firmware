@@ -6,9 +6,10 @@ nem blokkoló sorolvasó a `d_light_effects.ino` `PollControlSerial()` rutinja.
 
 ## Session menete
 
-1. Normál, egygolyós módban az UFO optó aktiválásakor a Mega a VUK-ban tartja
-   a golyót, letiltja a két flippertekercset és elküldi az
-   `MG_START,<session>` sort.
+1. Kigyújtott WEED és normál, egygolyós mód mellett az UFO-lottery 9-es
+   kimenete indítja a minijátékot (egy játékosnál 1/8, több játékosnál 1/9
+   eséllyel). A Mega a VUK-ban tartja a golyót, letiltja a két
+   flippertekercset és elküldi az `MG_START,<session>` sort.
 2. A GUI aktiválja az előtöltött minijátékot és `MG_READY,<session>` választ ad.
 3. A Mega gombváltozáskor azonnal, egyébként 50 ms-onként küldi az
    `MG_INPUT,<session>,<seq>,<mask>` snapshotot. A mask bitjei: bal=1, jobb=2,

@@ -209,7 +209,7 @@ void SimHelp() {
   Serial.println("SIM,parancsok: S=start K=kiloves D=lefolyas R=demo ujra");
   Serial.println("SIM,1-4=weed c=cheech h=chong o=pop n=spinner l/L=loop");
   Serial.println("SIM,a/b/e=gate s=sling f/j=flipper x/y=hid u=ufo");
-  Serial.println("SIM,U=SpaceCoke-cinkeles M=pontlopas-cinkeles (utana u!)");
+  Serial.println("SIM,U=SpaceCoke M=pontlopas G=minigame-cinkeles (utana u!)");
 }
 
 // Indexet kap (nem SimEvent&-t), mert az Arduino auto-prototipusai a
@@ -347,6 +347,10 @@ void SimPoll() {
         case 'M':                                // cinkelt kocka: pontlopas
           simForceLottery = 8;                   // (csak tobbjatekos jatekban ervenyes!)
           Serial.println("SIM,cinkelt kocka,pontlopas");
+          break;
+        case 'G':                                // cinkelt kocka: Munchies minigame
+          simForceLottery = 9;
+          Serial.println("SIM,cinkelt kocka,minigame");
           break;
         case 'u': SimUfoHit(300); break;         // golyo az UFO-ba
         case 'R':                                // demo ujrainditasa

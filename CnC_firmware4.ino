@@ -46,7 +46,7 @@
 // firmware update automatikusan a main-t huzza es flasheli!
 //#define SIM_MODE
 #ifdef SIM_MODE
-int simForceLottery = 0; // a kovetkezo UFO-lotto kenyszeritett erteke (7 = SpaceCoke)
+int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minigame
 #endif
 //////////////////////////////////////////////////////////////////////
 
@@ -788,7 +788,12 @@ void loop() {
   RunMunchiesLights(); // minijatek alatt a legutolso jatekfeny-reteg
   RunLightTest(); // szerviz-menu light test: ha aktiv, feluliria a leds[]-et (loopolva, csak vizualis)
   FastLED.show();
-  FastLED.delay(1000 / UPDATES_PER_SECOND);
+  // A FastLED.delay() a varakozas alatt ismetelten show()-t hivhat. WS2812-n
+  // a show megszakitasokat tilt (~3.5 ms / 115 LED), ezert a folyamatos
+  // ujrakuldes a Mega soros RX byte-jait elvesztette (AT_SAVE / MG_ALIVE).
+  // A sima delay alatt az UART megszakitasok elnek, a parser a kovetkezo
+  // loopban hianytalanul kiolvassa a hardveres puffert.
+  delay(1000 / UPDATES_PER_SECOND);
 
 
 
@@ -3190,19 +3195,29 @@ void UFOO() {
 
   if (stableBallPresent && ufoshoot == 0) {
     ufoDetectStartedAt = 0;
-    // Normal, egygolyos jatekban az UFO most a Munchies Abduction VUK-ja.
-    // Multiball/hurry-up alatt nem allitjuk meg az egesz asztalt: ott megmarad
-    // a regi gyors kidobasi ag.
-    boolean startMunchies = (multiball == 0 && hurryUp == LOW);
-#ifdef SIM_MODE
-    // A probapadi demo cinkelt UFO-lotto agai tovabbra is tesztelhetok.
-    if (simForceLottery > 0) startMunchies = false;
-#endif
-    if (startMunchies) {
-      StartMunchiesMode();
-      return;
-    }
     if (ufosw == 1 && multiball == 0) {
+      // A regi UFO-lottery marad az alap. A Munchies a 9-es uj kimenet:
+      // egy jatekosnal 7 regi + minigame (1/8), tobb jatekosnal a pontlopast
+      // is megtartva 8 regi + minigame (1/9). Hurry-up kozben nem inditunk
+      // minijatekot, ott valtozatlanul csak a regi lottery-agak kozul huzunk.
+      if (numofplayers == 1) {
+        lottery = random(1, (hurryUp == LOW) ? 9 : 8); // normal: 1..8; hurry: 1..7
+        if (hurryUp == LOW && lottery == 8) lottery = 9;
+      }
+      else {
+        lottery = random(1, (hurryUp == LOW) ? 10 : 9); // normal: 1..9; hurry: 1..8
+      }
+#ifdef SIM_MODE
+      if (simForceLottery > 0) { // probapadi "cinkelt kocka" (f_sim_mode)
+        lottery = simForceLottery;
+        simForceLottery = 0;
+      }
+#endif
+      if (lottery == 9 && hurryUp == LOW) {
+        StartMunchiesMode();
+        return;
+      }
+
       wTrig.trackPause(TRK_THEME);
       wTrig.trackPlayPoly(TRK_HAPPYUFO);
       // UFO Lottery (weed kigyujtve): a baked ID2 animacio jatszik a 0-67-en,
@@ -3214,18 +3229,6 @@ void UFOO() {
       fasz = 68;
       SetupPurpleAndGreenPalette();
       ufoshoot = 4;
-      if (numofplayers == 1) {
-        lottery = random(1, 8); // 1..7
-      }
-      else {
-        lottery = random(1, 9); // 1..8, a 8-as a pontlopas (csak tobbjatekosnal!)
-      }
-#ifdef SIM_MODE
-      if (simForceLottery > 0) { // probapadi "cinkelt kocka" (f_sim_mode)
-        lottery = simForceLottery;
-        simForceLottery = 0;
-      }
-#endif
       if (lottery  == 1) {
         extraball += 1;
         Serial.println("Ufo5");
@@ -3263,9 +3266,12 @@ void UFOO() {
 
     if (ufosw == 0 && multiball == 0 && hurryUp == 0) {
       ufoshoot = random(1, 4);
-      effect = HIGH;
-      effectID = 4; // UFO FUCK - nincs kigyujtve a weed: hang + varas + visszadobas
       if (ufoshoot == 1) {
+        // Csak ez a hosszabb, 4.3 mp-es VUK-ban tartott "UFO FUCK" ag kapja
+        // a GUI-videot es a hosszu ID4 fenyanimaciot. A masik ket varians
+        // szandekosan gyorsan visszaadja a golyot, hogy porogjon a jatek.
+        effect = HIGH;
+        effectID = 4;
         wTrig.trackPause(TRK_THEME);
         wTrig.trackPlayPoly(TRK_UFO);
         wTrig.trackPlayPoly(TRK_NOWEEDUFO);

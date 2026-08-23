@@ -191,6 +191,15 @@ void HandleMunchiesCommand(const char* command) {
     return;
   }
 
+  // A Mega a READY megjovetele elott 500 ms-onkent ujrakuldi a START-ot,
+  // ezert a GUI valasza is ismetlodhet. Aktiv sessionben ez nem uj inditas,
+  // hanem biztos bizonyitek arra, hogy a Pi-kapcsolat el: frissitse ugyanazt
+  // a watchdogot, mint az MG_ALIVE.
+  if (strcmp(verb, "MG_READY") == 0 && munchiesMode == MG_ACTIVE) {
+    munchiesLastPiAt = millis();
+    return;
+  }
+
   if (strcmp(verb, "MG_BUSY") == 0 && munchiesMode == MG_WAIT_READY) {
     SendMunchiesAbort("GUI_BUSY");
     BeginMunchiesEject();

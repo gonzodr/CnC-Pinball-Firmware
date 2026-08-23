@@ -12,7 +12,8 @@
 //                          AT_VAL,<e1>,...,<eN> (kb. 5 Hz), amig STOP nem jon
 //   AT,STOP             -> AT_STOPPED
 //   AT,GET              -> AT_THR,<k1>,...,<kN>
-//   AT,SAVE,<k1>,...,<kN> -> AT_SAVED          (egyetlen EEPROM-mentes)
+//   AT,SAVE,<k1>,...,<kN> -> AT_SAVED          (egyetlen EEPROM-mentes;
+//                            START utan vagy egy nyugtazott STOP utan is jo)
 //                            AT_ERR,RANGE       (rossz darabszam/ertek)
 //   Ha nem attract-ban vagyunk: AT_ERR,BUSY (lasd lentebb, miert).
 //
@@ -199,7 +200,10 @@ void HandleAnalogTestCmd(const char* s) {
   }
 
   if (!strncmp(arg, "SAVE,", 5)) {
-    if (intmon != 1 || !analogTestActive) {
+    // A GUI a biztos EEPROM-iras erdekeben elobb STOP-ot kuld, majd csak az
+    // AT_STOPPED nyugtazas utan SAVE-et. Ezert a mentesnek leallitott stream
+    // mellett is ervenyesnek kell lennie; tovabbra is csak attractban engedjuk.
+    if (intmon != 1) {
       Serial.println("AT_ERR,BUSY");
       return;
     }
