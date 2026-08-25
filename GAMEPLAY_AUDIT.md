@@ -55,7 +55,7 @@ Vizsgalt allapot:
 | Normal teljes loop | 2500 +250 bonus | Nincs aktiv loopnyil | Nincs | `BANANA`/`BLOB` | Nincs | **OK**, teljes video nem kell |
 | Multiball loop jackpot | 30000 +2000 bonus, multiballonként egyszer | Loop nyil villog; Jackpot ID1 overlay | `Jackpot6` trigger van, PNG hianyzik | `JACKPOT` + `BLOB` | Loop nyil egyertelmu | **Hianyzik**: Jackpot6 videoasset; a fenyes/hangos reakcio jo |
 | Normal hidtalalat | 1000 +100 bonus | Hidrampa ambient villan | Nincs | Hidankent kulon hang | Nincs | **OK** pontozas; iranyjelzes csak comboablakban kell |
-| Hid-combo 1..6 | 2500/5k/7.5k/10k/15k/20k +100/150/200/250/300/500 bonus | Kishid/Chong: ID9 egyszer; nagyhid/Cheech: ID10 overlay egyszer | 6 Cheech + 6 Chong sequence; a befejezo hid karaktere szerint | Ket generikus combo hang valtakozik | A karakteres video visszajelez, de a 4 s-os kovetkezo celablakot nem mutatja | **Reszleges**: pont/video/fenyeffekt bekotve; az ellenkezo hid 4 s-ig villogjon, GUI-n `COMBO - SHOOT LEFT/RIGHT` |
+| Hid-combo 1..6 | 2500/5k/7.5k/10k/15k/20k +100/150/200/250/300/500 bonus | Kishid/Chong: ID9 egyszer; nagyhid/Cheech: ID10 overlay egyszer | 6 Cheech + 6 Chong sequence; a befejezo hid karaktere szerint | Ket generikus combo hang valtakozik | A karakteres video visszajelez, de az 5,5 s-os kovetkezo celablakot nem mutatja | **Reszleges**: pont/video/fenyeffekt bekotve; az ellenkezo hid 5,5 s-ig villogjon, GUI-n `COMBO - SHOOT LEFT/RIGHT` |
 | Beerrel kvalifikalt kis hid | 5000 +200 bonus | Kis hid zold/sarga villogas | `Point2` -> 5000 video megvan | 5000-es score hang | Hid lampaja egyertelmu | **OK**, kesobb sajat `BEER JACKPOT` nev jobb lenne |
 | Multiball hid-jackpot | Szinttol/hidtol fuggoen 10k..30k +200/500 bonus | Mindket hid zold/sarga villogas; talalatkor Weedblast ID5 | `Jackpot2..6` trigger van, mind az 5 PNG hianyzik | `JACKPOT` | Mindket hid egyertelmuen vilagit | **Hianyzik**: jackpot videok; ID5 neve/tartalma Weedblast, nem biztos hogy hid-jackpothoz illik |
 | FISH vagy TANK | 1500 +50 bonus | A talalt cel feher | Nincs | `PING` vagy `BEER` | Celprogressz latszik | **OK** |
@@ -118,14 +118,14 @@ A baked effektbankban jelenleg tizenegy effekt van:
 |---:|---|---|---|
 | 1 | Loop - Jackpot | Multiball loop-jackpot | Jo esemeny-egyezes; overlaynek van deklaralva, de a jatek `effect=HIGH` full utjan inditja. Ezt technikailag ellenorizni kell. |
 | 2 | UFO Lottery | UFO-jutalmak | Jo |
-| 3 | Shooter | Minden kiloves | Jo |
+| 3 | Shooter | Az aktualis golyo elso kilovese | Tema + effekt egyszer; visszagurulas es ball-save utani automatikus ujrarugas csendes |
 | 4 | UFO FUCK | Az egyik inaktiv UFO-ag | Jo |
 | 5 | Weedblast | WEED complete es minden kvalifikalt hid/jackpot | WEED-hez jo, hid-jackpothoz tematikusan generikus/teves |
 | 6 | Hurry UP | Hurry Up es minden Hurry Up talalat | Jo mod-alap, de minden talalatnal ujraindulhat/megzavarhatja az olvashatosagot |
-| 7 | ChongCollect | Aktiv Chong collectible | Egyszer fut le talalatonkent |
-| 8 | CheechCollect | Aktiv Cheech collectible | Egyszer fut le talalatonkent |
-| 9 | ComboLowBridge | Kishid/Chong sikeres combo | Full effekt, egyszer fut le |
-| 10 | ComboHighBridge | Nagyhid/Cheech sikeres combo | Overlay effekt, egyszer fut le |
+| 7 | ChongCollect | Aktiv Chong collectible | Full effekt, egyszer fut le; a Light Editor nem canvasnak exportalta |
+| 8 | CheechCollect | Aktiv Cheech collectible | Full effekt, egyszer fut le; a Light Editor nem canvasnak exportalta |
+| 9 | ComboLowBridge | Kishid/Chong sikeres combo | Full effekt, egyszer fut le; a Light Editor nem canvasnak exportalta |
+| 10 | ComboHighBridge | Nagyhid/Cheech sikeres combo | Overlay/canvas effekt; 666 transzparens es 276 festett cella az exportban |
 | 11 | Tilt | Danger es Tilt | Dangernel 3 teljes kor; Tiltnel drainig loop |
 
 Hianyzo, prioritasos fenyeffektek:

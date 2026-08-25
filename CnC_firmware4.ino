@@ -249,6 +249,8 @@ namespace Scoring {
 // A DAVE nem pontfeature: a lane-ek veletlen/mento jelleguek, a teljesites
 // egyetlen jutalma a jatek folytatasat segito ball save.
 const unsigned long DAVE_BALL_SAVE_MS = 10000UL;
+// Celzott híd-lovesre is maradjon ido: a regi 4 mp helyett 5,5 mp.
+const unsigned long BRIDGE_COMBO_WINDOW_MS = 5500UL;
 // Minden VUK-kidobas ugyanazt az 5 mp-es fizikai vedelmet kapja. A
 // SpaceCoke 30 mp-e kulon multiball-szabaly, nem erosebb UFO-jutalom.
 const unsigned long UFO_EJECT_BALL_SAVE_MS = 5000UL;
@@ -551,8 +553,11 @@ boolean shootfailchk = 0;
 boolean AutoKick = LOW;
 boolean kick = LOW;
 boolean firstplay = HIGH;
+boolean shooterLaneWasClosed = LOW;
 // Timers
 unsigned long kicktimer = 0;
+unsigned long shooterLaneClosedAt = 0;
+const unsigned long SHOOTER_LANE_REKICK_MS = 1000UL;
 /////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////
@@ -1102,22 +1107,41 @@ void Ballhandler() {
   //// Ballkick
   /////////////////////////////////////////////////
 
-  if (SimDigitalRead(shooterLaneSwitch) == LOW && kick == 0) {
-    if (AutoKick == LOW && SimDigitalRead(ballShooterButton) == LOW && millis() - 500 > shoottimer2) {
+  const unsigned long shooterNow = millis();
+  const boolean shooterLaneClosed = (SimDigitalRead(shooterLaneSwitch) == LOW);
+
+  // A visszagurulo golyo uj zarasa inditja az 1 mp-es varakozast. Ha a
+  // kontaktus felenged, a varakozas torlodik; ures savra nem rugunk ra.
+  if (shooterLaneClosed) {
+    if (shooterLaneWasClosed == LOW) {
+      shooterLaneWasClosed = HIGH;
+      shooterLaneClosedAt = shooterNow;
+    }
+  }
+  else {
+    shooterLaneWasClosed = LOW;
+    shooterLaneClosedAt = 0;
+  }
+
+  if (shooterLaneClosed && kick == 0) {
+    if (AutoKick == LOW && SimDigitalRead(ballShooterButton) == LOW &&
+        shooterNow - shoottimer2 > 500UL) {
       kick = 1;
-      kicktimer = millis();
+      kicktimer = shooterNow;
       AutoKick = HIGH;
+      // Ha a golyo a gyenge rugas utan rajta marad a kapcsolon, innen
+      // szamitva kapjon egy teljes masodpercet az ujrarugasig.
+      shooterLaneClosedAt = shooterNow;
       ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
       ballsaversw = HIGH;
       ballsavetime = 15000;
     }
-
-    // FONTOS: az utolso kick ota is teljen el 700 ms! Enelkul az 50 ms-os
-    // impulzus vege utan AZONNAL ujratuzelt (~60 ms-onkent, gepfegyverkent),
-    // amig golyot latott a savban - gyenge kilovesnel ez egette a tekercset.
-    if (AutoKick == HIGH && millis() - 700 > shoottimer2 && millis() - kicktimer > 700) {
+    else if (AutoKick == HIGH &&
+             shooterNow - shooterLaneClosedAt >= SHOOTER_LANE_REKICK_MS &&
+             shooterNow - kicktimer >= SHOOTER_LANE_REKICK_MS) {
       kick = 1;
-      kicktimer = millis();
+      kicktimer = shooterNow;
+      shooterLaneClosedAt = shooterNow;
     }
   }
 
@@ -1128,18 +1152,14 @@ void Ballhandler() {
     if (millis() - 50 > kicktimer) {
       digitalWrite(shooterlaneCoil, LOW);
 
-      // Minden kilovesnel a Shooter (ID3) fenyeffekt szol. A jatekindito
-      // kilovesnel a startmus HIGH -> emellett a tema-zene is elindul;
-      // a fenyeffekt viszont MINDEN kilovesnel ID3 (korabban csak startmus
-      // eseten ment, effectID=1/Loop-Jackpot).
+      // A tema es a Shooter (ID3) csak az aktualis golyo ELSO kilovesenek
+      // visszajelzese. A flaget itt elfogyasztjuk, igy egy visszagurulas
+      // automatikus ujrarugasa es a ball-save visszaadasa teljesen csendes.
       if (startmus == HIGH) {
         wTrig.trackPlayPoly(TRK_THEME);
-      }
-      else {
         startmus = LOW;
+        PlayBakedEffectOnce(3);
       }
-      effect = HIGH;
-      effectID = 3;
       kick = 0;
       shoot = 0;
       shootfail = 0;
@@ -3892,12 +3912,14 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
         Score(Scoring::BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
       }
       else {
-        if (millis() - 4000 > *comboReadT) {
+        const unsigned long comboNow = millis();
+        const unsigned long comboAge = comboNow - *comboReadT;
+        if (*comboReadT == 0 || comboAge >= BRIDGE_COMBO_WINDOW_MS) {
           comboCounter = 0;
           Score(Scoring::BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
           if (!suppressFeedback) wTrig.trackPlayPoly(firstHitSound);
         }
-        if (millis() - 4000 < *comboReadT) { // ha meg nem telt el 4 mp a masik hid ota
+        else { // a masik hid ota meg nem telt el az 5,5 mp-es komboablak
           comboCounter++;
           if (comboCounter > 6) {
             comboCounter = 6;

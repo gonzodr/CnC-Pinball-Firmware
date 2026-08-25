@@ -54,9 +54,12 @@ ebben a merfoldkoben.
 - [ ] C&C complete: feny + hang + `SHOOT CHEECH OR CHONG` GUI-uzenet.
 - [ ] WEED complete: `SHOOT UFO OR SPINNER` GUI-uzenet.
 - [ ] DAVE complete: `BALL SAVE LIT` feny/hang/GUI-uzenet.
-- [ ] Combo alatt az ellenkezo híd nyilai villogjanak a 4 masodperces ablakban.
+- [ ] Combo alatt az ellenkezo híd nyilai villogjanak az 5,5 masodperces ablakban.
 - [x] Dedikalt Chong combo-fenyeffekt (ID9) a kishid sikeres kombotalalatara.
 - [x] Dedikalt Cheech combo-fenyeffekt (ID10) a nagyhid sikeres kombotalalatara.
+- [ ] Light Editorban canvasra allitani es ujraexportalni az ID7 ChongCollect,
+      ID8 CheechCollect es ID9 ComboLowBridge effekteket, ha ezeknek is a
+      jatekfenyre kell rajzolniuk. Jelenleg csak az ID10 ComboHighBridge canvas.
 - [ ] Hurry Up folyamatos GUI-statusz es visszaszamlalas.
 - [ ] Spinner progressz a GUI-n is latszodjon.
 - [ ] Multiball alatt `SHOOT JACKPOTS` statusz.
