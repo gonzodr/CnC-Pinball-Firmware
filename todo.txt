@@ -31,15 +31,11 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
     (kodbol ellenorizve 2026-07-21: 0 db visszaolvaso wTrig-hivas)
 
 ---------------------------------------------------------------------
-2) wavTrigger LIBRARY ATIRASA (a fejleszto gepen!)
+2) wavTrigger SERIAL1 BACKEND
 ---------------------------------------------------------------------
-[ ] Keresd meg a wavTrigger.h fajlt a libraries mappaban
-    (altalaban Dokumentumok\Arduino\libraries\wavTrigger\)
-[ ] Benne:
-      //#define __WT_USE_ALTSOFTSERIAL__    <- kikommentezni
-      #define __WT_USE_SERIAL1__            <- ezt aktivalni
-[ ] Mentes, majd forditas Visual Micro-ban (hibatlanul kell mennie,
-    az AltSoftSerial include mar nincs a sketchben)
+[x] A fixen Serial1-es wavTrigger.h/.cpp a firmware-repoban van.
+    Nem kell es nem szabad a laptop globalis Arduino-library peldanyara
+    hagyatkozni; az alap library kulonben az USB Serial portot foglalja el.
 
 ---------------------------------------------------------------------
 3) FELTOLTES UTANI TESZTLISTA

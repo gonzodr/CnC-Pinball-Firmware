@@ -114,8 +114,8 @@ feldarabolja a sorozatokat, cserébe olvasáskor kell egy `p - e.data` kivonás 
 - ⚠️ **A két commit még csak a `fix/effect-data-xor-mask` ágon van.** A Pi a `main`-ről húz
   (`firmware_update.py`: git pull → compile → upload), tehát amíg nincs mergelve és
   felpusholva, a Pi a régi, maszkolatlan adatot fordítja — és ugyanúgy elhal 28%-nál.
-- ⚠️ A `CnC_firmware4.ino`-ban van egy **commitolatlan, duplikált** `#include <wavTrigger.h>`
-  az 1. sorban (a 39. sorban már benne van). Hatástalan, szándékosan nem lett commitolva.
+- ✅ A firmware egyetlen, repo-local `wavTrigger.h/.cpp` példányt használ,
+  fix `Serial1` backenddel; a gép globális Arduino-library beállításától független.
 - ⚠️ **A Pi-n a `cnc-pinball.service` LE VAN ÁLLÍTVA**, vissza kell indítani.
 - ⚠️ A Mega az utolsó méréskor **le volt csatlakoztatva** (eltűnt a COM3). Visszadugás után
   érdemes egy záró verify-t futtatni.
@@ -161,9 +161,9 @@ a `$hex:` scope-minősítőnek számít):
 & $avr -C $conf -p atmega2560 -c wiring -P COM3 -b 115200 -U "flash:v:${hex}:i"
 ```
 
-**Könyvtárak:** FastLED + wavTrigger. A wavTrigger **módosított példány** kell legyen,
-amiben `__WT_USE_SERIAL1__` aktív (ellenőrizve: az). Friss library-manager példány ROSSZ
-binárist adna.
+**Könyvtárak:** csak a FastLED külső függőség. A wavTrigger módosított,
+`Serial1`-es példánya a firmware-repó része, ezért egy friss laptop globális
+library-manager példánya nem tudja átvenni az USB soros portot.
 
 **Raspberry Pi:** `gonzodr@192.168.1.188`, jelszót a user adja meg chatben. Firmware:
 `~/CnC_firmware4`, az F7-es flash a GUI-ból indul.

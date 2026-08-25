@@ -34,7 +34,7 @@
 
 #include <FastLED.h>          // For the leds
 #include <Wire.h>             // For send data to Servo UNO
-#include <wavTrigger.h>       // Serial1-en fut (TX1 = 18-as pin)! A wavTrigger.h library-ban __WT_USE_SERIAL1__ legyen aktiv!
+#include "wavTrigger.h"       // Repo-local, fix Serial1 backend (TX1=18, RX1=19)
 #include "effect_data.h"      // fenyeffekt-adat-tablak (kulon fajlban)
 
 //////////////////////////////////////////////////////////////////////
@@ -786,12 +786,29 @@ void setup() {
   pinMode(bridgeHighSwitch, INPUT_PULLUP);
   //pinMode(d53, INPUT_PULLUP);
 
+  // Minden nagyaramu kimenet determinisztikusan LOW legyen meg a WAV Trigger
+  // egy masodperces init-varakozasa es a CoilGuard megszakitas inditasa elott.
+  // Ez a bootloaderbol/elozo sketchbol maradt PORT-latch impulzust is kizarja.
+  const uint8_t coilOutputs[] = {
+    (uint8_t)ballTroughCoil, (uint8_t)shooterlaneCoil,
+    (uint8_t)leftSlingshotCoil, (uint8_t)rightSlingshotCoil,
+    (uint8_t)pop1Coil, (uint8_t)pop2Coil, (uint8_t)pop3Coil,
+    (uint8_t)ufoCoil, (uint8_t)leftFlipperBat, (uint8_t)rightFlipperBat
+  };
+  for (uint8_t i = 0; i < sizeof(coilOutputs); i++) {
+    digitalWrite(coilOutputs[i], LOW);
+  }
+
   //// Wav Trigger Init
   wTrig.start();
   delay(1000);
   wTrig.stopAllTracks();
   wTrig.masterGain(0);
   wTrig.trackPlayPoly(TRK_BOOT);
+
+#ifndef SIM_MODE
+  Serial.println("BOOT,NORMAL,115200");
+#endif
 
   
   CoilGuardInit(); // tekercsvedelem (e_coil_guard.ino) - a pinMode-ok UTAN kell!

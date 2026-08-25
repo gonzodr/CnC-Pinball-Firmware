@@ -18,8 +18,7 @@
 #define GUARD_LOCKOUT 3000 // ms - leoldas utan ennyi ideig tiltva
 
 struct GuardCoil {
-  volatile uint8_t* inReg;  // PIN regiszter (tenyleges pin-allapot)
-  volatile uint8_t* outReg; // PORT regiszter (kimenet lehuzasahoz)
+  volatile uint8_t* outReg; // PORT latch: firmware-parancs + kenyszer-leoldas
   uint8_t mask;
   uint16_t limit;           // max folyamatos behuzas [ms]
   uint16_t onTime;          // eddig ennyi ideje HIGH [ms]
@@ -35,7 +34,6 @@ const char* const guardNames[GUARD_COILS] = {
 };
 
 void CoilGuardAdd(uint8_t idx, uint8_t pin, uint16_t limit_ms) {
-  guardCoils[idx].inReg = portInputRegister(digitalPinToPort(pin));
   guardCoils[idx].outReg = portOutputRegister(digitalPinToPort(pin));
   guardCoils[idx].mask = digitalPinToBitMask(pin);
   guardCoils[idx].limit = limit_ms;
@@ -82,7 +80,11 @@ ISR(TIMER5_COMPA_vect) {
       continue;
     }
 
-    if (*c.inReg & c.mask) {
+    // A firmware altal vezerelt PORT latchot figyeljuk, nem a fizikailag
+    // visszaolvasott PIN regisztert. A kabinet driver/pull-up halozata a PIN
+    // biteket kikapcsolt kimenetnel is HIGH-nak mutathatja; az minden tekercsen
+    // harommasodpercenkenti fantom lockoutot okozott.
+    if (*c.outReg & c.mask) {
       c.onTime++;
       if (c.onTime >= c.limit) {
         *c.outReg &= ~c.mask;        // KENYSZER-LEOLDAS
