@@ -45,6 +45,13 @@
 // A main agon MINDIG kikommentelve tartjuk, mert a gepbeli F7-es
 // firmware update automatikusan a main-t huzza es flasheli!
 //#define SIM_MODE
+// Hard biztonsagi kapu: egy veletlenul helyben maradt #define SIM_MODE vagy
+// Arduino IDE extra flag ELES feltolteskor nem eleg a simulatorhoz. A SIM
+// buildet csak a test/flash_sim.sh altal adott MASODIK flag engedelyezi.
+#if defined(SIM_MODE) && !defined(SIM_BUILD_CONFIRMED)
+#warning "SIM_MODE ignored: SIM_BUILD_CONFIRMED is required"
+#undef SIM_MODE
+#endif
 #ifdef SIM_MODE
 int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minigame
 #endif

@@ -56,4 +56,5 @@ a regi fajl a refaktor elotti pontozas torteneti referenciaja addig.
 - `golden_demo.events.txt` - a referencia eseménysor (2 játékos, teljes
   parti multiballal + SpaceCoke-kal + névbeírással)
 - `watch.py` - soros-figyelő, kanonikus eseménysort ír
-- `flash_sim.sh` - padi SIM-flash (a main gépbiztos marad utána)
+- `flash_sim.sh` - padi SIM-flash; a `SIM_MODE` es `SIM_BUILD_CONFIRMED`
+  build flageket egyutt adja at, a forrast nem modositja

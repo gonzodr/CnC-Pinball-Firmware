@@ -13,7 +13,7 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!! ELES GEPRE FELTOLTES ELOTT: a CnC_firmware4.ino tetejen a     !!!
-!!! "#define SIM_MODE" sort KOMMENTELD KI! Sim modban a golyo-    !!!
+!!! A gepi buildhez ne adj SIM_MODE + SIM_BUILD_CONFIRMED flageket!   !!!
 !!! infrak szimulalt erteket adnak, a gep hasznalhatatlan lenne!  !!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
