@@ -108,26 +108,9 @@ uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done)
   return (uint16_t)(loopEnd + (afterIntro - cycleSteps));
 }
 
-// A generator EffectDef.data mezoje AVR-en csak 16 bites pointer. A far
-// baziscimet ezert ID alapjan, pgm_get_far_address()-szel kell eloallitani.
-uint_farptr_t bakedEffectFarAddress(uint8_t id) {
-  switch (id) {
-    case 1:  return pgm_get_far_address(fx_loop_jackpot);
-    case 2:  return pgm_get_far_address(fx_ufo_lottery);
-    case 3:  return pgm_get_far_address(fx_shooter);
-    case 4:  return pgm_get_far_address(fx_ufo_fuck);
-    case 5:  return pgm_get_far_address(fx_weedblast);
-    case 6:  return pgm_get_far_address(fx_hurry_up);
-    case 7:  return pgm_get_far_address(fx_chongcollect);
-    case 8:  return pgm_get_far_address(fx_cheechcollect);
-    case 9:  return pgm_get_far_address(fx_combolowbridge);
-    case 10: return pgm_get_far_address(fx_combohighbridge);
-    case 11: return pgm_get_far_address(fx_tilt);
-    default: return 0;
-  }
-}
-
 // Az effektadat adott kockajanak 24 bites PROGMEM-cime.
+// Az ID -> tomb cim kapcsolot az editor generalja az effect_data.h-ba, igy
+// uj vagy atnevezett effekt utan nem maradhat itt elavult kezi switch tabla.
 static inline uint_farptr_t bakedFramePtr(const EffectDef& e, uint16_t frame) {
   return bakedEffectFarAddress(e.id) +
          (uint32_t)frame * EFFECT_LEDS * 3UL;

@@ -12,10 +12,7 @@
 #include <Arduino.h>
 #include <avr/pgmspace.h>
 
-// Az Arduino AVR core pin/port tablait a linker a .progmem* szekciokban
-// tartja, es a core ezeket 16 bites LPM-mel olvassa. A 64 KiB-nal nagyobb
-// effektbank ezert nem kerulhet ugyanebbe a szekciocsoportba: kulon, a kod
-// moge linkelt flash-szekcioba tesszuk, es pgm_read_byte_far()-ral olvassuk.
+// Keep Arduino core pin tables below 64 KiB; this bank is read with far access.
 #define FX_DATA_PROGMEM __attribute__((section(".text.fxdata"), used))
 
 #define FX_DATA_MASK_APPLIED 0x5A
@@ -940,6 +937,24 @@ const uint8_t fx_tilt[] FX_DATA_PROGMEM = {
 // CNLIGHT_PROJECT_V1_DATA ZpLODPzORTJAo7soLJgwim5LhHtBMSSzKLotl9WCY8FGUfSXyKgGzIZNouj2ZPLOBX2VEXYxGNM6FH1+VoeWoZ+lZDZDF6yuhZqo
 // CNLIGHT_PROJECT_V1_DATA lb48wOqPx9uHYnM13fCbp+SkKb/QXO6qKyheSMXw/gjocPgF38J9Qg==
 // CNLIGHT_PROJECT_V1_END
+
+// Generated far-flash lookup: d_light_effects.ino calls this by effect ID.
+static inline uint_farptr_t bakedEffectFarAddress(uint8_t id) {
+  switch (id) {
+    case 1: return pgm_get_far_address(fx_loop_jackpot);
+    case 2: return pgm_get_far_address(fx_ufo_lottery);
+    case 3: return pgm_get_far_address(fx_shooter);
+    case 4: return pgm_get_far_address(fx_ufo_fuck);
+    case 5: return pgm_get_far_address(fx_weedblast);
+    case 6: return pgm_get_far_address(fx_hurry_up);
+    case 7: return pgm_get_far_address(fx_chongcollect);
+    case 9: return pgm_get_far_address(fx_combolowbridge);
+    case 8: return pgm_get_far_address(fx_cheechcollect);
+    case 10: return pgm_get_far_address(fx_combohighbridge);
+    case 11: return pgm_get_far_address(fx_tilt);
+    default: return 0;
+  }
+}
 
 const EffectDef bakedEffects[] = {
   // ID, name, frames, frameMs, loops, loopFrames, overlay, introFrames
