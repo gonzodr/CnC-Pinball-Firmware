@@ -74,6 +74,8 @@ static inline uint8_t fx_g(const uint8_t* p) { return gam(fx_read(p)); }
 
 int  runningEffect = 0;
 unsigned long effectStartT = 0;
+uint8_t fullEffectPlaysRemaining = 1;
+boolean fullEffectLoopForever = LOW;
 
 int8_t overlayIdx = -1;           // futo overlay effekt tabla-indexe (-1 = nincs)
 unsigned long overlayStartT = 0;
@@ -110,12 +112,21 @@ void RunBakedEffect(uint8_t idx) {
   bool done;
   uint16_t frame = bakedCurrentFrame(e, effectStartT, done);
   if (done) {
-    // Hurry Up alatt az ID6 vegtelenitve loopol (a mod vegeig), nem all le.
-    if (hurryUp == HIGH && runningEffect == 6) {
+    // A runtime is kerhet teljes-effekt ismetlest: Danger = 3 teljes kor,
+    // Tilt = drainig vegtelen. A Hurry Up regi, mod-vegeig tarto loopja is
+    // ezen a lezarasi ponton marad.
+    if (fullEffectLoopForever == HIGH ||
+        (hurryUp == HIGH && runningEffect == 6)) {
+      effectStartT = millis();
+      frame = bakedCurrentFrame(e, effectStartT, done);
+    } else if (fullEffectPlaysRemaining > 1) {
+      fullEffectPlaysRemaining--;
       effectStartT = millis();
       frame = bakedCurrentFrame(e, effectStartT, done);
     } else { // vege -> vissza a normal jatek-fenyre
       effect = LOW; effectID = 0; runningEffect = 0;
+      fullEffectPlaysRemaining = 1;
+      fullEffectLoopForever = LOW;
       initlight = HIGH; Initlights();
       return;
     }
@@ -131,12 +142,51 @@ void RunBakedEffect(uint8_t idx) {
   }
 }
 
+// FULL baked effekt inditasa megadott szamu teljes lejatszassal. A forever
+// flag a plays erteket felulirja; StopFullBakedEffect() allitja le explicit.
+void StartFullBakedEffect(uint8_t id, uint8_t plays, boolean forever) {
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == id && !bakedEffects[i].overlay) {
+      effect = HIGH;
+      effectID = id;
+      runningEffect = id;
+      effectStartT = millis();
+      fullEffectPlaysRemaining = plays ? plays : 1;
+      fullEffectLoopForever = forever;
+      return;
+    }
+  }
+}
+
+void StopFullBakedEffect() {
+  effect = LOW;
+  effectID = 0;
+  runningEffect = 0;
+  fullEffectPlaysRemaining = 1;
+  fullEffectLoopForever = LOW;
+}
+
 // OVERLAY effekt inditasa a jateklogikabol (csak overlay-flages effektet fogad).
 void PlayOverlay(uint8_t id) {
   for (uint8_t i = 0; i < bakedEffectCount; i++) {
     if (bakedEffects[i].id == id && bakedEffects[i].overlay) {
       overlayIdx = i;
       overlayStartT = millis();
+      return;
+    }
+  }
+}
+
+// A bank overlay/full flagje alapjan a megfelelo egyszeri lejatszasi utat
+// valasztja. Ezt hasznaljak az uj collect- es combo-effektek.
+void PlayBakedEffectOnce(uint8_t id) {
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == id) {
+      if (bakedEffects[i].overlay) {
+        PlayOverlay(id);
+      } else {
+        StartFullBakedEffect(id, 1, LOW);
+      }
       return;
     }
   }
@@ -174,6 +224,8 @@ void RunLightEffect() {
   if (runningEffect != effectID) { // uj effekt indul
     runningEffect = effectID;
     effectStartT = millis();
+    fullEffectPlaysRemaining = 1;
+    fullEffectLoopForever = LOW;
   }
   int8_t idx = -1;
   for (uint8_t i = 0; i < bakedEffectCount; i++) {

@@ -127,6 +127,8 @@ void BeginMunchiesEject() {
   unsigned long now = millis();
   // A minijatek ne egye meg a meg aktiv ballsave idejet.
   if (ballsaversw == HIGH) ballsavetimer += now - munchiesPausedAt;
+  // Ugyanaz az 5 mp-es VUK-kidobasi vedelem jar a minijatek utan is.
+  EnsureBallSave(UFO_EJECT_BALL_SAVE_MS);
 
   munchiesMode = MG_EJECTING;
   munchiesEjectAt = now;

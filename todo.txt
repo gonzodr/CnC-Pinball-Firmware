@@ -3,6 +3,10 @@ CnC PINBALL - TODO (2026-07-09)
 AltSoftSerial -> Serial1 attelepites + stabilitasi javitasok utan
 =====================================================================
 
+JATEKSZABALY / PONTOZAS / FENY-HANG-VIDEO AUDIT:
+  GAMEPLAY_AUDIT.md  - reszletes jelenlegi leltar es javaslatok
+  GAMEPLAY_TODO.md   - priorizalt megvalositasi lista + WEED-stack merfoldko
+
 A KOD MAR AT VAN IRVA az uj bekoteshez, tehat eloszor a lenti
 atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 (Ha a regi allapot kell: CnC_firmware3_backup_20260709 mappa.)
@@ -47,7 +51,9 @@ atkoteseket csinald meg, CSAK UTANA toltsd fel a firmware-t!
 [ ] Flipperek erzese (gyorsabbnak kell lennie esemenyduseben)
 [ ] UFO kilokes mindharom valtozata (a 3-asnal rovidebb lett a
     tekercsimpulzus - eddig ~550ms-ig huzott, az sok volt)
-[ ] Tilt: 3 gyors razas -> tilt, utana normal golyovaltas
+[x] Tilt: elso kulon razas -> Danger, masodik -> Danger2, harmadik -> Tilt;
+    a harangnak a jelzesek kozott legalabb 750 ms-ig nyugalomban kell lennie;
+    Tilt utan nincs golyovegi bonusz, majd normal golyovaltas
 [ ] 4 jatekosos jatek vegig (pontszam-tomb tulindexeles javitva)
 [ ] UFO fonyeremeny es Multiball4: a 40000 pont most mar PLUSZ
     (eddig int tulcsordulas miatt LEVONT ~25000-et!)

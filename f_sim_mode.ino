@@ -210,6 +210,9 @@ void SimHelp() {
   Serial.println("SIM,1-4=weed c=cheech h=chong o=pop n=spinner l/L=loop");
   Serial.println("SIM,a/b/e=gate s=sling f/j=flipper x/y=hid u=ufo");
   Serial.println("SIM,U=SpaceCoke M=pontlopas G=minigame-cinkeles (utana u!)");
+  Serial.println("SIM,E=Extra Ball Lit cinkeles (utana u, majd x)");
+  Serial.println("SIM,H=Hurry Up 2x ki/be (pontozasi smoke test)");
+  Serial.println("SIM,t=tilt-harang (3 kulon nyomas, koztuk >950 ms -> Tilt)");
 }
 
 // Indexet kap (nem SimEvent&-t), mert az Arduino auto-prototipusai a
@@ -340,6 +343,20 @@ void SimPoll() {
         case 'j': SimPress(26, 200); break;      // jobb flipper
         case 'x': SimPress(52, 100); break;      // nagy hid
         case 'y': SimPress(53, 100); break;      // kis hid
+        case 'H':                                // kozponti 2x pontozas tesztje
+          hurryUp = (hurryUp == HIGH) ? LOW : HIGH;
+          if (hurryUp == HIGH) {
+            hurryUpTimer = millis();
+            effect = HIGH;
+            effectID = 6;
+            Serial.println("SIM,hurryup,on");
+          }
+          else {
+            effect = LOW;
+            effectID = 0;
+            Serial.println("SIM,hurryup,off");
+          }
+          break;
         case 'U':                                // cinkelt kocka: SpaceCoke
           simForceLottery = 7;
           Serial.println("SIM,cinkelt kocka");
@@ -352,7 +369,12 @@ void SimPoll() {
           simForceLottery = 9;
           Serial.println("SIM,cinkelt kocka,minigame");
           break;
+        case 'E':                                // cinkelt kocka: Extra Ball Lit
+          simForceLottery = 10;
+          Serial.println("SIM,cinkelt kocka,extra-ball-lit");
+          break;
         case 'u': SimUfoHit(300); break;         // golyo az UFO-ba
+        case 't': SimPress(PIN_A12, 200); break; // tilt-harang; settle miatt >950 ms szunet kell
         case 'R':                                // demo ujrainditasa
           simScriptIx = 0;
           simPrevFire = millis();

@@ -183,6 +183,70 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_PIPEWRENCH         122
 #define TRK_COLLECT            123
 
+// --- Kozponti pontozasi profil (balance pass 1, 2026-08-24) ---
+// A direkt pont es a golyovegi bonusz kulon ertek. A Hurry Up szorzojat
+// kizarolag a Score() alkalmazza a direkt pontra; a bonusz nem duplazodik.
+namespace Scoring {
+  const uint8_t HURRY_UP_MULTIPLIER = 2;
+
+  const unsigned long SLING_POINTS = 250UL;
+  const unsigned int  SLING_BONUS = 25U;
+  const unsigned long POP_POINTS = 250UL;
+  const unsigned int  POP_BONUS = 10U;
+  const unsigned long SPINNER_POINTS = 250UL;
+  const unsigned int  SPINNER_BONUS = 10U;
+
+  const unsigned long GATE_POINTS = 500UL;
+  const unsigned int  GATE_BONUS = 25U;
+
+  const unsigned long CNC_LETTER_POINTS = 1500UL;
+  const unsigned int  CNC_LETTER_BONUS = 50U;
+  const unsigned long CNC_COMPLETE_POINTS = 5000UL;
+  const unsigned int  CNC_COMPLETE_BONUS = 500U;
+  const unsigned long WEED_LETTER_POINTS = 1000UL;
+  const unsigned int  WEED_LETTER_BONUS = 50U;
+  const unsigned long WEED_COMPLETE_POINTS = 5000UL;
+  const unsigned int  WEED_COMPLETE_BONUS = 500U;
+  const unsigned long FISHTANK_TARGET_POINTS = 1500UL;
+  const unsigned int  FISHTANK_TARGET_BONUS = 50U;
+  const unsigned long FISHTANK_PAIR_POINTS = 2500UL;
+  const unsigned int  FISHTANK_PAIR_BONUS = 250U;
+
+  const unsigned long LOOP_POINTS = 2500UL;
+  const unsigned int  LOOP_BONUS = 250U;
+  const unsigned long BRIDGE_POINTS = 1000UL;
+  const unsigned int  BRIDGE_BONUS = 100U;
+  const unsigned long INACTIVE_CHARACTER_POINTS = 200UL;
+  const unsigned int  INACTIVE_CHARACTER_BONUS = 50U;
+  const unsigned long GIFT_CNC_POINTS = 5000UL;
+  const unsigned int  GIFT_CNC_BONUS = 500U;
+  const unsigned long GIFT_OTHER_POINTS = 5000UL;
+  const unsigned int  GIFT_OTHER_BONUS = 100U;
+  const unsigned long DRIFT_POINTS = 1500UL;
+  const unsigned int  DRIFT_BONUS = 50U;
+  const unsigned long MULTIBALL_SPINNER_POINTS = 1000UL;
+  const unsigned int  MULTIBALL_SPINNER_BONUS = 10U;
+  const unsigned long LOOP_JACKPOT_POINTS = 30000UL;
+  const unsigned int  LOOP_JACKPOT_BONUS = 2000U;
+  const unsigned long UFO_EJECT_POINTS = 0UL;
+  const unsigned int  UFO_EJECT_BONUS = 300U;
+  const unsigned long COLLECTIBLE_POINTS[3] = { 10000UL, 15000UL, 20000UL };
+  const unsigned int  COLLECTIBLE_BONUS[3] = { 500U, 1000U, 2000U };
+
+  const unsigned long COMBO_POINTS[6] = {
+    2500UL, 5000UL, 7500UL, 10000UL, 15000UL, 20000UL
+  };
+  const unsigned int COMBO_BONUS[6] = { 100U, 150U, 200U, 250U, 300U, 500U };
+}
+
+// A DAVE nem pontfeature: a lane-ek veletlen/mento jelleguek, a teljesites
+// egyetlen jutalma a jatek folytatasat segito ball save.
+const unsigned long DAVE_BALL_SAVE_MS = 10000UL;
+// Minden VUK-kidobas ugyanazt az 5 mp-es fizikai vedelmet kapja. A
+// SpaceCoke 30 mp-e kulon multiball-szabaly, nem erosebb UFO-jutalom.
+const unsigned long UFO_EJECT_BALL_SAVE_MS = 5000UL;
+const unsigned long SPACECOKE_BALL_SAVE_MS = 30000UL;
+
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER RGB
 #define UPDATES_PER_SECOND 100
@@ -419,6 +483,7 @@ int ball4 = 0;
 int ball5 = 0;
 int ballsavetime = 15000;
 int extraball = 0;
+boolean extraBallLit = LOW;
 int multiball = 0;
 // A szenzoronkenti kuszobok a h_analog_test.ino-ban elnek (EEPROM-bol
 // toltve). Az Arduino preprocesszor csak FUGGVENY-prototipust general
@@ -490,6 +555,7 @@ int ufoCoil = 37; // output ufo
 // Booleans
 boolean ufosw = 0;
 boolean ufoInactivesw = 0;
+boolean ufoEjectSaveStarted = LOW;
 // Integers
 int lottery = 0;
 int ufoshoot = 0;
@@ -551,7 +617,11 @@ int spsound = 0;
 int giftsw = 0;
 int intmon = 1;
 int heysoundcounter = 0;
-int tiltcounter =0;
+// Commercial-style plumb-bob tilt: ket figyelmeztetes utan a harmadik,
+// kulonallo harangerintes tilteli az aktualis golyot.
+const uint8_t TILT_WARNINGS_ALLOWED = 2;
+const unsigned long TILT_SETTLE_MS = 750UL;
+uint8_t tiltWarnings = 0;
 int shootLightCycle;
 int colorcode;
 int offset = 0;
@@ -594,7 +664,8 @@ boolean weedhurryswitch1 = 0;
 boolean weedhurryswitch2 = 0;
 boolean weedhurryswitch3 = 0;
 boolean weedhurryswitch4 = 0;
-boolean tiltLogicSW = LOW;
+boolean tiltContactLatched = LOW;
+boolean ballTilted = LOW;
 
 
 unsigned long weedhurrytimer1 = 0;
@@ -630,8 +701,7 @@ unsigned long cigartime = 0;
 unsigned long weedtableindicatortimer = 0;
 unsigned long hurryUppreviousMillis = 0;
 unsigned long heysoundtimer = 0;
-unsigned long tilttimer = 0;
-unsigned long tiltLogicTimer = 0;
+unsigned long tiltOpenSince = 0;
 const long interval = 100; // Ledstate blinktime intervall
 
 
@@ -936,25 +1006,27 @@ void Ballhandler() {
         Inittable = HIGH;
         inittable();
 
-        if (bonusx == 1) {
-          bonus = bonus * 2;
-          bonusx = 0;
+        // Commercial tilt: az aktualis golyo felhalmozott bonusza elvész.
+        // Az inittable() szandekosan mar e blokk elott lefut, ezert a
+        // ballTilted flaget csak ITT, a bonus dontese utan szabad torolni.
+        if (ballTilted == LOW) {
+          if (bonusx == 1) {
+            bonus = bonus * 2;
+          }
+          if (bonusx == 2) {
+            bonus = bonus * 4;
+          }
+          if (bonusx == 3) {
+            bonus = bonus * 6;
+          }
+          if (bonusx == 4) {
+            bonus = bonus * 8;
+          }
+          score[player] = score[player] + bonus;
         }
-        if (bonusx == 2) {
-          bonus = bonus * 4;
-          bonusx = 0;
-        }
-        if (bonusx == 3) {
-          bonus = bonus * 6;
-          bonusx = 0;
-        }
-        if (bonusx == 4) {
-          bonus = bonus * 8;
-          bonusx = 0;
-        }
-
-        score[player] = score[player] + bonus;
+        bonusx = 0;
         bonus = 0;
+        ballTilted = LOW;
         SendData();
         if (extraball == 0)
         {
@@ -1570,6 +1642,7 @@ void intmMode() {
       chongCollectives[4] = 0;
       bonus = 0;
       bonusx = 0;
+      ballTilted = LOW;
     }
 
     // 60 mp tetlenseg: vissza az attract modba
@@ -1669,7 +1742,7 @@ void intmMode() {
 
 void inittable() {
   if (Inittable == HIGH) {
-    tiltcounter = 0;
+    ResetTiltWarningsForBall();
     cncswitch1 = 0;
     cncswitch2 = 0;
     cncswitch3 = 0;
@@ -1683,6 +1756,7 @@ void inittable() {
     cheechLightActiveSw = 0;
     chongactive = 0;
     ufosw = 0;
+    extraBallLit = LOW; // az EXTRA BALL LIT csak az aktualis golyoig el
     davearr[1] = 0;
     davearr[2] = 0;
     davearr[3] = 0;
@@ -1701,7 +1775,6 @@ void inittable() {
     weedmetersend();
     beerCollect = 0;
     randGift = random(1, 10);
-    tiltcounter =0;
     switch (randGift) {
       case 1:
         cncswitch1 = 2;
@@ -1774,6 +1847,12 @@ void SendData() {
 /////////////////////////////////////////////////
 
 void Score(unsigned long scr, unsigned long bns) {
+  // Hurry Up egyetlen, jatekosnak is elmondhato szabaly: minden kozvetlen
+  // pont 2x. A bonusz valtozatlan marad, igy a golyovegi x2/x4/x6/x8 nem
+  // szorozza meg meg egyszer a Hurry Up jutalmat.
+  if (hurryUp == HIGH) {
+    scr = scr * Scoring::HURRY_UP_MULTIPLIER;
+  }
   bonus = bonus + bns;
   score[player] = score[player] + scr;
 #ifdef SIM_MODE
@@ -1784,6 +1863,78 @@ void Score(unsigned long scr, unsigned long bns) {
            player, scr, bns, score[player]);
   Serial.println(tb);
 #endif
+}
+
+// Legalabb minimumMs vedelmet biztosit, de egy mar futo hosszabb save-et
+// (peldaul kilovesi vagy multiball save-et) sosem rovidit le.
+void EnsureBallSave(unsigned long minimumMs) {
+  unsigned long now = millis();
+  unsigned long remaining = 0;
+  if (ballsaversw == HIGH && ballsavetimer != 0 &&
+      now - ballsavetimer < (unsigned long)ballsavetime) {
+    remaining = (unsigned long)ballsavetime - (now - ballsavetimer);
+  }
+  if (remaining < minimumMs) {
+    ballsaversw = HIGH;
+    ballsavetime = (int)minimumMs;
+    ballsavetimer = now;
+  }
+}
+
+void StartUfoEjectBallSave(unsigned long minimumMs) {
+  if (ufoEjectSaveStarted == LOW) {
+    ufoEjectSaveStarted = HIGH;
+    EnsureBallSave(minimumMs);
+  }
+}
+
+boolean ExtraBallLotteryBlocked() {
+  return (extraball > 0 || extraBallLit == HIGH);
+}
+
+int DrawUfoLottery() {
+  int result;
+  do {
+    if (numofplayers == 1) {
+      if (hurryUp == HIGH) {
+        result = random(1, 8); // 1..7; minigame/EB-lit nincs Hurry Up alatt
+      }
+      else {
+        result = random(1, 10); // 1..9 huzas
+        if (result >= 8) result++; // 8 tiltott (pontlopas): 8->9, 9->10
+      }
+    }
+    else {
+      result = random(1, (hurryUp == LOW) ? 11 : 9); // normal 1..10, hurry 1..8
+    }
+  } while (ExtraBallLotteryBlocked() && (result == 1 || result == 10));
+
+#ifdef SIM_MODE
+  if (simForceLottery > 0) {
+    int forced = simForceLottery;
+    simForceLottery = 0;
+    if (!ExtraBallLotteryBlocked() || (forced != 1 && forced != 10)) {
+      result = forced;
+    }
+    else {
+      Serial.println("SIM,extra-ball-lottery-blokkolva");
+    }
+  }
+#endif
+  return result;
+}
+
+boolean CollectExtraBallLitAtHighRamp() {
+  if (extraBallLit == LOW || extraball > 0 ||
+      SimDigitalRead(bridgeHighSwitch) != LOW || BrdgHighSw != 0) {
+    return false;
+  }
+  extraBallLit = LOW;
+  extraball = 1;
+  wTrig.trackPlayPoly(TRK_EXTRABALL);
+  Serial.println("ExtraB");
+  delay(20);
+  return true;
 }
 
 // Veletlen beszedhang lejatszasa egy listabol. RNG-ekvivalens a regi
@@ -1950,16 +2101,7 @@ void Right_Slingshot() {
     ballHandlerSkip = 1;
     ballHandlerSkipTimer = millis();
 
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-    }
-    else {
-      Score(0, 50);
-    }
+    Score(Scoring::SLING_POINTS, Scoring::SLING_BONUS);
 
   }
   if (slingr == 1 && millis() - 12 < slingrtimer) {
@@ -1990,16 +2132,7 @@ void Left_Slingshot() {
     ballHandlerSkip = 1;
     ballHandlerSkipTimer = millis();
 
-    if (hurryUp == HIGH) {
-      effect = HIGH;
-      effectID = 6;
-      Score(2500, 100);
-      Serial.println("Point1");
-      delay(20);
-    }
-    else {
-      Score(0, 50);
-    }
+    Score(Scoring::SLING_POINTS, Scoring::SLING_BONUS);
 
   }
   if (slingl == 1 && millis() - 12 < slingltimer) {
@@ -2051,7 +2184,7 @@ void CnC() {
       if (SimDigitalRead(cncPin[i]) == LOW && *csw[i] == 0) {
         *csw[i] = 1;
         wTrig.trackPlayPoly(cncSound[i]);
-        Score(1500, 50);
+        Score(Scoring::CNC_LETTER_POINTS, Scoring::CNC_LETTER_BONUS);
         if (giftsw == 1) { giftsw = 0; Gift(); }
       }
     }
@@ -2064,13 +2197,7 @@ void CnC() {
         *chsw[i] = 1;
         *chtimer[i] = millis();
         wTrig.trackPlayPoly(cncSound[i]);
-        effect = HIGH;
-        effectID = 6;
-        Score(2500, 500);
-        Serial.println("Point1");
-        if (i == 2) {
-          Score(1500, 50); // az eredetiben CSAK a C1st betu ad plusz pontot (megorizve)
-        }
+        Score(Scoring::CNC_LETTER_POINTS, Scoring::CNC_LETTER_BONUS);
       }
     }
     for (uint8_t i = 0; i < 3; i++) {
@@ -2088,7 +2215,7 @@ void CnC() {
         wTrig.trackPlayPoly(cncSound[i]);
         wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-        Score(5000, 500);
+        Score(Scoring::GIFT_CNC_POINTS, Scoring::GIFT_CNC_BONUS);
         delay(10);
         Serial.println("Point2");
         giftsw = 3;
@@ -2119,7 +2246,7 @@ void CnC() {
   if (cncswitch1 == 1 && cncswitch2 == 1 && cncswitch3 == 1 && cncoff == 0) {
     cnctimer = millis();
     cncoff = 1;
-    bonus = bonus + 750;
+    Score(Scoring::CNC_COMPLETE_POINTS, Scoring::CNC_COMPLETE_BONUS);
   }
 
   if (cncoff == 1) {
@@ -2177,12 +2304,12 @@ void Loopshoot() {
     }
     wTrig.trackPlayPoly(TRK_BLOB);
     if (multiloopsw == 1) {
-      Score(30000, 2000);
+      Score(Scoring::LOOP_JACKPOT_POINTS, Scoring::LOOP_JACKPOT_BONUS);
       effect = HIGH;
       effectID = 1; // Loop-Jackpot - a multiball loop-jackpotnal
     }
     else {
-      Score(2000, 500);
+      Score(Scoring::LOOP_POINTS, Scoring::LOOP_BONUS);
       // sima felso loop: nincs baked effekt (az ID4/UFO FUCK mostmar
       // kizarolag a UFO-no-weed esemenye)
     }
@@ -2235,7 +2362,7 @@ void Weed() {
     for (uint8_t i = 0; i < 4; i++) {
       if (SimDigitalRead(weedPin[i]) == LOW && *wsw[i] == 0) {
         *wsw[i] = 1;
-        Score(1000, 50);
+        Score(Scoring::WEED_LETTER_POINTS, Scoring::WEED_LETTER_BONUS);
         wTrig.trackPlayPoly(weedSound[i]);
         if (giftsw == 1) { giftsw = 0; Gift(); }
       }
@@ -2248,11 +2375,7 @@ void Weed() {
       if (SimDigitalRead(weedPin[i]) == LOW && *whsw[i] == 0) {
         *whsw[i] = 1;
         *whtimer[i] = millis();
-        effect = HIGH;
-        effectID = 6;
-        Score(2500, 100);
-        Serial.println("Point1");
-        delay(20);
+        Score(Scoring::WEED_LETTER_POINTS, Scoring::WEED_LETTER_BONUS);
         wTrig.trackPlayPoly(weedSound[i]);
         if (giftsw == 1) { giftsw = 0; Gift(); }
       }
@@ -2269,7 +2392,7 @@ void Weed() {
     for (uint8_t i = 0; i < 4; i++) {
       if (SimDigitalRead(weedPin[i]) == LOW && *wsw[i] == 2) {
         *wsw[i] = 1;
-        Score(5000, 100);
+        Score(Scoring::GIFT_OTHER_POINTS, Scoring::GIFT_OTHER_BONUS);
         wTrig.trackPlayPoly(weedSound[i]);
         wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
@@ -2298,7 +2421,8 @@ void Weed() {
     }
   }
 
-  // WEED kigyujtve (mind a 4 celpont == 1) -> multiball-mero elesites + hang
+  // WEED kigyujtve -> UFO + multiball-mero elesites es hang. Szandekosan
+  // NEM ad ball save-et; azt csak az UFO/VUK kidobas es a multiball indokolja.
   if (*wsw[0] == 1 && *wsw[1] == 1 && *wsw[2] == 1 && *wsw[3] == 1 && weedoff == 0) {
     weedtimer = millis();
     weedoff = 1;
@@ -2333,7 +2457,7 @@ void Weed() {
       weedswitch3 = 0;
       weedswitch4 = 0;
       weedoff = 0;
-      Score(1000, 500);
+      Score(Scoring::WEED_COMPLETE_POINTS, Scoring::WEED_COMPLETE_BONUS);
     }
   }
 }
@@ -2360,16 +2484,7 @@ void Fishtank() {
   for (uint8_t i = 0; i < 2; i++) {
     if (SimDigitalRead(fishPin[i]) == LOW && *fstate[i] == 0) {
       *fstate[i] = 1;
-      if (hurryUp == HIGH) {
-        effect = HIGH;
-        effectID = 6;
-        Score(2500, 100);
-        Serial.println("Point1");
-        delay(20);
-      }
-      else {
-        Score(1500, 10);
-      }
+      Score(Scoring::FISHTANK_TARGET_POINTS, Scoring::FISHTANK_TARGET_BONUS);
       wTrig.trackPlayPoly(fishSound[i]);
       if (giftsw == 1) { giftsw = 0; Gift(); }
     }
@@ -2380,7 +2495,7 @@ void Fishtank() {
     for (uint8_t i = 0; i < 2; i++) {
       if (SimDigitalRead(fishPin[i]) == LOW && *fstate[i] == 2) {
         *fstate[i] = 1;
-        Score(5000, 100);
+        Score(Scoring::GIFT_OTHER_POINTS, Scoring::GIFT_OTHER_BONUS);
         wTrig.trackPlayPoly(fishSound[i]);
         wTrig.trackPlayPoly(TRK_CHEECHBEAUTY);
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
@@ -2414,6 +2529,7 @@ void Fishtank() {
     fishtimer = millis();
     fishoff = 1;
     beerCollect++;
+    Score(Scoring::FISHTANK_PAIR_POINTS, Scoring::FISHTANK_PAIR_BONUS);
     if (beerCollect == 1) {
       Serial.println("Beer1");
     }
@@ -2599,11 +2715,7 @@ void Dave_switch() {
   if (daveoff == 0 && davearr[1] == 1 && davearr[2] == 1 && davearr[3] == 1 && davearr[4] == 1) {
     daveoff = 1;
     davetimer = millis();
-    ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
-    if (ballsaversw == LOW) {
-      ballsaversw = HIGH;
-      ballsavetime = 5000;
-    }
+    EnsureBallSave(DAVE_BALL_SAVE_MS);
   }
 
   if (daveoff == 1) {
@@ -2655,8 +2767,9 @@ void Gate() {
     if (SimDigitalRead(gatePin[i]) == LOW && gatetimesw == 0) {
       uint8_t g = i + 1; // gatearr-index (1..3)
       wTrig.trackPlayPoly(TRK_KVAKK);
+      Score(Scoring::GATE_POINTS, Scoring::GATE_BONUS);
       if (gatearr[g] == 2) { // megjelolt kapu -> drift-pont
-        Score(1500, 50);
+        Score(Scoring::DRIFT_POINTS, Scoring::DRIFT_BONUS);
         wTrig.trackPlayPoly(TRK_CHEECHYEAH);
         wTrig.trackPlayPoly(TRK_WEEDFULL);
         Serial.println("Drift");
@@ -2814,14 +2927,7 @@ void Pops() {
 
   for (uint8_t i = 0; i < 3; i++) {
     if (SimDigitalRead(popSwitch[i]) == LOW && *popLogic[i] == LOW) {
-      if (hurryUp == HIGH) {
-        effect = HIGH;
-        effectID = 6;
-        Score(1000, 10);
-      }
-      else {
-        Score(200, 10);
-      }
+      Score(Scoring::POP_POINTS, Scoring::POP_BONUS);
       *popSw[i] = HIGH;
       *popLogic[i] = HIGH;
       *popTimer[i] = millis();
@@ -3017,16 +3123,11 @@ void Weedspinner() {
   if (weedspsw == 0 && SimDigitalRead(spinnerSwitch) == LOW) {
     weedspsw = 1;
     if (multiball != 0) {
-      Score(1000, 10);
-    }
-    else if (hurryUp == HIGH)
-    {
-      Score(2500, 10);
-      effect = HIGH;
-      effectID = 6;
+      Score(Scoring::MULTIBALL_SPINNER_POINTS,
+            Scoring::MULTIBALL_SPINNER_BONUS);
     }
     else {
-      Score(0, 50);
+      Score(Scoring::SPINNER_POINTS, Scoring::SPINNER_BONUS);
     }
     wTrig.trackPlayPoly(TRK_PLUMB);
     if (spinnersw == 1) {
@@ -3195,24 +3296,11 @@ void UFOO() {
 
   if (stableBallPresent && ufoshoot == 0) {
     ufoDetectStartedAt = 0;
+    ufoEjectSaveStarted = LOW;
     if (ufosw == 1 && multiball == 0) {
-      // A regi UFO-lottery marad az alap. A Munchies a 9-es uj kimenet:
-      // egy jatekosnal 7 regi + minigame (1/8), tobb jatekosnal a pontlopast
-      // is megtartva 8 regi + minigame (1/9). Hurry-up kozben nem inditunk
-      // minijatekot, ott valtozatlanul csak a regi lottery-agak kozul huzunk.
-      if (numofplayers == 1) {
-        lottery = random(1, (hurryUp == LOW) ? 9 : 8); // normal: 1..8; hurry: 1..7
-        if (hurryUp == LOW && lottery == 8) lottery = 9;
-      }
-      else {
-        lottery = random(1, (hurryUp == LOW) ? 10 : 9); // normal: 1..9; hurry: 1..8
-      }
-#ifdef SIM_MODE
-      if (simForceLottery > 0) { // probapadi "cinkelt kocka" (f_sim_mode)
-        lottery = simForceLottery;
-        simForceLottery = 0;
-      }
-#endif
+      // 1 = azonnali extra ball, 9 = Munchies, 10 = EXTRA BALL LIT.
+      // Az 1-es es 10-es kimenet nem huzhato, ha mar van/lit egy extra ball.
+      lottery = DrawUfoLottery();
       if (lottery == 9 && hurryUp == LOW) {
         StartMunchiesMode();
         return;
@@ -3230,8 +3318,13 @@ void UFOO() {
       SetupPurpleAndGreenPalette();
       ufoshoot = 4;
       if (lottery  == 1) {
-        extraball += 1;
+        extraball = 1; // nem stackelunk egynel tobbet
         Serial.println("Ufo5");
+        delay(20);
+      }
+      if (lottery == 10) {
+        extraBallLit = HIGH;
+        Serial.println("Ufo8");
         delay(20);
       }
 
@@ -3300,6 +3393,7 @@ void UFOO() {
   }
 
   if (ufoshoot == 1 && ufoshoottimer2 < millis() - 4300) {
+    StartUfoEjectBallSave(UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
     if (millis() - 50 > ufoshoottimer + 4300) {
       digitalWrite(ufoCoil, LOW);
@@ -3310,12 +3404,13 @@ void UFOO() {
           wTrig.trackResume(TRK_THEME);
         }
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-        Score(0, 300);
+        Score(Scoring::UFO_EJECT_POINTS, Scoring::UFO_EJECT_BONUS);
       }
     }
   }
 
   if (ufoshoot == 2 && ufoshoottimer2 < millis() - 2000) {
+    StartUfoEjectBallSave(UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
     if (millis() - 50 > ufoshoottimer + 2000) {
       digitalWrite(ufoCoil, LOW);
@@ -3325,12 +3420,13 @@ void UFOO() {
           wTrig.trackResume(TRK_THEME);
         }
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-        Score(0, 300);
+        Score(Scoring::UFO_EJECT_POINTS, Scoring::UFO_EJECT_BONUS);
       }
     }
   }
 
   if (ufoshoot == 3 && ufoshoottimer2 < millis() - 1500) {
+    StartUfoEjectBallSave(UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
     if (millis() - 50 > ufoshoottimer + 1500) {
       digitalWrite(ufoCoil, LOW);
@@ -3340,7 +3436,7 @@ void UFOO() {
           wTrig.trackResume(TRK_THEME);
         }
         wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
-        Score(0, 300);
+        Score(Scoring::UFO_EJECT_POINTS, Scoring::UFO_EJECT_BONUS);
       }
     }
   }
@@ -3348,6 +3444,8 @@ void UFOO() {
   //// Itt ad is az ufo valamit
 
   if (ufoshoot == 4 && ufoshoottimer2 < millis() - 5500) {
+    StartUfoEjectBallSave((lottery == 7) ?
+                          SPACECOKE_BALL_SAVE_MS : UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
     if (millis() - 50 > ufoshoottimer + 5500) {
       digitalWrite(ufoCoil, LOW);
@@ -3402,26 +3500,23 @@ void UFOO() {
           wTrig.trackPlayPoly(TRK_COLLECT + ufoMinus); // 124..127 = kirabolt jatekos hangja
           ufoMinus = 0;
         }
+        if (lottery == 10) {    /// Extra Ball Lit (Ufo8)
+          wTrig.trackPlayPoly(TRK_FIREWORK);
+          wTrig.trackPlayPoly(TRK_SHOOTBRIDGE); // atmeneti high-ramp callout
+        }
 
 
         fasz = 68;
         initlight = 1;
         Initlights();
-        ballsavetimer = millis(); // a ballsave BEALLITASANAK ideje (rollover-biztos)
-        ballsaversw = HIGH;
-        if (lottery == 7) {
-          ballsavetime = 30000;
-        }
-        else {
-          ballsavetime = 10000;
-        }
         ufoshoot = 0;
 
         if (lottery == 2) {
           wTrig.trackPlayPoly(TRK_MUS_HURRY);
           wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
         }
-        if (lottery == 1 || lottery == 3 || lottery == 4 || lottery == 5 || lottery == 6 || lottery == 8)
+        if (lottery == 1 || lottery == 3 || lottery == 4 || lottery == 5 ||
+            lottery == 6 || lottery == 8 || lottery == 10)
         {
           wTrig.trackResume(TRK_THEME);
           wTrig.trackPlayPoly(TRK_SHOOTOUTUFO);
@@ -3432,12 +3527,13 @@ void UFOO() {
   }
 
   if (ufoshoot == 5 && ufoshoottimer2 < millis() - 1500) {
+    StartUfoEjectBallSave(UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
     if (millis() - 50 > ufoshoottimer + 1500) {
       digitalWrite(ufoCoil, LOW);
       if (millis() - 500 > ufoshoottimer + 1500) {
         ufoshoot = 0;
-        Score(0, 300);
+        Score(Scoring::UFO_EJECT_POINTS, Scoring::UFO_EJECT_BONUS);
       }
     }
   }
@@ -3490,40 +3586,33 @@ void Chong_switch() {
       chongLightActiveSw = LOW;
       cheechLightActiveSw = LOW;
       chongCollectives[player] += 1;
+      PlayBakedEffectOnce(7); // ChongCollect: egyszer
       if (chongCollectives[player] == 1) {
           Serial.println("ChongC1");
           delay(20);
-          Score(10000, 500);
+          Score(Scoring::COLLECTIBLE_POINTS[0], Scoring::COLLECTIBLE_BONUS[0]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_WEEDPIPE);
       }
       if (chongCollectives[player] == 2) {
           Serial.println("ChongC2");
           delay(20);
-          Score(15000, 1000);
+          Score(Scoring::COLLECTIBLE_POINTS[1], Scoring::COLLECTIBLE_BONUS[1]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_COCKROACH);
       }
       if (chongCollectives[player] == 3) {
           Serial.println("ChongC3");
           delay(20);
-          Score(20000, 2000);
+          Score(Scoring::COLLECTIBLE_POINTS[2], Scoring::COLLECTIBLE_BONUS[2]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_PIPEWRENCH);
           chongCollectives[player] = 0;
       }
     }
     else {
-      if (hurryUp == HIGH) {
-        effect = HIGH;
-        effectID = 6;
-        Score(2500, 500);
-        Serial.println("Point1");
-        delay(20);
-      }
-      else {
-        Score(200, 50);
-      }
+      Score(Scoring::INACTIVE_CHARACTER_POINTS,
+            Scoring::INACTIVE_CHARACTER_BONUS);
     }
   }
 
@@ -3572,10 +3661,11 @@ void Cheech_switch() {
       CollectTimer = millis();
       CollectSw = 1;
       cheechCollectives[player] += 1;
+      PlayBakedEffectOnce(8); // CheechCollect: egyszer
       if (cheechCollectives[player] == 1) {
           Serial.println("CheechC1");
           delay(20);
-          Score(10000, 500);
+          Score(Scoring::COLLECTIBLE_POINTS[0], Scoring::COLLECTIBLE_BONUS[0]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_CHAINWHEEL);
 
@@ -3583,14 +3673,14 @@ void Cheech_switch() {
       if (cheechCollectives[player] == 2) {
           Serial.println("CheechC2");
           delay(20);
-          Score(15000, 1000);
+          Score(Scoring::COLLECTIBLE_POINTS[1], Scoring::COLLECTIBLE_BONUS[1]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_BIGJOINT);
       }
       if (cheechCollectives[player] == 3) {
           Serial.println("CheechC3");
           delay(20);
-          Score(20000, 2000);
+          Score(Scoring::COLLECTIBLE_POINTS[2], Scoring::COLLECTIBLE_BONUS[2]);
           wTrig.trackPlayPoly(TRK_COLLECT);
           wTrig.trackPlayPoly(TRK_LICENSEPLATE);
           cheechCollectives[player] = 0;
@@ -3598,16 +3688,8 @@ void Cheech_switch() {
       }
     }
     else {
-      if (hurryUp == HIGH) {
-        effect = HIGH;
-        effectID = 6;
-        Score(2500, 500);
-        Serial.println("Point1");
-        delay(20);
-      }
-      else {
-        Score(200, 50);
-      }
+      Score(Scoring::INACTIVE_CHARACTER_POINTS,
+            Scoring::INACTIVE_CHARACTER_BONUS);
     }
   }
 
@@ -3766,11 +3848,13 @@ void Gift() {
 //  - a ket hid KOMBOZIK egymassal: comboReadT/comboWriteT kereszthivatkozas
 //  - a multiball-jackpot tabla KULONBOZO (lasd a ket wrappert)
 //  - az elso talalat (nem-kombo) hangja kulonbozo (firstHitSound)
+//  - a kombovideo karaktere a BEFEJEZO hidhoz tartozik
 void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
                   boolean* active, uint8_t ledActA, uint8_t ledActB,
                   uint8_t ledAmbA, uint8_t ledAmbB,
                   unsigned long* comboReadT, unsigned long* comboWriteT,
-                  uint8_t firstHitSound,
+                  uint8_t firstHitSound, const char* comboVideoPrefix,
+                  uint8_t comboEffectId, boolean suppressFeedback,
                   const unsigned long* jpScr, const unsigned long* jpBns) {
   if (*active == LOW) {
     leds[ledActA] = CRGB::Black;
@@ -3781,27 +3865,32 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
       *swT = millis();
 
       if (hurryUp == HIGH) {
-        Score(5000, 500);
-        Serial.println("Point2");
-        delay(20);
+        Score(Scoring::BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
       }
       else {
         if (millis() - 4000 > *comboReadT) {
           comboCounter = 0;
-          Score(500, 50);
-          wTrig.trackPlayPoly(firstHitSound);
+          Score(Scoring::BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
+          if (!suppressFeedback) wTrig.trackPlayPoly(firstHitSound);
         }
         if (millis() - 4000 < *comboReadT) { // ha meg nem telt el 4 mp a masik hid ota
           comboCounter++;
           if (comboCounter > 6) {
             comboCounter = 6;
           }
-          if (comboCounter == 1) { Score(2500, 300);  Serial.println("Combo1"); wTrig.trackPlayPoly(TRK_COMBO1); }
-          if (comboCounter == 2) { Score(5000, 300);  Serial.println("Combo2"); wTrig.trackPlayPoly(TRK_COMBO2); }
-          if (comboCounter == 3) { Score(7500, 300);  Serial.println("Combo3"); wTrig.trackPlayPoly(TRK_COMBO1); }
-          if (comboCounter == 4) { Score(10000, 300); Serial.println("Combo4"); wTrig.trackPlayPoly(TRK_COMBO1); }
-          if (comboCounter == 5) { Score(15000, 300); Serial.println("Combo5"); wTrig.trackPlayPoly(TRK_COMBO2); }
-          if (comboCounter == 6) { Score(20000, 300); Serial.println("Combo6"); wTrig.trackPlayPoly(TRK_COMBO1); }
+          static const uint8_t comboSound[6] = {
+            TRK_COMBO1, TRK_COMBO2, TRK_COMBO1,
+            TRK_COMBO1, TRK_COMBO2, TRK_COMBO1
+          };
+          uint8_t comboIndex = comboCounter - 1;
+          Score(Scoring::COMBO_POINTS[comboIndex],
+                Scoring::COMBO_BONUS[comboIndex]);
+          if (!suppressFeedback) {
+            Serial.print(comboVideoPrefix);
+            Serial.println(comboCounter);
+            wTrig.trackPlayPoly(comboSound[comboIndex]);
+            PlayBakedEffectOnce(comboEffectId);
+          }
         }
         *comboWriteT = millis();
       }
@@ -3841,7 +3930,10 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
       *swFlag = 1;
       *swT = millis();
       Score(jpScr[multiball], jpBns[multiball]);
-      if (multiball == 0) {
+      if (suppressFeedback) {
+        // Az EXTRA BALL collect video/callout elsoseget kap ugyanazon a lovesen.
+      }
+      else if (multiball == 0) {
         wTrig.trackPlayPoly(TRK_SCORE_5000);
         Serial.println("Point2");
       }
@@ -3871,7 +3963,8 @@ void BridgeLow() {
   static const unsigned long jpScr[6] = { 5000, 10000, 15000, 20000, 25000, 30000 };
   static const unsigned long jpBns[6] = {  200,   200,   200,   200,   200,   200 };
   BridgeCommon(bridgeLowSwitch, &BrdgLowSw, &BrdgLowT, &BrdgLowActive,
-               24, 25, 23, 17, &comboTimerH, &comboTimerL, 9, jpScr, jpBns);
+               24, 25, 23, 17, &comboTimerH, &comboTimerL, 9,
+               "ComboChong", 9, false, jpScr, jpBns);
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -3888,8 +3981,10 @@ void BridgeHigh() {
   //                                    mb: 0     1      2      3      4      5
   static const unsigned long jpScr[6] = { 5000, 10000, 15000, 20000, 20000, 20000 };
   static const unsigned long jpBns[6] = {  200,   500,   500,   500,   500,   500 };
+  boolean collectedExtraBall = CollectExtraBallLitAtHighRamp();
   BridgeCommon(bridgeHighSwitch, &BrdgHighSw, &BrdgHighT, &BrdgHighActive,
-               36, 37, 50, 51, &comboTimerL, &comboTimerH, 36, jpScr, jpBns);
+               36, 37, 50, 51, &comboTimerL, &comboTimerH, 36,
+               "ComboCheech", 10, collectedExtraBall, jpScr, jpBns);
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -3975,33 +4070,48 @@ void HurryUp()
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 void Tilt() {
-    if (SimDigitalRead(PIN_A12) == 0 && tiltLogicSW == LOW) {
-        wTrig.trackPlayPoly(TRK_MELLOWOUT);
-        wTrig.trackPlayPoly(TRK_TILT1);
-        tiltcounter = tiltcounter + 10;
-        tilttimer = millis();
-        tiltLogicSW = HIGH;
-        tiltLogicTimer = millis();
-        Serial.println("Danger");
+    const unsigned long now = millis();
+    const boolean contactClosed = (SimDigitalRead(PIN_A12) == LOW);
+
+    // Egy hosszan kilengo harang csak EGY warningot adhat. Uj warninghoz a
+    // kontaktusnak elobb fel kell engednie, majd 750 ms-ig folyamatosan
+    // nyitva kell maradnia. Ez a commercial "tilt debounce/settle" viselkedes.
+    if (tiltContactLatched == HIGH) {
+      if (contactClosed) {
+        tiltOpenSince = 0;
+      }
+      else {
+        if (tiltOpenSince == 0) {
+          tiltOpenSince = now;
+        }
+        else if (now - tiltOpenSince >= TILT_SETTLE_MS) {
+          tiltContactLatched = LOW;
+          tiltOpenSince = 0;
+        }
+      }
     }
 
-    if (tiltcounter != 0 && millis() - tilttimer > 1000) {
-        tilttimer = millis();
-        tiltcounter = tiltcounter - 1;
-    }
-    if (tiltLogicSW == HIGH && millis() - tiltLogicTimer > 500){
-      tiltLogicSW = LOW;
+    if (contactClosed && tiltContactLatched == LOW) {
+      tiltContactLatched = HIGH;
+      tiltOpenSince = 0;
+      tiltWarnings++;
+
+      if (tiltWarnings <= TILT_WARNINGS_ALLOWED) {
+        wTrig.trackPlayPoly(TRK_MELLOWOUT);
+        wTrig.trackPlayPoly(TRK_TILT1);
+        StartFullBakedEffect(11, 3, LOW); // Danger: harom teljes Tilt-fenykor
+        Serial.println(tiltWarnings == 1 ? "Danger" : "Danger2");
       }
-    if (tiltcounter > 15) {
+    }
+
+    if (tiltWarnings > TILT_WARNINGS_ALLOWED) {
+        ballTilted = HIGH;
         wTrig.stopAllTracks();
         Serial.println("Tilt");
         wTrig.trackPlayPoly(TRK_TILT1);
         wTrig.trackPlayPoly(TRK_TILT2);
         wTrig.trackPlayPoly(TRK_TILT3);
-        for (int i = 0; i < 68; i++) {
-                leds[i] = CRGB::Black;
-        }
-        FastLED.show();
+        StartFullBakedEffect(11, 1, HIGH); // drainig vegtelen Tilt-feny
         ballsaversw = LOW;
         digitalWrite(leftFlipperBat, LOW);
         digitalWrite(rightFlipperBat, LOW);
@@ -4015,9 +4125,23 @@ void Tilt() {
         digitalWrite(shooterlaneCoil, LOW);
         while (BIS != 5) {
             MIV(HIGH);
+            RunLightEffect();
+            FastLED.show();
+            delay(1000 / UPDATES_PER_SECOND);
         }
-        tiltcounter = 0; // tilt lekezelve, kulonben a blokk masodpercekig ujra lefutna
+        StopFullBakedEffect();
+        // A warning/allapot reset a kovetkezo golyo inittable() rutinjaban
+        // tortenik. Addig maradjon reteszelve, nehogy ujra lefusson.
+        tiltWarnings = TILT_WARNINGS_ALLOWED;
     }
+}
+
+void ResetTiltWarningsForBall() {
+    tiltWarnings = 0;
+    tiltOpenSince = 0;
+    // Ha golyovaltaskor a harang meg eppen a gyurun van, ne kapjon az uj
+    // jatekos azonnal fantom warningot: elobb varjuk meg a stabil felengedest.
+    tiltContactLatched = (SimDigitalRead(PIN_A12) == LOW) ? HIGH : LOW;
 }
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////

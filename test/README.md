@@ -26,6 +26,25 @@ diff test/golden_demo.events.txt /tmp/fw/uj.trim && echo "TISZTA - a refaktor OK
 
 ## Mit fed le és mit NEM
 
+### Pontozasi smoke test
+
+A kezi `H` parancs SIM modban ki-/bekapcsolja a Hurry Up allapotot. Ugyanazt
+a kapcsolot normal, majd Hurry Up modban megnyomva a `T,score` sor `scr`
+erteke pontosan ketszeres, a `bns` pedig valtozatlan kell legyen. Pelda:
+
+```text
+s   -> scr=250,bns=25
+H
+s   -> scr=500,bns=25
+```
+
+Az `E`, majd `u`, vegul `x` sorozat cinkelt `Ufo8` EXTRA BALL LIT
+lottery-kimenetet, UFO-kidobast es nagyhidas `ExtraB` collectet tesztel.
+
+A balance pass szandekosan megvaltoztatja a golden demo pontsorait. A
+kovetkezo padi futasnal uj `golden_demo.events.txt` baseline-t kell rogzitani;
+a regi fajl a refaktor elotti pontozas torteneti referenciaja addig.
+
 - **Lefedi:** pontozás (Score choke-point trace), játékfolyam, videó-
   triggerek, hangválasztás ott, ahol soros-látható.
 - **NEM fedi:** a LED-rutinokat (a pad nem capture-özi a szalagot) és a

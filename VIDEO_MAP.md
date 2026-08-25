@@ -27,6 +27,17 @@ score (7 mezos pontszamuzenet), Next, End, Start, Left, Right, Shoot,
 Point1-8, Jackpot1-6, Multiball1-4, Bonus1-4, Beer1-3, Combo1-6,
 ChongC1-3, CheechC1-3, Ufo1-13, ExtraB, Weed, Drift, Danger, Tilt
 
+A V4 uj hid-combo protokollja (2026-08-24) karakterenkent kulon triggerrel
+bovitette ezt: `ComboCheech1..6` es `ComboChong1..6`. A regi
+`Combo1..6` neveket a Python GUI csak kompatibilitasi aliasnak tartja meg.
+
+A V4 tilt protokollja (2026-08-25) az elso warningnal `Danger`, a masodiknal
+`Danger2`, a harmadik kulon kontaktusnal `Tilt` triggert kuld.
+
+A 2026-08-24-i pontozasi balance pass megszuntette a Hurry Up
+mikrokapcsolok `Point1` video-spamjet, igy a V4 jelenleg csak `Point2`-t
+kuldi a `Point1..8` regi pontvideo-trigger csaladbol.
+
 Megjegyzes: a "Zero" NINCS a Unity listaban - az a Python GUI-s koszak
 uzenete lehet.
 
@@ -42,17 +53,18 @@ uzenete lehet.
 | Multiball3 | Thai Stick | |
 | Multiball4 | Thai Stick | gyanus dupla - Labrador kellett volna? |
 | Bonus1..4 | Bonus1..4 | |
-| ExtraB | ExtraB | a fw3/V4 sosem kuldi (extra ball nema) |
+| ExtraB | ExtraB | a V4 a high-ramp EXTRA BALL collectkor kuldi; PNG meg hianyzik |
 | Ufo1..5 | ufo1..ufo5 | |
 | Ufo6 | **Ufofuck** | ELCSUSZAS! a 6-os trigger a "nyeretlen" video |
 | Ufo7 | **ufo6** | ezert nincs Ufo7.mp4 fajl! |
-| Ufo8 | ufo8 | egyik firmware sem kuldi (arva video) |
+| Ufo8 | ufo8 | EXTRA BALL LIT lottery-kimenet; a nagy hid gyujti be |
 | Ufo9 | ufo9 | SpaceCoke multiball |
 | Ufo10..13 | ufo10..ufo13 | pontlopas: a kirabolt jatekos (1..4) videoja |
 | Beer1..3 | Beer1..3 | |
-| Combo1..6 | Combo1..6 | |
+| ComboCheech1..6 | Combo/Combo_Cheech/Combo_2500..Combo_20000 | a nagyhid fejezi be a kombot |
+| ComboChong1..6 | Combo/Combo_Chong/Combo_2500..Combo_20000 | a kishid fejezi be a kombot |
 | ChongC1..3 / CheechC1..3 | ChongC1..3 / CheechC1..3 | |
-| Weed / Drift / Danger / Tilt | azonos nevu videok | |
+| Weed / Drift / Danger / Danger2 / Tilt | azonos nevu videok | Danger = elso warning, Danger2 = masodik warning |
 | (Start Scr) | PressStarttoPlay | attract kepernyo |
 | (Intro Scr) | IntroScr | |
 | (Thx Scr) | Thanksto | |
