@@ -17,7 +17,6 @@
 struct EffectDef {
   uint8_t id;
   const char* name;
-  const uint8_t* data;
   uint16_t frames;
   uint16_t frameMs;
   uint8_t loops;
@@ -937,17 +936,17 @@ const uint8_t fx_tilt[] PROGMEM = {
 // CNLIGHT_PROJECT_V1_END
 
 const EffectDef bakedEffects[] = {
-  // ID, name, data, frames, frameMs, loops, loopFrames, overlay, introFrames
-  { 1, "Loop - Jackpot", fx_loop_jackpot, 36, 50, 1, 36, 1, 0 },
-  { 2, "UFO Lottery", fx_ufo_lottery, 60, 50, 1, 60, 0, 0 },
-  { 3, "Shooter", fx_shooter, 10, 50, 1, 10, 0, 10 },
-  { 4, "UFO FUCK", fx_ufo_fuck, 50, 50, 1, 50, 0, 0 },
-  { 5, "Weedblast", fx_weedblast, 32, 50, 1, 32, 0, 0 },
-  { 6, "Hurry UP", fx_hurry_up, 100, 50, 1, 100, 0, 0 },
-  { 7, "ChongCollect", fx_chongcollect, 10, 50, 1, 10, 0, 10 },
-  { 9, "ComboLowBridge", fx_combolowbridge, 14, 50, 1, 14, 0, 14 },
-  { 8, "CheechCollect", fx_cheechcollect, 10, 50, 1, 10, 0, 10 },
-  { 10, "ComboHighBridge", fx_combohighbridge, 14, 50, 1, 14, 1, 14 },
-  { 11, "Tilt", fx_tilt, 20, 50, 1, 20, 0, 0 },
+  // ID, name, frames, frameMs, loops, loopFrames, overlay, introFrames
+  { 1, "Loop - Jackpot", 36, 50, 1, 36, 1, 0 },
+  { 2, "UFO Lottery", 60, 50, 1, 60, 0, 0 },
+  { 3, "Shooter", 10, 50, 1, 10, 0, 10 },
+  { 4, "UFO FUCK", 50, 50, 1, 50, 0, 0 },
+  { 5, "Weedblast", 32, 50, 1, 32, 0, 0 },
+  { 6, "Hurry UP", 100, 50, 1, 100, 0, 0 },
+  { 7, "ChongCollect", 10, 50, 1, 10, 0, 10 },
+  { 9, "ComboLowBridge", 14, 50, 1, 14, 0, 14 },
+  { 8, "CheechCollect", 10, 50, 1, 10, 0, 10 },
+  { 10, "ComboHighBridge", 14, 50, 1, 14, 1, 14 },
+  { 11, "Tilt", 20, 50, 1, 20, 0, 0 },
 };
 const uint8_t bakedEffectCount = sizeof(bakedEffects) / sizeof(bakedEffects[0]);

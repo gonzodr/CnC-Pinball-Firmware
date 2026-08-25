@@ -43,7 +43,12 @@
 #if !defined(FX_DATA_MASK_APPLIED) || (FX_DATA_MASK_APPLIED != FX_DATA_MASK)
 #error "effect_data.h is not XOR-masked (or uses a different mask) - run mask_effect_data.ps1"
 #endif
-static inline uint8_t fx_read(const uint8_t* p) { return pgm_read_byte(p) ^ FX_DATA_MASK; }
+// A jelenlegi effektbank 72 624 byte, ezert atlepheti az AVR 64 KiB-os
+// near-PROGMEM ablakat. Minden effektadatot 24 bites far cimmel olvasunk;
+// a sima const uint8_t* + pgm_read_byte() 0xFFFF folott levagna a cimet.
+static inline uint8_t fx_read(uint_farptr_t p) {
+  return pgm_read_byte_far(p) ^ FX_DATA_MASK;
+}
 
 // Gamma-korrekcio (2.2, az sRGB monitorhoz igazitva). A szerkeszto a
 // monitoron (gamma ~2.2) tervezi a szineket, a WS2812B viszont LINEARIS,
@@ -69,8 +74,10 @@ const uint8_t gamma8[256] PROGMEM = {
   192, 194, 196, 197, 199, 201, 203, 205, 207, 209, 211, 213, 215, 217, 219, 221,
   223, 225, 227, 229, 231, 234, 236, 238, 240, 242, 244, 246, 248, 251, 253, 255,
 };
-static inline uint8_t gam(uint8_t v)        { return pgm_read_byte(&gamma8[v]); }
-static inline uint8_t fx_g(const uint8_t* p) { return gam(fx_read(p)); }
+static inline uint8_t gam(uint8_t v) {
+  return pgm_read_byte_far(pgm_get_far_address(gamma8) + v);
+}
+static inline uint8_t fx_g(uint_farptr_t p) { return gam(fx_read(p)); }
 
 int  runningEffect = 0;
 unsigned long effectStartT = 0;
@@ -101,9 +108,29 @@ uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done)
   return (uint16_t)(loopEnd + (afterIntro - cycleSteps));
 }
 
-// Az effekt data-kezdopointere az adott kockahoz (PROGMEM).
-static inline const uint8_t* bakedFramePtr(const EffectDef& e, uint16_t frame) {
-  return e.data + (uint32_t)frame * EFFECT_LEDS * 3;
+// A generator EffectDef.data mezoje AVR-en csak 16 bites pointer. A far
+// baziscimet ezert ID alapjan, pgm_get_far_address()-szel kell eloallitani.
+uint_farptr_t bakedEffectFarAddress(uint8_t id) {
+  switch (id) {
+    case 1:  return pgm_get_far_address(fx_loop_jackpot);
+    case 2:  return pgm_get_far_address(fx_ufo_lottery);
+    case 3:  return pgm_get_far_address(fx_shooter);
+    case 4:  return pgm_get_far_address(fx_ufo_fuck);
+    case 5:  return pgm_get_far_address(fx_weedblast);
+    case 6:  return pgm_get_far_address(fx_hurry_up);
+    case 7:  return pgm_get_far_address(fx_chongcollect);
+    case 8:  return pgm_get_far_address(fx_cheechcollect);
+    case 9:  return pgm_get_far_address(fx_combolowbridge);
+    case 10: return pgm_get_far_address(fx_combohighbridge);
+    case 11: return pgm_get_far_address(fx_tilt);
+    default: return 0;
+  }
+}
+
+// Az effektadat adott kockajanak 24 bites PROGMEM-cime.
+static inline uint_farptr_t bakedFramePtr(const EffectDef& e, uint16_t frame) {
+  return bakedEffectFarAddress(e.id) +
+         (uint32_t)frame * EFFECT_LEDS * 3UL;
 }
 
 // FULL effekt: az egesz palyat felulirja (a (0,0,0) is fekete lesz).
@@ -131,7 +158,7 @@ void RunBakedEffect(uint8_t idx) {
       return;
     }
   }
-  const uint8_t* p = bakedFramePtr(e, frame);
+  uint_farptr_t p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     // A baked adat R,G,B sorrendben all, de ezen a szalagon a baked szineknel
     // a G es B csatorna fel van cserelve (piros->pink, zold->vilagoskek volt),
@@ -203,7 +230,7 @@ void RunOverlayEffect() {
   uint16_t frame = bakedCurrentFrame(e, overlayStartT, done);
   if (done) { overlayIdx = -1; return; } // vege - a jatek-feny megy tovabb
 
-  const uint8_t* p = bakedFramePtr(e, frame);
+  uint_farptr_t p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
     // magenta (255,0,255) = ATLATSZO -> kihagyjuk (a jatek latszik alatta).
@@ -280,7 +307,7 @@ void RunLightTest() {
     frame = 0;
   }
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) leds[i] = CRGB::Black;
-  const uint8_t* p = bakedFramePtr(e, frame);
+  uint_farptr_t p = bakedFramePtr(e, frame);
   for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
     uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) leds[i] = CRGB(gam(r), gam(g), gam(b)); // gamma-korrekcio
