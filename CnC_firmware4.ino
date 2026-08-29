@@ -1121,7 +1121,10 @@ void Ballhandler() {
           if (heldIndex > 2) heldIndex = 2;
           Score(Scoring::JOINT_POINTS[heldIndex], Scoring::JOINT_BONUS[heldIndex]);
           wTrig.trackPlayPoly(TRK_BIGJOINT);
+          uint8_t heldBeers = jointStack[player];
           jointStack[player] = 0;
+          beerCredits[player] = (beerCredits[player] > heldBeers)
+                                  ? (uint8_t)(beerCredits[player] - heldBeers) : 0;
           SendPartyState();
         }
 
@@ -2084,9 +2087,13 @@ void ConsumeUfoPartyReward(uint8_t tier) {
   weedQualified[player] = LOW;
   spinnersw = 0;
   // Csak a Feature Wheel es a Love Pack fogyasztja el a jointokat; az egy
-  // jointos allapot nem is jut el idaig (ott az UFO inaktiv).
+  // jointos allapot nem is jut el idaig (ott az UFO inaktiv). A jointokkal
+  // EGYUTT a hozzajuk gyujtott sor is elfogy - ket joint ket sort visz.
   if (tier >= UFO_PARTY_FEATURE_WHEEL) {
+    uint8_t spent = jointStack[player];
     jointStack[player] = 0;
+    beerCredits[player] = (beerCredits[player] > spent)
+                            ? (uint8_t)(beerCredits[player] - spent) : 0;
   }
   ufosw = 0;
   SendPartyState();
