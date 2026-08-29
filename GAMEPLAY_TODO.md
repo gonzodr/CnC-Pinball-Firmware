@@ -89,11 +89,12 @@ ebben a merfoldkoben.
 
 ## P1 - GUI allapot/HUD
 
-- [ ] Firmware->GUI allapotprotokoll megtervezese.
+- [x] Firmware->GUI `Party` allapotprotokoll: jatekos, beer, joint,
+      UFO-tier es WEED qualification.
 - [ ] `WEED n/4`.
 - [ ] `GET HIGH n/180` vagy szazalek.
-- [ ] `UFO LIT`.
-- [ ] `BEER n/3`.
+- [x] UFO-tier kijelzes: Cash Out / Super Cash Out / Feature Wheel / Love Pack.
+- [x] `BEER n/3` es `JOINTS n/3` tartos, jatekosonkenti HUD.
 - [ ] `SHOOT CHEECH OR CHONG`.
 - [ ] `COMBO: SHOOT LEFT/RIGHT - n.n s`.
 - [ ] `BALL SAVE n s`.
@@ -112,6 +113,12 @@ ebben a merfoldkoben.
 - [ ] Effect ID1 overlay/full inditas ellenorzese es javitasa, ha szukseges.
 - [x] Hurry Up talalat nem inditja ujra minden mikro-switchnel a teljes palyas
       effektet.
+- [x] Hurry Up proceduralis korfutasa: CnC -> Chong -> WEED -> Cheech ->
+      Fishtank -> jobb sling -> ballsave -> bal sling; a talalt zona feher-ciankek
+      felvillanast es 1,4 s-os lecsengest kap (2026-08-28).
+- [x] Hurry Up ID6 megtartva legfelso, mod-vegeig loopolo retegkent; a jelenlegi
+      fekete hatteret es a kesobbi magenta sentinelt is transzparensen kezeli,
+      igy az alatta futo post/chase/falloff fenyek elnek (2026-08-28).
 
 ## P1 - szabalykommunikacio
 
@@ -138,15 +145,31 @@ ebben a merfoldkoben.
 - [ ] Egyetlen hosszan kilengo harang ne adjon tobb warningot.
 - [ ] Tilt utan a golyovegi bonusz ne adodjon hozza a score-hoz.
 
-## P2 - WEED-stack merfoldko
+## P2 - ROLL A JOINT / LOVE PACK merfoldko
 
-- [ ] A bankolo híd kivalasztasa.
-- [ ] Jatekosonkenti `weedStack` (0..3) es `weedQualified` allapot.
-- [ ] Egy WEED-kor utan az elso UFO/spinner/híd loves fogyassza a kvalifikaciot.
-- [ ] Stack 1: alacsony szintu lottery.
-- [ ] Stack 2: Extra Ball / Hurry Up / Munchies sorsolas.
-- [ ] Stack 3: garantalt SpaceCoke multiball.
-- [ ] Extra Ball jatekosonkenti limit es helyettesito jutalom.
-- [ ] Stack megmaradasi szabaly golyok kozott.
-- [ ] Palyafenyek es GUI-HUD mindharom valasztashoz.
-- [ ] SIM-tesztek minden valasztasi sorrendre es drainre.
+- [x] A kishid a bankolo loves; csak aktiv WEED + betarazott beer mellett
+      veszi at a normal combo/jackpot szerepet.
+- [x] Jatekosonkenti `jointStack` (0..3), `beerCredits` (0..3) es
+      `weedQualified` allapot, golyok kozotti megmaradassal.
+- [x] FISH+TANK egy betarazott beert ad; a harmadik beer mar nem nullaz es
+      nem elesiti kozvetlenul a kishid-jackpotot.
+- [x] Sima UFO: pont / multiplayer pontlopas / Extra Ball Lit.
+- [x] Joint 1 UFO Super Cash Out: 30000 pont / multiplayer 20000 pontlopas /
+      Extra Ball Lit.
+- [x] Joint 2 UFO: Extra Ball / Hurry Up / Munchies Feature Wheel.
+- [x] Joint 3: LOVE PACK; az UFO garantalt SpaceCoke multiballt indit.
+- [x] Az UFO-cashout elfogyasztja a teljes joint stacket; a ROLL A JOINT
+      jointonkent egy beer-kreditet fogyaszt.
+- [x] Tierenkenti UFO-, beer-, spinner- es kishid-fenyszinek.
+- [x] GUI Party HUD, iranymutato uzenetek es Love Pack placeholder trigger.
+- [x] SIM-demo bovítese a teljes Beer -> Joint -> Love Pack -> SpaceCoke lancra.
+- [ ] Dedikalt Joint 1 / Joint 2 videok.
+- [x] Feature Wheel szerencsekerek-animacio: kulon Extra Ball / Hurry Up /
+      Munchies sequence, firmware-sorsolassal es sessionos `WHEEL_DONE`
+      visszajelzessel (2026-08-27).
+- [x] A Feature Wheel vizualis vilagahoz illo 5 mp-es Extra Ball es Hurry Up
+      eredmenyvideo; a regi `Ufo5`/`Ufo6` itt szandekosan nincs lejatszva
+      (2026-08-27).
+- [ ] LovePack PNG sequence: `LOVE PACK! SHOOT THE UFO FOR COKE!`.
+- [ ] Dedikalt Roll a Joint / Love Pack / SpaceCoke baked fenyek.
+- [ ] Gepen teszt: minden cashout-sorrend, drain, multiplayer jatekosvaltas.

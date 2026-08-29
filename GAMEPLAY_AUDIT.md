@@ -38,16 +38,16 @@ Vizsgalt allapot:
 |---|---:|---|---|---|---|---|
 | Golyokiloves | 15 s ball save | Shooter ID3 full effekt | Nincs | Tema indul az elso kilovesnel | Ballsave LED | **OK**, video nem kell |
 | Sling, normal | 250 +25 bonus | Nincs kulon jatekfeny | Nem kell | `BIGYONG` | Nincs | **OK** mikroesemeny |
-| Sling, Hurry Up | 500 +25 bonus | A folyamatos Hurry Up ID6 | Nincs video-spam | `BIGYONG` | Nincs mod-HUD | **Reszleges**: a 2x modot HUD-dal kell jelezni |
+| Sling, Hurry Up | 500 +25 bonus | Borostyan chase; a talalt sling feher-ciankek villanas utan 1,4 s alatt kihuny; felette az ID6 transparent overlay loopol | Nincs video-spam | `BIGYONG` | A folyamatos korfutas jelzi a modot | **OK/Reszleges**: a 2x mod hatralevo idejet kesobb HUD-on is erdemes mutatni |
 | Pop bumper, normal | 250 +10 bonus | Kek alap, talalatkor piros/kek villanas | Nem kell | Nincs kulon WAV-hivas; a tekercs/mechanika hallatszik | Nincs | **OK/Reszleges**: rovid pop-hang opcionális |
-| Pop bumper, Hurry Up | 500 +10 bonus | Folyamatos Hurry Up ID6 + bumper villanas | Nincs | Nincs kulon | Nincs mod-HUD | **Reszleges**: a 2x modot HUD-dal kell jelezni |
+| Pop bumper, Hurry Up | 500 +10 bonus | A Hurry Up chase fut; a pop megtartja sajat mechanikai reakciojat | Nincs | Nincs kulon | A korfutas jelzi a modot | **Reszleges**: pop nincs a chase-utvonalban, a 2x mod idejet kesobb HUD mutassa |
 | C/N/C betutalalat | 1500 +50 bonus | A betu feherre valt | Nincs | Betunkent kulon track | A betuk mutatjak a progresszt | **OK** |
 | C&N&C teljes | 5000 +500 bonus | Harom betu villog; Cheech es Chong indikator aktiv | Nincs | Nincs completion/callout | Nem mondja ki, hogy Cheechet vagy Chongot kell loni | **Reszleges**: pontozas kesz; completion hang, rovid feny-overlay es `SHOOT CHEECH OR CHONG` GUI-uzenet hianyzik |
 | Aktiv Cheech talalat | 10k/15k/20k +500/1000/2000 bonus | Collectible LED-ek lepnek; CheechCollect ID8 egyszer lefut | `CheechC1..3`, mind megvan | Beszed + collect + targyhang | A karakterindikator villog | **OK**, a 3. utan kulon sorozat-complete jelzes kell |
 | Aktiv Chong talalat | 10k/15k/20k +500/1000/2000 bonus | Collectible LED-ek lepnek; ChongCollect ID7 egyszer lefut | `ChongC1..3`, mind megvan | Beszed + collect + targyhang | A karakterindikator villog | **OK**, a 3. utan kulon sorozat-complete jelzes kell |
 | Inaktiv Cheech/Chong | 200 +50 bonus | Nincs aktiv karakterfeny | Nem kell | Veletlen karakterbeszed | Inaktiv lampak | **OK** |
 | WEED betutalalat | 1000 +50 bonus | Betu feherre valt | Nincs | Betunkent kulon hang | A betuk mutatjak a progresszt | **OK** |
-| WEED teljes | 5000 +500 bonus | Weedblast ID5; UFO-nyil es GET HIGH kigyullad | `Weed`, megvan | `WEEDFULL` + veletlen completion hang | Ket kulon cel egyszerre aktiv, nincs szoveges utasitas | **Reszleges**: pontozas kesz; GUI: `SHOOT UFO OR SPINNER`; a ket nyil sajat, kovetkezetes szint kapjon |
+| WEED teljes | 5000 +500 bonus | Weedblast ID5; UFO, GET HIGH es beer eseten ROLL A JOINT kigyullad | `Weed`, megvan | `WEEDFULL` + veletlen completion hang | Party HUD kiirja a valaszthato utakat | **OK**: a qualification jatekosonkent, golyok kozott megmarad |
 | Spinner inaktiv | Fordulatonkent 250 +10 bonus | GET HIGH sotet | Nem kell | `PLUMB` minden fordulatnal | Inaktiv lampak | **OK** pontozas; eros porgetesnel a hangterheles meg tesztelendo |
 | Spinner aktiv | 250 +10, valamint multiball-meter csokken | GET HIGH zold/narancs; high-table flasher; kulso I2C meter | Nem kell minden spinre | `PLUMB` | A hatralevo ertek csak az I2C meterbol latszik | **Reszleges**: GUI-n is kell `GET HIGH n/180` vagy szazalek |
 | Multiball 1..4 indul | 10k/20k/30k/40k +500/1000/1500/2000 bonus | Hidak es loop jackpotra villognak; ball save LED; nincs sajat start-effekt | Trigger van, de a `Michokan`, `Acapulco Gold`, `Thai Stick`, `Labrador` PNG-k hianyoznak | Szintenkent sajat zene/hang | A jackpotnyilak vilagitanak | **Hianyzik**: 4 videoasset + 4 rovid start-fenyeffekt/callout vagy egy parameterezett kozos effekt |
@@ -56,11 +56,11 @@ Vizsgalt allapot:
 | Multiball loop jackpot | 30000 +2000 bonus, multiballonként egyszer | Loop nyil villog; Jackpot ID1 overlay | `Jackpot6` trigger van, PNG hianyzik | `JACKPOT` + `BLOB` | Loop nyil egyertelmu | **Hianyzik**: Jackpot6 videoasset; a fenyes/hangos reakcio jo |
 | Normal hidtalalat | 1000 +100 bonus | Hidrampa ambient villan | Nincs | Hidankent kulon hang | Nincs | **OK** pontozas; iranyjelzes csak comboablakban kell |
 | Hid-combo 1..6 | 2500/5k/7.5k/10k/15k/20k +100/150/200/250/300/500 bonus | Kishid/Chong: ID9 egyszer; nagyhid/Cheech: ID10 overlay egyszer | 6 Cheech + 6 Chong sequence; a befejezo hid karaktere szerint | Ket generikus combo hang valtakozik | A karakteres video visszajelez, de az 5,5 s-os kovetkezo celablakot nem mutatja | **Reszleges**: pont/video/fenyeffekt bekotve; az ellenkezo hid 5,5 s-ig villogjon, GUI-n `COMBO - SHOOT LEFT/RIGHT` |
-| Beerrel kvalifikalt kis hid | 5000 +200 bonus | Kis hid zold/sarga villogas | `Point2` -> 5000 video megvan | 5000-es score hang | Hid lampaja egyertelmu | **OK**, kesobb sajat `BEER JACKPOT` nev jobb lenne |
+| WEED+beer ROLL A JOINT | 5k/10k/20k +250/500/1000 bonus | Kishid borostyan/arany | GUI PartyEvent; Joint-videok hianyoznak | `BIGJOINT` | HUD mutatja a beer/joint keszletet es az UFO tiert | **Reszleges**: szabaly kesz; dedikalt videok/fenyeffektek hianyoznak |
 | Multiball hid-jackpot | Szinttol/hidtol fuggoen 10k..30k +200/500 bonus | Mindket hid zold/sarga villogas; talalatkor Weedblast ID5 | `Jackpot2..6` trigger van, mind az 5 PNG hianyzik | `JACKPOT` | Mindket hid egyertelmuen vilagit | **Hianyzik**: jackpot videok; ID5 neve/tartalma Weedblast, nem biztos hogy hid-jackpothoz illik |
 | FISH vagy TANK | 1500 +50 bonus | A talalt cel feher | Nincs | `PING` vagy `BEER` | Celprogressz latszik | **OK** |
-| FISH+TANK par, 1/2 | 2500 +250 bonus | Betuk villognak, majd reset | `Beer1/Beer2`, megvan | Nincs kulon completion hang a ket cel hangjan felul | A klip jelzi, hogy hanyadik kor | **OK/Reszleges**: pont/video kesz, completion hang opcionális |
-| FISH+TANK par, 3 | 2500 +250 bonus; kis hid kvalifikalodik | Beer villogas + kis hid villog | `Beer3`, megvan | `SHOOTBRIDGE` | Hang es hidfeny jo | **OK**, GUI-n maradjon rovid `SHOOT LEFT BRIDGE` |
+| FISH+TANK par, 1/2 | 2500 +250 bonus; +1 beer-kredit | Betuk villognak, ambient kek | `Beer1/Beer2`, megvan | Nincs kulon completion hang a ket cel hangjan felul | Party HUD mutatja a tarolt beert | **OK/Reszleges**: pont/video/HUD kesz, completion hang opcionális |
+| FISH+TANK par, 3 | 2500 +250 bonus; beer-keszlet 3/3 | Beer villogas + ciankek ambient | `Beer3`, megvan | Celhangok | A beer nem nullazodik es nem elesit onallo jackpotot | **OK**: a beer a ROLL A JOINT eroforrasa |
 | D/A/V/E rollover | Nincs pont; betuprogressz | Betu feher | Nincs | `DAVE` | Flipperrel lane-change mukodik | **OK**: nem celzott loves, hanem lane/outlane mentomechanika |
 | DAVE teljes | Nincs pont; legalabb 10 s ball save | Betuk villognak; ballsave LED villog | Nincs | Csak a reset vegen `DAVENOTHERE` | A ballsave LED jelez, de nincs activation callout | **Reszleges**: a save kesz; `BALL SAVE LIT` hang/GUI hianyzik |
 | Gate rollover | 500 +25 bonus | Kapu feher; ambient narancs villanas | Nincs | `KVAKK` | Flipperes lane-change latszik | **OK** |
@@ -69,14 +69,14 @@ Vizsgalt allapot:
 | Gift helyes cel | 5000 +100 vagy +500 bonus | Kijelolt cel zold/sarga + sarga futofeny | `Point2` -> 5000, megvan | Celhang + celebration + `SHOOTOUTUFO` | Nem magyarazza el a gift szabalyat | **Reszleges**: sajat `GIFT` uzenet/callout kell; a Point2 tul generikus |
 | Gift rossz cel | Normal talalati pont; gift elveszik | A gift-feny megszunik | Nincs | Nincs kudarcjelzes | A jatekos nem tudja, miert tunt el | **Szabaly-/kommunikacios hiba**: ne vesszen el rossz talalatra, vagy legyen idozitett es jol kommunikalt |
 | UFO inaktiv, gyors kidobas | 0 +300 bonus; kidobaskor 5 s vedelmi save | UFO-nyil sotet | Ket agon nincs video; 1/3 agon `Ufo6` -> `Ufofuck` megvan es ID4 | Harom veletlen hangvarians | Inaktiv nyil | **OK**: a save csak a VUK ket kar koze ejteset vedi |
-| UFO-lottery indul | Az alabbi jutalmak egyike; kidobaskor 5 s vedelmi save | UFO Lottery ID2 full effekt | Jutalomtol fuggo, mindegyik jelenlegi UFO-sequence megvan | `HAPPYUFO`, jutalomhang | UFO-nyil villog kvalifikalas elott | **OK**; SpaceCoke kivetel, ott a multiball miatt 30 s save jar |
+| UFO-lottery indul | Tierfuggo jutalom; kidobaskor 5 s vedelmi save | UFO Lottery ID2 full effekt; tierfuggo nyilszin | A 2-jointos Feature Wheelhez 3 kulon 6 s-os sequence, utana Extra Ball/Hurry Up agban 5 s-os eredmenyvideo; LovePack placeholder | `HAPPYUFO`, jutalomhang | Cash Out / Super / Feature / Love Pack HUD | **OK/Reszleges**: a Wheel vegen indul az eredmenyvideo es vele parhuzamosan a jutalom/kidobas; LovePack meg hianyzik |
 | UFO extra ball | +1 golyo | Lottery effekt + ballsave | `Ufo5`, megvan | Firework + Extra Ball | Nincs kulon playfield insert az extra ballhoz | **OK**, a GUI-video potolja |
 | UFO Extra Ball Lit | Nem ad azonnal golyot; a nagy hidat kvalifikalja | Lottery effekt; dedikalt high-ramp feny meg nincs | `Ufo8`, megvan | Firework + atmeneti `SHOOTBRIDGE` | A video jelzi a lit allapotot, a collect helye meg nincs palyafenynel kiemelve | **Reszleges**: lottery/high-ramp szabaly kesz; dedikalt rampafeny kell |
-| High-ramp Extra Ball collect | +1 golyo; a lit allapot megszunik | Dedikalt light show meg nincs | `ExtraB` trigger van, PNG hianyzik | `EXTRABALL` | Ugyanazon a lovesen az extra-ball feedback elsoseget kap a combo/jackpothoz kepest | **Hianyzik**: collect video es light show |
-| UFO Hurry Up | 5000 +100 bonus es 80 s mod | Lottery ID2, majd Hurry Up ID6 folyamatos | `Ufo7` -> `Ufo6`, megvan | Firework, Hurry Up, modzene | Nincs hatralevo ido vagy pontszabaly a GUI-n | **Reszleges**: folyamatos HUD es egységes Hurry Up-pontozas kell |
+| High-ramp Extra Ball collect | +1 golyo; a lit allapot megszunik | Dedikalt light show meg nincs | `ExtraB` -> `Extraball`, megvan | `EXTRABALL` | Ugyanazon a lovesen az extra-ball feedback elsoseget kap a combo/jackpothoz kepest | **Reszleges**: collect video kesz, dedikalt light show meg hianyzik |
+| UFO Hurry Up | 5000 +100 bonus es 80 s mod | Borostyan korfutas CnC/Chong/WEED/Cheech/Fishtank/sling/ballsave utvonalon; talalati falloff; legfelul az ID6 transparent overlay loopol | Uj `HURRY_UP_MASTER` eredmenyvideo a Wheel utan | Firework, Hurry Up, modzene | A chase es az ID6 folyamatosan jelzi az aktiv modot | **OK/Reszleges**: pontozas egységesen 2x; hatralevo ido kesobb GUI-HUD-ra kerulhet |
 | UFO pontjutalmak | 15k/20k/25k/30k + bonus | Lottery ID2 | `Ufo1..4`, megvannak | Firework + ertekhang | Jutalom egyertelmu a videobol/hangbol | **OK** |
-| UFO SpaceCoke | 40000 +2000 bonus; 5 golyos MB; 30 s save | Lottery effekt, jackpot-hidak/loop; nincs sajat SpaceCoke start-effekt | `Ufo9`, megvan | 4 reszes sajat hang/zene | Fobb jackpotok vilagitanak | **OK/Reszleges**: sajat SpaceCoke start-fenyeffekt erositené |
-| UFO pontlopas | Masik jatekos -10000 | Lottery effekt | `Ufo10..13`, megvannak | Firework + aldozat hangja | A video jelzi az aldozatot | **OK** |
+| UFO SpaceCoke | Love Pack collect: 40000 +2000 bonus; 5 golyos MB; 30 s save | Cián/feher UFO, majd lottery effekt es jackpotfenyek | `LovePack` placeholder + `Ufo9` | 4 reszes sajat hang/zene | `LOVE PACK READY - SHOOT UFO` | **OK/Reszleges**: sajat Love Pack es SpaceCoke start-fenyeffekt/video kell |
+| UFO pontlopas | Masik jatekos -10000; Super Cashoutnal -20000 | Lottery effekt | `Ufo10..13`, megvannak | Firework + aldozat hangja | A video jelzi az aldozatot, `Steal` protokoll a pontos osszeget | **OK** |
 | Munchies indul | GUI altal szamolt bonus; kidobaskor 5 s vedelmi save | Saját sotet idle reteg; good/bad/collection effektek | Teljes minijatek, nem sima klip | GUI/minijatek hangjai; tema pause | Minijatek UI vezeti | **OK** |
 | Danger 1 | Nincs pont | Tilt ID11 harom teljes kor | `Danger`, 102 frame | `MELLOWOUT` + Tilt1 | Elso warning kulon animaciot es 3x fenyeffektet kap | **OK** |
 | Danger 2 | Nincs pont | Tilt ID11 harom teljes kor | `Danger2`, 180 frame | `MELLOWOUT` + Tilt1 | Masodik warning kulon animaciot es 3x fenyeffektet kap | **OK** |
@@ -253,22 +253,15 @@ statusz/HUD reteg.
 
 ### Firmware -> GUI allapottelemetria
 
-Javasolt uj, soros statuszuzenetek vagy egy periodikus osszegzett uzenet:
+Az elso implementalt, esemenyvezerelt allapotprotokoll:
 
 ```text
-STATE,WEED,2,4
-STATE,UFO,LIT
-STATE,SPINNER,ACTIVE,95,180
-STATE,CNC,COMPLETE
-STATE,BEER,2,3
-STATE,COMBO,RIGHT,3200
-STATE,BALLSAVE,7000
-STATE,HURRY,42000
-STATE,MULTIBALL,2
+Party,<player>,<beer 0..3>,<joint 0..3>,<ufo-tier 0..4>,<weed-ready 0|1>
+PartyEvent,<player>,<event-name>
 ```
 
-A pontos protokollt implementalas elott veglegesiteni kell; a lenyeg, hogy a
-GUI ne kovetkeztessen videotriggerbol belso firmware-allapotra.
+A GUI ezt kozvetlenul dolgozza fel; nem kovetkeztet a videotriggerbol belso
+firmware-allapotra. A tobbi subsystem telemetriaja kesobbi bovites.
 
 ### Palyafeny-szotar
 

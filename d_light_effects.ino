@@ -8,12 +8,15 @@
 // SZERKESZTO gyart (cellankent kesz szin/fenyero, tetszoleges gorbe) - a
 // motor csak kirakja. Adat + leiro: effect_data.h (ott a teljes spec).
 //
-// KETFELE lejatszas (a leiro overlay flagje donti el):
+// ALAPVETOEN KETFELE lejatszas (a leiro overlay flagje donti el):
 //  - FULL (overlay=0): az effekt ATVESZI a palyat, a (0,0,0) = fekete.
 //    Inditas: effect = HIGH; effectID = ID;   (a jatek-LED-ek el vannak nyomva)
 //  - OVERLAY (overlay=1): az effekt csak RARAJZOL a normal jatek-fenyre, a
 //    (0,0,0) cella = ATLATSZO (a motor nem erinti). Igy egy kis effekt nem
 //    sotetiti el a palya tobbi reszet. Inditas: PlayOverlay(ID);
+//  - HURRY ID6 SPECIAL OVERLAY: mod-vegeig loopol a proceduralis chase
+//    felett; kompatibilitasbol a regi fekete es az uj magenta hatter is
+//    atlatszo. Inditas/leallitas: Start/StopHurryUpBakedOverlay().
 //
 // Az effekt ID-ja EXPLICIT a leiroban (nem a tabla-sorrend) -> ID szerint
 // keresunk. INTRO+LOOP+OUTRO: introFrames = az elso N kocka EGYSZER lefut,
@@ -86,6 +89,8 @@ boolean fullEffectLoopForever = LOW;
 
 int8_t overlayIdx = -1;           // futo overlay effekt tabla-indexe (-1 = nincs)
 unsigned long overlayStartT = 0;
+int8_t hurryOverlayIdx = -1;      // ID6 kulon, mod-vegeig loopolo felso reteg
+unsigned long hurryOverlayStartT = 0;
 
 // Az aktualis kockaindex (intro + ciklus + outro logika). done = true ha az effekt lejart.
 uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done) {
@@ -123,10 +128,8 @@ void RunBakedEffect(uint8_t idx) {
   uint16_t frame = bakedCurrentFrame(e, effectStartT, done);
   if (done) {
     // A runtime is kerhet teljes-effekt ismetlest: Danger = 3 teljes kor,
-    // Tilt = drainig vegtelen. A Hurry Up regi, mod-vegeig tarto loopja is
-    // ezen a lezarasi ponton marad.
-    if (fullEffectLoopForever == HIGH ||
-        (hurryUp == HIGH && runningEffect == 6)) {
+    // Tilt = drainig vegtelen. A Hurry Up mar proceduralis chase, nem baked.
+    if (fullEffectLoopForever == HIGH) {
       effectStartT = millis();
       frame = bakedCurrentFrame(e, effectStartT, done);
     } else if (fullEffectPlaysRemaining > 1) {
@@ -220,6 +223,50 @@ void RunOverlayEffect() {
     // minden mas rajzolodik, a (0,0,0) fekete is (elsotetit)!
     if (!(r == FX_TR_R && g == FX_TR_G && b == FX_TR_B)) {
       leds[i] = CRGB(gam(r), gam(g), gam(b)); // gamma-korrekcio
+    }
+    p += 3;
+  }
+}
+
+// A Hurry Up ID6 kulon utat kap: a jelenlegi bankban meg FULL-kent es fekete
+// hatterrel van exportalva, kesobb viszont magenta transparent export lesz.
+// Itt mindket hatterformatum atlatszo, ezert az alatta futo proceduralis chase
+// es a postok talalati/falloff fenye nem hal el. A nem atlatszo ID6 pixelek
+// legfelso retegkent felulirjak az alattuk levo szint.
+void StartHurryUpBakedOverlay() {
+  hurryOverlayIdx = -1;
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == 6) {
+      hurryOverlayIdx = i;
+      hurryOverlayStartT = millis();
+      return;
+    }
+  }
+}
+
+void StopHurryUpBakedOverlay() {
+  hurryOverlayIdx = -1;
+  hurryOverlayStartT = 0;
+}
+
+void RunHurryUpBakedOverlay() {
+  if (hurryUp != HIGH || hurryOverlayIdx < 0) return;
+
+  const EffectDef& e = bakedEffects[hurryOverlayIdx];
+  bool done;
+  uint16_t frame = bakedCurrentFrame(e, hurryOverlayStartT, done);
+  if (done) {
+    hurryOverlayStartT = millis();
+    frame = bakedCurrentFrame(e, hurryOverlayStartT, done);
+  }
+
+  uint_farptr_t p = bakedFramePtr(e, frame);
+  for (uint8_t i = 0; i < EFFECT_LEDS; i++) {
+    uint8_t r = fx_read(p), g = fx_read(p + 1), b = fx_read(p + 2);
+    boolean transparentSentinel = (r == FX_TR_R && g == FX_TR_G && b == FX_TR_B);
+    boolean legacyBlack = (r == 0 && g == 0 && b == 0);
+    if (!transparentSentinel && !legacyBlack) {
+      leds[i] = CRGB(gam(r), gam(g), gam(b));
     }
     p += 3;
   }
@@ -323,6 +370,10 @@ void HandleControlCmd(const char* s) {
   }
   if (s[0] == 'M' && s[1] == 'G' && s[2] == '_') {
     HandleMunchiesCommand(s);
+    return;
+  }
+  if (strncmp(s, "WHEEL_DONE,", 11) == 0) {
+    HandleUfoWheelDone(s);
   }
 }
 

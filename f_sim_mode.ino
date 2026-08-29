@@ -26,7 +26,8 @@
 //  P1/B2: WEED kigyujtes + spinner-porgetes -> MULTIBALL 1 + jackpot,
 //         majd dupla gyors lefolyas (BIS>=4 fix tesztje!)
 //  P2/B2: gyors kor
-//  P1/B3: WEED -> UFO cinkelt kockaval -> SPACECOKE (5 golyos multiball),
+//  P1/B3: 3x (BEER + WEED + ROLL A JOINT) -> LOVE PACK -> UFO ->
+//         SPACECOKE (5 golyos multiball),
 //         lefolyasok ballsave alatt es utan (visszaloves-teszt)
 //  P2/B3: gyors kor -> GAME OVER -> nevbevitel demo
 //
@@ -105,14 +106,30 @@ const SimEvent simScript[] = {
   // --- P2 / B2: gyors kor ---
   { TRIG_LANE,  1500, SIMCMD_PRESS, 51, 400 },
   { TRIG_TIME, 16000, SIMCMD_DRAIN,  0,   0 },
-  // --- P1 / B3: SPACECOKE teszt ---
+  // --- P1 / B3: BEER + JOINT STACK + LOVE PACK + SPACECOKE teszt ---
   { TRIG_LANE,  1500, SIMCMD_PRESS, 51, 400 },
-  { TRIG_TIME,  2000, SIMCMD_PRESS, 11, 150 },  // WEED ujra (UFO elesitese)
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 16, 150 },  // BEER 1: FISH + TANK
+  { TRIG_TIME,   600, SIMCMD_PRESS, 17, 150 },
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 11, 150 },  // WEED 1
   { TRIG_TIME,   600, SIMCMD_PRESS, 10, 150 },
   { TRIG_TIME,   600, SIMCMD_PRESS,  9, 150 },
   { TRIG_TIME,   600, SIMCMD_PRESS,  8, 150 },
-  { TRIG_TIME,  2000, SIMCMD_LOTTERY, 7,  0 },  // cinkelt kocka: SpaceCoke
-  { TRIG_TIME,   500, SIMCMD_UFOHIT, 0, 300 },  // golyo az UFO-ba
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 53, 150 },  // ROLL A JOINT 1
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 16, 150 },  // BEER 2
+  { TRIG_TIME,   600, SIMCMD_PRESS, 17, 150 },
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 11, 150 },  // WEED 2
+  { TRIG_TIME,   600, SIMCMD_PRESS, 10, 150 },
+  { TRIG_TIME,   600, SIMCMD_PRESS,  9, 150 },
+  { TRIG_TIME,   600, SIMCMD_PRESS,  8, 150 },
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 53, 150 },  // ROLL A JOINT 2
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 16, 150 },  // BEER 3
+  { TRIG_TIME,   600, SIMCMD_PRESS, 17, 150 },
+  { TRIG_TIME,  1500, SIMCMD_PRESS, 11, 150 },  // WEED 3
+  { TRIG_TIME,   600, SIMCMD_PRESS, 10, 150 },
+  { TRIG_TIME,   600, SIMCMD_PRESS,  9, 150 },
+  { TRIG_TIME,   600, SIMCMD_PRESS,  8, 150 },
+  { TRIG_TIME,  2000, SIMCMD_PRESS, 53, 150 },  // JOINT 3 -> LOVE PACK
+  { TRIG_TIME,  1500, SIMCMD_UFOHIT, 0, 300 },  // LOVE PACK collect az UFO-ban
   { TRIG_TIME, 14000, SIMCMD_DRAIN,  0,   0 },  // 3 gyors lefolyas ballsave alatt
   { TRIG_TIME,  1200, SIMCMD_DRAIN,  0,   0 },  //   -> mindet vissza kell lonie!
   { TRIG_TIME,  1200, SIMCMD_DRAIN,  0,   0 },
@@ -208,7 +225,7 @@ int SimAnalogRead(uint8_t pin) {
 void SimHelp() {
   Serial.println("SIM,parancsok: S=start K=kiloves D=lefolyas R=demo ujra");
   Serial.println("SIM,1-4=weed c=cheech h=chong o=pop n=spinner l/L=loop");
-  Serial.println("SIM,a/b/e=gate s=sling f/j=flipper x/y=hid u=ufo");
+  Serial.println("SIM,a/b/e=gate v/B=fish/tank s=sling f/j=flipper x/y=hid u=ufo");
   Serial.println("SIM,U=SpaceCoke M=pontlopas G=minigame-cinkeles (utana u!)");
   Serial.println("SIM,E=Extra Ball Lit cinkeles (utana u, majd x)");
   Serial.println("SIM,H=Hurry Up 2x ki/be (pontozasi smoke test)");
@@ -338,6 +355,8 @@ void SimPoll() {
         case 'a': SimPress(45, 120); break;      // gate 1..3
         case 'b': SimPress(44, 120); break;
         case 'e': SimPress(40, 120); break;
+        case 'v': SimPress(16, 150); break;      // Fish Tank ket celpontja
+        case 'B': SimPress(17, 150); break;
         case 's': SimPress(4, 80); break;        // jobb sling
         case 'f': SimPress(27, 200); break;      // bal flipper
         case 'j': SimPress(26, 200); break;      // jobb flipper

@@ -218,6 +218,8 @@ namespace Scoring {
   const unsigned int  FISHTANK_TARGET_BONUS = 50U;
   const unsigned long FISHTANK_PAIR_POINTS = 2500UL;
   const unsigned int  FISHTANK_PAIR_BONUS = 250U;
+  const unsigned long JOINT_POINTS[3] = { 5000UL, 10000UL, 20000UL };
+  const unsigned int  JOINT_BONUS[3] = { 250U, 500U, 1000U };
 
   const unsigned long LOOP_POINTS = 2500UL;
   const unsigned int  LOOP_BONUS = 250U;
@@ -358,7 +360,11 @@ boolean fishoff = LOW;
 // Integers
 int fishTankLightState1 = 0;
 int fishTankLightState2 = 0;
-int beerCollect = 0;
+// A sorok jatekosonkent, golyok kozott is megmaradnak. Egy sort a
+// ROLL A JOINT loves hasznal fel; harom jointbol lesz a Love Pack.
+uint8_t beerCredits[] = { 0, 0, 0, 0, 0 };
+uint8_t jointStack[] = { 0, 0, 0, 0, 0 };
+boolean weedQualified[] = { LOW, LOW, LOW, LOW, LOW };
 // Timers
 unsigned long fishtimer = 0;
 /////////////////////////////////////////////////////////////////
@@ -573,6 +579,24 @@ int lottery = 0;
 int ufoshoot = 0;
 int ufoanalog = 0;
 int ufoMinus = 0; // pontlopasnal (lottery 8): a kirabolt jatekos sorszama
+enum UfoPartyTier : uint8_t {
+  UFO_PARTY_NONE = 0,
+  UFO_PARTY_CASHOUT = 1,
+  UFO_PARTY_SUPER_CASHOUT = 2,
+  UFO_PARTY_FEATURE_WHEEL = 3,
+  UFO_PARTY_LOVE_PACK = 4
+};
+uint8_t ufoAwardTier = UFO_PARTY_NONE;
+uint16_t ufoWheelSession = 0;
+boolean ufoWheelWaiting = LOW;
+unsigned long ufoWheelStartedAt = 0;
+unsigned long ufoWheelLastSendAt = 0;
+const unsigned long UFO_WHEEL_RETRY_MS = 500UL;
+// A GUI 6 mp-es Wheel sequence-e utan erkezik a DONE; az Extra Ball/Hurry
+// eredmenyvideo mar a jutalommal parhuzamosan fut. Kapcsolathibanal 12 mp
+// utan is tovabblepunk, hogy a golyo ne ragadjon a VUK-ban.
+const unsigned long UFO_WHEEL_TIMEOUT_MS = 12000UL;
+const unsigned long UFO_LOTTERY_HOLD_MS = 5500UL;
 // Timers
 unsigned long ufoInactiveTimer = 0;
 unsigned long ufoshoottimer = 0;
@@ -667,6 +691,48 @@ boolean shHscSw = 0;
 boolean stHscSw = 0;
 boolean hurryUp = LOW;
 boolean hurryUpState = LOW;
+enum HurryLightZone : uint8_t {
+  HURRY_ZONE_CNC = 0,
+  HURRY_ZONE_CHONG,
+  HURRY_ZONE_WEED,
+  HURRY_ZONE_CHEECH,
+  HURRY_ZONE_FISHTANK,
+  HURRY_ZONE_SLING_RIGHT,
+  HURRY_ZONE_BALLSAVE,
+  HURRY_ZONE_SLING_LEFT,
+  HURRY_ZONE_COUNT
+};
+// Fizikai kor: CnC -> Chong -> WEED -> Cheech -> Fishtank -> jobb sling ->
+// bonus/ballsave blokk -> bal sling -> vissza CnC. Az also, korabban
+// nevesitetlen LED-ek a ket sling kornyezetenek fenycsovai.
+const uint8_t hurryPathLed[] PROGMEM = {
+  LED_CNC_AMBIENT, LED_CNC_C1, LED_CNC_AMP, LED_CNC_C2,
+  LED_CHONG_IND,
+  LED_WEED_W, LED_WEED_E1, LED_WEED_E2, LED_WEED_D,
+  LED_CHEECH_IND,
+  LED_FISH, LED_TANK, LED_FISHTANK_AMBIENT,
+  14, 13, 12, 11,
+  LED_BONUS_X2, LED_BONUS_X4, LED_BALLSAVE, LED_BONUS_X6, LED_BONUS_X8,
+  5, 4, 1, 0
+};
+const uint8_t hurryPathZone[] PROGMEM = {
+  HURRY_ZONE_CNC, HURRY_ZONE_CNC, HURRY_ZONE_CNC, HURRY_ZONE_CNC,
+  HURRY_ZONE_CHONG,
+  HURRY_ZONE_WEED, HURRY_ZONE_WEED, HURRY_ZONE_WEED, HURRY_ZONE_WEED,
+  HURRY_ZONE_CHEECH,
+  HURRY_ZONE_FISHTANK, HURRY_ZONE_FISHTANK, HURRY_ZONE_FISHTANK,
+  HURRY_ZONE_SLING_RIGHT, HURRY_ZONE_SLING_RIGHT,
+  HURRY_ZONE_SLING_RIGHT, HURRY_ZONE_SLING_RIGHT,
+  HURRY_ZONE_BALLSAVE, HURRY_ZONE_BALLSAVE, HURRY_ZONE_BALLSAVE,
+  HURRY_ZONE_BALLSAVE, HURRY_ZONE_BALLSAVE,
+  HURRY_ZONE_SLING_LEFT, HURRY_ZONE_SLING_LEFT,
+  HURRY_ZONE_SLING_LEFT, HURRY_ZONE_SLING_LEFT
+};
+const uint8_t HURRY_PATH_COUNT = sizeof(hurryPathLed) / sizeof(hurryPathLed[0]);
+const unsigned long HURRY_CHASE_STEP_MS = 85UL;
+const unsigned long HURRY_HIT_FADE_MS = 1400UL;
+unsigned long hurryChaseStartedAt = 0;
+unsigned long hurryHitAt[HURRY_ZONE_COUNT] = { 0 };
 // Player select mod (intmon == 3)
 boolean selArmSw = LOW;
 boolean selShootSw = LOW;
@@ -871,6 +937,8 @@ void loop() {
       GiftRunlight();     // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
       RunOverlayEffect(); // overlay/canvas effekt: rarajzol a jatek-fenyre (subsystemek UTAN!)
       RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
+      RunHurryUpLights(); // proceduralis chase + lassan kihunyo talalati retegek
+      RunHurryUpBakedOverlay(); // ID6 legfelso reteg; fekete/magenta = atlatszo
     }
   }
 
@@ -936,6 +1004,7 @@ void Ballhandler() {
           shoottimer = millis();
           shoottimer2 = millis();
           shoot = 1;
+          TriggerHurryHit(HURRY_ZONE_BALLSAVE);
           if (firstplay == LOW) {
             startmus = LOW;
           }
@@ -946,6 +1015,7 @@ void Ballhandler() {
           shoottimer = millis();
           shoottimer2 = millis();
           shoot = 1;
+          TriggerHurryHit(HURRY_ZONE_BALLSAVE);
           if (firstplay == LOW) {
             startmus = LOW;
           }
@@ -961,6 +1031,7 @@ void Ballhandler() {
             shoottimer = millis();
             shoottimer2 = millis();
             shoot = 1;
+            TriggerHurryHit(HURRY_ZONE_BALLSAVE);
             if (firstplay == LOW) {
               startmus = LOW;
             }
@@ -977,6 +1048,7 @@ void Ballhandler() {
             shoottimer = millis();
             shoottimer2 = millis();
             shoot = 1;
+            TriggerHurryHit(HURRY_ZONE_BALLSAVE);
             if (firstplay == LOW) {
               startmus = LOW;
             }
@@ -991,6 +1063,7 @@ void Ballhandler() {
           shoottimer = millis();
           shoottimer2 = millis();
           shoot = 1;
+          TriggerHurryHit(HURRY_ZONE_BALLSAVE);
           if (firstplay == LOW) {
             startmus = LOW;
           }
@@ -1009,7 +1082,8 @@ void Ballhandler() {
       digitalWrite(rightFlipperBat, LOW);
         wTrig.stopAllTracks();
         hurryUp = LOW;
-        if (effectID == 6) { effect = LOW; effectID = 0; } // ID6 loop leall
+        StopHurryUpLights();
+        StopHurryUpBakedOverlay();
         maxBallSw = LOW;
         BIP = 1;
 
@@ -1082,6 +1156,10 @@ void Ballhandler() {
           wTrig.trackPlaySolo(TRK_EXTRABALL);
           startmus = HIGH;
           firstplay = HIGH;
+        }
+        if (intmon == 0) {
+          RestorePartyShotsForPlayer();
+          SendPartyState();
         }
       }
     }
@@ -1304,9 +1382,9 @@ void Multiball() {
       wTrig.trackLoop(TRK_MUS_SPACECOKE, 0);
       wTrig.trackResume(TRK_THEME);
     }
-    ufosw = 1;
     multiball = 0;
-    spinnersw = 1;
+    RestorePartyShotsForPlayer();
+    SendPartyState();
     multiloopsw = 0;
     BIP = 1;
     BrdgLowActive = LOW;
@@ -1667,6 +1745,13 @@ void intmMode() {
       score[4] = 0;
       weedm[4] = 0;
       weedmeter[4] = 180;
+      for (uint8_t p = 0; p <= 4; p++) {
+        beerCredits[p] = 0;
+        jointStack[p] = 0;
+        weedQualified[p] = LOW;
+      }
+      RestorePartyShotsForPlayer();
+      SendPartyState();
       weedmetersend();
       feny[0] = 960;
       miv1 = SimAnalogRead(a1);
@@ -1817,7 +1902,6 @@ void inittable() {
     spinnersw = 0;
     Inittable = LOW;
     weedmetersend();
-    beerCollect = 0;
     randGift = random(1, 10);
     switch (randGift) {
       case 1:
@@ -1936,22 +2020,119 @@ boolean ExtraBallLotteryBlocked() {
   return (extraball > 0 || extraBallLit == HIGH);
 }
 
-int DrawUfoLottery() {
-  int result;
-  do {
-    if (numofplayers == 1) {
-      if (hurryUp == HIGH) {
-        result = random(1, 8); // 1..7; minigame/EB-lit nincs Hurry Up alatt
-      }
-      else {
-        result = random(1, 10); // 1..9 huzas
-        if (result >= 8) result++; // 8 tiltott (pontlopas): 8->9, 9->10
-      }
-    }
-    else {
-      result = random(1, (hurryUp == LOW) ? 11 : 9); // normal 1..10, hurry 1..8
-    }
-  } while (ExtraBallLotteryBlocked() && (result == 1 || result == 10));
+uint8_t CurrentUfoPartyTier() {
+  if (jointStack[player] >= 3) return UFO_PARTY_LOVE_PACK;
+  if (jointStack[player] == 2) return UFO_PARTY_FEATURE_WHEEL;
+  if (jointStack[player] == 1) return UFO_PARTY_SUPER_CASHOUT;
+  if (weedQualified[player] == HIGH) return UFO_PARTY_CASHOUT;
+  return UFO_PARTY_NONE;
+}
+
+boolean RollJointLit() {
+  return (weedQualified[player] == HIGH && beerCredits[player] > 0 &&
+          jointStack[player] < 3 && multiball == 0 && hurryUp == LOW);
+}
+
+void SendPartyState() {
+  char msg[40];
+  snprintf(msg, sizeof(msg), "Party,%d,%u,%u,%u,%u",
+           player, beerCredits[player], jointStack[player],
+           CurrentUfoPartyTier(), weedQualified[player] == HIGH ? 1 : 0);
+  Serial.println(msg);
+}
+
+void SendPartyEvent(const char* eventName) {
+  Serial.print("PartyEvent,");
+  Serial.print(player);
+  Serial.print(",");
+  Serial.println(eventName);
+}
+
+void RestorePartyShotsForPlayer() {
+  if (multiball != 0 || hurryUp == HIGH) {
+    ufosw = 0;
+    spinnersw = 2;
+    return;
+  }
+  ufosw = (CurrentUfoPartyTier() != UFO_PARTY_NONE) ? 1 : 0;
+  spinnersw = (weedQualified[player] == HIGH) ? 1 : 0;
+}
+
+void ConsumeUfoPartyReward(uint8_t tier) {
+  weedQualified[player] = LOW;
+  spinnersw = 0;
+  if (tier >= UFO_PARTY_SUPER_CASHOUT) {
+    jointStack[player] = 0;
+  }
+  ufosw = 0;
+  SendPartyState();
+}
+
+void RollJoint() {
+  if (!RollJointLit()) return;
+
+  beerCredits[player]--;
+  jointStack[player]++;
+  weedQualified[player] = LOW;
+  spinnersw = 0;
+  ufosw = 1; // minden joint utan az UFO-n gyujtheto be vagy stackelheto tovabb
+
+  uint8_t index = jointStack[player] - 1;
+  Score(Scoring::JOINT_POINTS[index], Scoring::JOINT_BONUS[index]);
+  wTrig.trackPlayPoly(TRK_BIGJOINT);
+
+  if (jointStack[player] == 1) {
+    SendPartyEvent("JOINT1");
+  }
+  else if (jointStack[player] == 2) {
+    SendPartyEvent("JOINT2");
+  }
+  else {
+    SendPartyEvent("LOVE_PACK");
+    // A video meg nincs kesz. A trigger mar most stabil, igy a LovePack
+    // sequence kesobb pusztan az assets mappaba teheto.
+    Serial.println("LovePack");
+  }
+  SendPartyState();
+}
+
+int DrawUfoLottery(uint8_t tier) {
+  int result = 3;
+
+  if (tier == UFO_PARTY_LOVE_PACK) {
+    result = 7; // SpaceCoke Multiball
+  }
+  else if (tier == UFO_PARTY_FEATURE_WHEEL) {
+    // Ket joint: Munchies / Hurry Up / azonnali Extra Ball. A mar aktiv
+    // vagy betarazott feature-t kihagyjuk, nehogy a jatekos ures nyeremenyt kapjon.
+    const uint8_t featureResults[3] = { 9, 2, 1 };
+    do {
+      result = featureResults[random(0, 3)];
+    } while ((result == 1 && ExtraBallLotteryBlocked()) ||
+             (result == 2 && hurryUp == HIGH));
+  }
+  else if (tier == UFO_PARTY_SUPER_CASHOUT) {
+    // Egy joint valoban tobbet erjen a sima UFO-nal: csak a 30000 pontos
+    // fo dij, multiplayerben 20000 pont lopas, illetve EXTRA BALL LIT.
+    const uint8_t singleResults[2] = { 5, 10 };
+    const uint8_t multiResults[3]  = { 5, 8, 10 };
+    do {
+      result = (numofplayers == 1)
+        ? singleResults[random(0, 2)]
+        : multiResults[random(0, 3)];
+    } while (result == 10 && ExtraBallLotteryBlocked());
+  }
+  else {
+    // Sima WEED cashout: negy pontjutalom, multiplayerben pontlopas,
+    // valamint EXTRA BALL LIT. Hurry Up/minigame/SpaceCoke nincs ebben a tierben.
+    const uint8_t singleResults[5] = { 3, 4, 5, 6, 10 };
+    const uint8_t multiResults[6]  = { 3, 4, 5, 6, 8, 10 };
+    do {
+      result = (numofplayers == 1)
+        ? singleResults[random(0, 5)]
+        : multiResults[random(0, 6)];
+    } while (result == 10 && ExtraBallLotteryBlocked());
+  }
 
 #ifdef SIM_MODE
   if (simForceLottery > 0) {
@@ -1966,6 +2147,144 @@ int DrawUfoLottery() {
   }
 #endif
   return result;
+}
+
+const char* UfoWheelResultName() {
+  if (lottery == 1) return "EXTRABALL";
+  if (lottery == 2) return "HURRYUP";
+  return "MUNCHIES";
+}
+
+void SendUfoWheelStart() {
+  Serial.print("WheelStart,");
+  Serial.print(ufoWheelSession);
+  Serial.print(",");
+  Serial.println(UfoWheelResultName());
+  ufoWheelLastSendAt = millis();
+}
+
+void ApplyUfoLotteryEntryAward(boolean playLegacyVideo) {
+  if (lottery == 1) {
+    extraball = 1; // nem stackelunk egynel tobbet
+    if (playLegacyVideo) {
+      Serial.println("Ufo5");
+      delay(20);
+    }
+    else {
+      // Szoveges fallback az uj eredmenyvideo elkeszulteig. A kesobbi GUI
+      // a Wheel sequence utan, meg a WHEEL_DONE elott tudja lancolni a klipet.
+      SendPartyEvent("WHEEL_EXTRA_BALL");
+    }
+  }
+
+  if (lottery == 10) {
+    extraBallLit = HIGH;
+    Serial.println("Ufo8");
+    delay(20);
+  }
+
+  // lottery 2..7: pontszam + video-trigger (a video-nevek szandekosan
+  // kevertek - a regi Unity-korszakbol, lasd VIDEO_MAP.md). Index = lottery-2.
+  if (lottery >= 2 && lottery <= 7) {
+    static const unsigned long lotScr[6] = { 5000, 15000, 20000, 30000, 25000, 40000 };
+    static const unsigned long lotBns[6] = {  100,   100,   150,   250,   250,  2000 };
+    static const char* const   lotVid[6] = { "Ufo7", "Ufo1", "Ufo2", "Ufo4", "Ufo3", "Ufo9" };
+    Score(lotScr[lottery - 2], lotBns[lottery - 2]);
+    if (playLegacyVideo) {
+      Serial.println(lotVid[lottery - 2]);
+      delay(20);
+    }
+    else if (lottery == 2) {
+      // Szoveges fallback az uj Hurry Up eredmenyvideo elkeszulteig.
+      SendPartyEvent("WHEEL_HURRY_UP");
+    }
+  }
+
+  if (lottery == 8) {
+    // PONTLOPAS: sima cashoutnal -10000, egyjointos Super Cashoutnal
+    // -20000 pont egy veletlen MASIK jatekosnak.
+    ufoMinus = ((player - 1 + random(1, numofplayers)) % numofplayers) + 1;
+    unsigned long stealAmount = (ufoAwardTier == UFO_PARTY_SUPER_CASHOUT)
+                                  ? 20000UL : 10000UL;
+    if (score[ufoMinus] >= stealAmount) score[ufoMinus] -= stealAmount;
+    else score[ufoMinus] = 0;
+    Serial.print("Steal,");
+    Serial.print(ufoMinus);
+    Serial.print(",");
+    Serial.println(stealAmount);
+    Serial.print("Ufo");
+    Serial.println(9 + ufoMinus);
+    delay(20);
+  }
+}
+
+void StartUfoLotteryVisuals() {
+  wTrig.trackPause(TRK_THEME);
+  wTrig.trackPlayPoly(TRK_HAPPYUFO);
+  // UFO Lottery (weed kigyujtve): baked ID2 a 0-67-en, felul palettas feny.
+  effect = HIGH;
+  effectID = 2;
+  fasz = 68;
+  SetupPurpleAndGreenPalette();
+}
+
+void BeginUfoLotteryPresentation(boolean playLegacyVideo) {
+  StartUfoLotteryVisuals();
+  ApplyUfoLotteryEntryAward(playLegacyVideo);
+  ufoshoot = 4;
+  ufoshoottimer = millis();
+  ufoshoottimer2 = ufoshoottimer;
+}
+
+void StartUfoWheelPresentation() {
+  // A fizikai UFO-visszajelzes a teljes GUI-lanccal egyutt indul, nem csak
+  // annak vege utan villan fel egy pillanatra.
+  StartUfoLotteryVisuals();
+  ufoWheelSession++;
+  if (ufoWheelSession == 0) ufoWheelSession = 1;
+  ufoWheelWaiting = HIGH;
+  ufoWheelStartedAt = millis();
+  ufoshoot = 6; // a golyo a GUI visszajelzeseig a VUK-ban parkol
+  SendUfoWheelStart();
+}
+
+void CompleteUfoWheelPresentation() {
+  if (!ufoWheelWaiting) return;
+  ufoWheelWaiting = LOW;
+
+  if (lottery == 9 && hurryUp == LOW) {
+    ufoshoot = 0;
+    SendPartyEvent("WHEEL_MUNCHIES");
+    StartMunchiesMode();
+    return;
+  }
+
+  // A GUI lejatszotta a 6 mp-es kereket, elinditotta az 5 mp-es eredmenyt,
+  // es ezzel egyutt kuldte a DONE-t. A regi 5,5 mp-es video-holdot nem
+  // varjuk ki ujra: a jutalom es a VUK-kidobas az animacio alatt indul.
+  ApplyUfoLotteryEntryAward(LOW);
+  ufoshoot = 4;
+  ufoshoottimer = millis() - UFO_LOTTERY_HOLD_MS;
+  ufoshoottimer2 = ufoshoottimer;
+}
+
+void HandleUfoWheelDone(const char* command) {
+  if (!ufoWheelWaiting || strncmp(command, "WHEEL_DONE,", 11) != 0) return;
+  char* endp;
+  unsigned long session = strtoul(command + 11, &endp, 10);
+  if (*endp != '\0' || session != ufoWheelSession) return;
+  CompleteUfoWheelPresentation();
+}
+
+void UpdateUfoWheelPresentation() {
+  if (!ufoWheelWaiting) return;
+  unsigned long now = millis();
+  if (now - ufoWheelStartedAt >= UFO_WHEEL_TIMEOUT_MS) {
+    Serial.println("WheelStatus,Timeout");
+    CompleteUfoWheelPresentation();
+    return;
+  }
+  if (now - ufoWheelLastSendAt >= UFO_WHEEL_RETRY_MS) SendUfoWheelStart();
 }
 
 boolean CollectExtraBallLitAtHighRamp() {
@@ -2146,6 +2465,7 @@ void Right_Slingshot() {
     ballHandlerSkipTimer = millis();
 
     Score(Scoring::SLING_POINTS, Scoring::SLING_BONUS);
+    TriggerHurryHit(HURRY_ZONE_SLING_RIGHT);
 
   }
   if (slingr == 1 && millis() - 12 < slingrtimer) {
@@ -2177,6 +2497,7 @@ void Left_Slingshot() {
     ballHandlerSkipTimer = millis();
 
     Score(Scoring::SLING_POINTS, Scoring::SLING_BONUS);
+    TriggerHurryHit(HURRY_ZONE_SLING_LEFT);
 
   }
   if (slingl == 1 && millis() - 12 < slingltimer) {
@@ -2242,6 +2563,7 @@ void CnC() {
         *chtimer[i] = millis();
         wTrig.trackPlayPoly(cncSound[i]);
         Score(Scoring::CNC_LETTER_POINTS, Scoring::CNC_LETTER_BONUS);
+        TriggerHurryHit(HURRY_ZONE_CNC);
       }
     }
     for (uint8_t i = 0; i < 3; i++) {
@@ -2421,6 +2743,7 @@ void Weed() {
         *whtimer[i] = millis();
         Score(Scoring::WEED_LETTER_POINTS, Scoring::WEED_LETTER_BONUS);
         wTrig.trackPlayPoly(weedSound[i]);
+        TriggerHurryHit(HURRY_ZONE_WEED);
         if (giftsw == 1) { giftsw = 0; Gift(); }
       }
     }
@@ -2477,15 +2800,21 @@ void Weed() {
     static const uint8_t weedDoneSound[4] = { 67, 66, 115, 116 };
     wTrig.trackPlayPoly(weedDoneSound[spsound - 1]);
     Serial.println("Weed");
+    weedQualified[player] = HIGH;
+    if (multiball == 0 && hurryUp == LOW) {
+      ufosw = 1;
+      spinnersw = 1;
+    }
+    SendPartyEvent((beerCredits[player] > 0 && jointStack[player] < 3)
+                     ? "CHOOSE" : "NEED_BEER");
+    SendPartyState();
     delay(10);
   }
 
   if (weedoff == 1) {
     if (multiball == 0 && hurryUp == LOW) {
-      ufosw = 1;
       SetupBlackAndGreenStripedPalette();
       currentBlending = NOBLEND;
-      spinnersw = 1;
     }
 
     if (millis() - 1000 < weedtimer) {
@@ -2530,6 +2859,7 @@ void Fishtank() {
       *fstate[i] = 1;
       Score(Scoring::FISHTANK_TARGET_POINTS, Scoring::FISHTANK_TARGET_BONUS);
       wTrig.trackPlayPoly(fishSound[i]);
+      TriggerHurryHit(HURRY_ZONE_FISHTANK);
       if (giftsw == 1) { giftsw = 0; Gift(); }
     }
   }
@@ -2568,23 +2898,21 @@ void Fishtank() {
     }
   }
 
-  // Mind a 2 celpont -> beer collect (3-nal kis hid elesites)
+  // Mind a ket celpont -> egy betarazhato sor. Maximum harom tarolhato,
+  // golyok es jatekosvaltasok kozott is megmarad; a ROLL A JOINT fogyasztja.
   if (fishTankLightState1 == 1 && fishTankLightState2 == 1 && fishoff == 0) {
     fishtimer = millis();
     fishoff = 1;
-    beerCollect++;
     Score(Scoring::FISHTANK_PAIR_POINTS, Scoring::FISHTANK_PAIR_BONUS);
-    if (beerCollect == 1) {
-      Serial.println("Beer1");
+    if (beerCredits[player] < 3) {
+      beerCredits[player]++;
+      Serial.print("Beer");
+      Serial.println(beerCredits[player]);
+      SendPartyEvent("BEER");
+      SendPartyState();
     }
-    if (beerCollect == 2) {
-      Serial.println("Beer2");
-    }
-    if (beerCollect == 3) {
-      Serial.println("Beer3");
-      BrdgLowActive = HIGH;
-      wTrig.trackPlayPoly(TRK_SHOOTBRIDGE);
-      beerCollect = 0;
+    else {
+      SendPartyEvent("BEER_FULL");
     }
   }
 
@@ -2600,6 +2928,13 @@ void Fishtank() {
       fishTankLightState2 = 0;
       fishoff = 0;
     }
+  }
+
+  if (effect == LOW) {
+    if (beerCredits[player] == 0) leds[LED_FISHTANK_AMBIENT] = CRGB::Black;
+    if (beerCredits[player] == 1) leds[LED_FISHTANK_AMBIENT] = CRGB(0, 0, 96);
+    if (beerCredits[player] == 2) leds[LED_FISHTANK_AMBIENT] = CRGB::Blue;
+    if (beerCredits[player] >= 3) leds[LED_FISHTANK_AMBIENT] = CRGB::Cyan;
   }
 }
 /////////////////////////////////////////////////
@@ -3175,6 +3510,15 @@ void Weedspinner() {
     }
     wTrig.trackPlayPoly(TRK_PLUMB);
     if (spinnersw == 1) {
+      // Az elso spinnerfordulat valasztja ki a GET HIGH agat. Az aktualis
+      // WEED qualification elfogy, a spinner viszont a golyo/multiball
+      // vegeig aktiv marad. Egy korabbi joint UFO-cashoutja nem veszik el.
+      if (weedQualified[player] == HIGH) {
+        weedQualified[player] = LOW;
+        ufosw = (jointStack[player] > 0) ? 1 : 0;
+        SendPartyEvent("SPINNER");
+        SendPartyState();
+      }
       weedtableindicator = HIGH;
       weedtableindicatortimer = millis();
 
@@ -3310,6 +3654,10 @@ void weedmetersend() {
 
 void UFOO() {
   unsigned long now = millis();
+  if (ufoWheelWaiting) {
+    UpdateUfoWheelPresentation();
+    return;
+  }
   if (ufoInactivesw == 1 && now - ufoInactiveTimer >= 100UL) {
     ufoInactivesw = 0;
   }
@@ -3342,62 +3690,25 @@ void UFOO() {
     ufoDetectStartedAt = 0;
     ufoEjectSaveStarted = LOW;
     if (ufosw == 1 && multiball == 0) {
-      // 1 = azonnali extra ball, 9 = Munchies, 10 = EXTRA BALL LIT.
-      // Az 1-es es 10-es kimenet nem huzhato, ha mar van/lit egy extra ball.
-      lottery = DrawUfoLottery();
+      // Az UFO jutalmat mar a golyo beerkezesekor reteszeljuk. A tier
+      // kovetkezetesen elfogy: sima WEED cashout, 1 joint Super Cashout,
+      // 2 joint Feature Wheel, 3 joint/Love Pack SpaceCoke.
+      ufoAwardTier = CurrentUfoPartyTier();
+      lottery = DrawUfoLottery(ufoAwardTier);
+      ConsumeUfoPartyReward(ufoAwardTier);
+      if (ufoAwardTier == UFO_PARTY_CASHOUT) SendPartyEvent("CASHOUT");
+      if (ufoAwardTier == UFO_PARTY_SUPER_CASHOUT) SendPartyEvent("SUPER_CASHOUT");
+      if (ufoAwardTier == UFO_PARTY_FEATURE_WHEEL) SendPartyEvent("FEATURE_WHEEL");
+      if (ufoAwardTier == UFO_PARTY_LOVE_PACK) SendPartyEvent("SPACE_COKE");
+      if (ufoAwardTier == UFO_PARTY_FEATURE_WHEEL) {
+        StartUfoWheelPresentation();
+        return;
+      }
       if (lottery == 9 && hurryUp == LOW) {
         StartMunchiesMode();
         return;
       }
-
-      wTrig.trackPause(TRK_THEME);
-      wTrig.trackPlayPoly(TRK_HAPPYUFO);
-      // UFO Lottery (weed kigyujtve): a baked ID2 animacio jatszik a 0-67-en,
-      // a 68-114 felso szalag kozben tovabb fut a palettas futofennyel.
-      // (Korabban fasz=0 + palettas futofeny volt az EGESZ szalagon, baked
-      // animacio helyett - ez volt a regi hack.)
-      effect = HIGH;
-      effectID = 2;
-      fasz = 68;
-      SetupPurpleAndGreenPalette();
-      ufoshoot = 4;
-      if (lottery  == 1) {
-        extraball = 1; // nem stackelunk egynel tobbet
-        Serial.println("Ufo5");
-        delay(20);
-      }
-      if (lottery == 10) {
-        extraBallLit = HIGH;
-        Serial.println("Ufo8");
-        delay(20);
-      }
-
-      // lottery 2..7: pontszam + video-trigger (a video-nevek szandekosan
-      // kevertek - a regi Unity-korszakbol, lasd VIDEO_MAP.md). Index = lottery-2.
-      if (lottery >= 2 && lottery <= 7) {
-        static const unsigned long lotScr[6] = { 5000, 15000, 20000, 30000, 25000, 40000 };
-        static const unsigned long lotBns[6] = {  100,   100,   150,   250,   250,  2000 };
-        static const char* const   lotVid[6] = { "Ufo7", "Ufo1", "Ufo2", "Ufo4", "Ufo3", "Ufo9" };
-        Score(lotScr[lottery - 2], lotBns[lottery - 2]);
-        Serial.println(lotVid[lottery - 2]);
-        delay(20);
-      }
-
-      if (lottery  == 8) {
-        // PONTLOPAS: -10000 pont egy veletlen MASIK jatekosnak.
-        // Aldozat: a sajat sorszamunkhoz kepest 1..(numofplayers-1)-gyel
-        // eltolt jatekos (korbeforgatva) -> soha nem onmagunk.
-        ufoMinus = ((player - 1 + random(1, numofplayers)) % numofplayers) + 1;
-        if (score[ufoMinus] >= 10000) {
-          score[ufoMinus] = score[ufoMinus] - 10000;
-        }
-        else {
-          score[ufoMinus] = 0; // alulcsordulas-vedelem (unsigned!)
-        }
-        Serial.print("Ufo");
-        Serial.println(9 + ufoMinus); // Ufo10..Ufo13 = melyik jatekost raboltuk ki
-        delay(20);
-      }
+      BeginUfoLotteryPresentation(HIGH);
 
     }
 
@@ -3487,11 +3798,11 @@ void UFOO() {
 
   //// Itt ad is az ufo valamit
 
-  if (ufoshoot == 4 && ufoshoottimer2 < millis() - 5500) {
+  if (ufoshoot == 4 && ufoshoottimer2 < millis() - UFO_LOTTERY_HOLD_MS) {
     StartUfoEjectBallSave((lottery == 7) ?
                           SPACECOKE_BALL_SAVE_MS : UFO_EJECT_BALL_SAVE_MS);
     digitalWrite(ufoCoil, HIGH);
-    if (millis() - 50 > ufoshoottimer + 5500) {
+    if (millis() - 50 > ufoshoottimer + UFO_LOTTERY_HOLD_MS) {
       digitalWrite(ufoCoil, LOW);
       if (millis() - 700 > ufoshoottimer + 4000) {
         if (lottery  == 1) {    /// ExtraBall
@@ -3503,8 +3814,12 @@ void UFOO() {
           wTrig.trackPlayPoly(TRK_HURRYUP);
           hurryUp = HIGH;
           hurryUpTimer = millis();
-          effect = HIGH; // az ID6 Hurry UP animacio azonnal indul es a mod
-          effectID = 6;  // vegeig loopol (lasd RunBakedEffect: hurryUp+ID6)
+          StopFullBakedEffect(); // az UFO lottery full effektje leall
+          StartHurryUpBakedOverlay(); // ID6 atlatszo legfelso retegkent marad
+          fasz = 68;
+          initlight = HIGH;
+          Initlights();
+          ResetHurryUpLights();
           spinnersw = 2;
           ufosw = 0;
         }
@@ -3583,14 +3898,43 @@ void UFOO() {
   }
 
   if (ufosw == 1) {
+    uint8_t tier = CurrentUfoPartyTier();
     Blinktimer();
     if (ledState == HIGH) {
-      leds[LED_UFO_ARROW_1] = CRGB::Green; // C
-      leds[LED_UFO_ARROW_2] = CRGB::Black; // C
+      if (tier == UFO_PARTY_CASHOUT) {
+        leds[LED_UFO_ARROW_1] = CRGB::Purple;
+        leds[LED_UFO_ARROW_2] = CRGB::Black;
+      }
+      else if (tier == UFO_PARTY_SUPER_CASHOUT) {
+        leds[LED_UFO_ARROW_1] = CRGB::Orange;
+        leds[LED_UFO_ARROW_2] = CRGB::Gold;
+      }
+      else if (tier == UFO_PARTY_FEATURE_WHEEL) {
+        leds[LED_UFO_ARROW_1] = CRGB::Magenta;
+        leds[LED_UFO_ARROW_2] = CRGB::White;
+      }
+      else {
+        leds[LED_UFO_ARROW_1] = CRGB::Cyan;
+        leds[LED_UFO_ARROW_2] = CRGB::White;
+      }
     }
     if (ledState == LOW) {
-      leds[LED_UFO_ARROW_1] = CRGB::Black; // C
-      leds[LED_UFO_ARROW_2] = CRGB::Green; // C
+      if (tier == UFO_PARTY_CASHOUT) {
+        leds[LED_UFO_ARROW_1] = CRGB::Black;
+        leds[LED_UFO_ARROW_2] = CRGB::Purple;
+      }
+      else if (tier == UFO_PARTY_SUPER_CASHOUT) {
+        leds[LED_UFO_ARROW_1] = CRGB::Gold;
+        leds[LED_UFO_ARROW_2] = CRGB::Orange;
+      }
+      else if (tier == UFO_PARTY_FEATURE_WHEEL) {
+        leds[LED_UFO_ARROW_1] = CRGB::White;
+        leds[LED_UFO_ARROW_2] = CRGB::Magenta;
+      }
+      else {
+        leds[LED_UFO_ARROW_1] = CRGB::White;
+        leds[LED_UFO_ARROW_2] = CRGB::Cyan;
+      }
     }
 
   }
@@ -3617,6 +3961,7 @@ void Chong_switch() {
   if (SimDigitalRead(chongSwitch) == LOW && chongoffsw == LOW) {
     chongoffsw = HIGH;
     chongoffswtimer = millis();
+    TriggerHurryHit(HURRY_ZONE_CHONG);
     // Chong beszedhangok (a regi 10 case-es switch helyett)
     static const uint8_t chongTracks[10] = { 8, 9, 52, 53, 9, 79, 80, 82, 83, 85 };
     PlaySpeech(chongTracks, 10);
@@ -3691,6 +4036,7 @@ void Cheech_switch() {
     if (SimDigitalRead(cheechSwitch) == LOW && cheechoffsw == LOW) {
     cheechoffsw = HIGH;
     cheechoffswtimer = millis();
+    TriggerHurryHit(HURRY_ZONE_CHEECH);
     // Cheech beszedhangok (a regi 15 case-es switch helyett)
     static const uint8_t cheechTracks[15] = { 7, 35, 36, 37, 48, 49, 50, 54, 55, 56, 57, 58, 59, 81, 87 };
     PlaySpeech(cheechTracks, 15);
@@ -4005,6 +4351,31 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
 }
 
 void BridgeLow() {
+  // A ROLL A JOINT csak aktiv WEED + legalabb egy betarazott sor mellett
+  // veszi at a kishidat. Ilyenkor nem ad ugyanarra a kapcsolozarasra normal
+  // bridge/combo pontot. Multiballban a jackpot mindig elsobbseget elvez.
+  if (RollJointLit()) {
+    if (effect == LOW) {
+      Blinktimer();
+      if (ledState == HIGH) {
+        leds[LED_LEFT_RAMP_1] = CRGB::Orange;
+        leds[LED_LEFT_RAMP_2] = CRGB::Gold;
+        leds[LED_LEFT_RAMP_AMBIENT] = CRGB(96, 24, 0);
+      }
+      else {
+        leds[LED_LEFT_RAMP_1] = CRGB::Gold;
+        leds[LED_LEFT_RAMP_2] = CRGB::Orange;
+        leds[LED_LEFT_RAMP_AMBIENT] = CRGB(32, 8, 0);
+      }
+    }
+    if (SimDigitalRead(bridgeLowSwitch) == LOW && BrdgLowSw == 0) {
+      BrdgLowSw = 1;
+      BrdgLowT = millis();
+      RollJoint();
+    }
+    return;
+  }
+
   //                                    mb: 0     1      2      3      4      5
   static const unsigned long jpScr[6] = { 5000, 10000, 15000, 20000, 25000, 30000 };
   static const unsigned long jpBns[6] = {  200,   200,   200,   200,   200,   200 };
@@ -4057,45 +4428,89 @@ void BridgeHigh() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
+void ResetHurryUpLights() {
+  hurryChaseStartedAt = millis();
+  for (uint8_t i = 0; i < HURRY_ZONE_COUNT; i++) hurryHitAt[i] = 0;
+}
+
+void StopHurryUpLights() {
+  hurryChaseStartedAt = 0;
+  for (uint8_t i = 0; i < HURRY_ZONE_COUNT; i++) hurryHitAt[i] = 0;
+}
+
+void TriggerHurryHit(uint8_t zone) {
+  if (hurryUp == HIGH && zone < HURRY_ZONE_COUNT) {
+    hurryHitAt[zone] = millis();
+  }
+}
+
+void RunHurryUpLights() {
+  if (hurryUp != HIGH) return;
+  if (hurryChaseStartedAt == 0) ResetHurryUpLights();
+
+  const unsigned long now = millis();
+  const uint_farptr_t ledBase = pgm_get_far_address(hurryPathLed);
+  const uint_farptr_t zoneBase = pgm_get_far_address(hurryPathZone);
+
+  // A mod sajat utvonala sotet alaprol indul, igy a futofeny a korabbi
+  // collection/progress lampak mellett is tisztan olvashato.
+  for (uint8_t i = 0; i < HURRY_PATH_COUNT; i++) {
+    leds[pgm_read_byte_far(ledBase + i)] = CRGB::Black;
+  }
+
+  // Borostyan comet: egy eros fej es ot fokozatosan halvanyulo farok.
+  static const uint8_t trailBrightness[6] = { 255, 150, 88, 48, 24, 10 };
+  uint8_t head = ((now - hurryChaseStartedAt) / HURRY_CHASE_STEP_MS) %
+                 HURRY_PATH_COUNT;
+  for (uint8_t trail = 0; trail < 6; trail++) {
+    uint8_t pathIndex = (head + HURRY_PATH_COUNT - trail) % HURRY_PATH_COUNT;
+    uint8_t led = pgm_read_byte_far(ledBase + pathIndex);
+    CRGB comet = CRGB(255, 72, 0);
+    comet.nscale8_video(trailBrightness[trail]);
+    leds[led] += comet;
+  }
+
+  // Talalat: az egesz erintett palyaelem feheren felvillan, majd ciankekbe
+  // hajolva 1,4 masodperc alatt simul vissza a chase-be.
+  for (uint8_t zone = 0; zone < HURRY_ZONE_COUNT; zone++) {
+    if (hurryHitAt[zone] == 0) continue;
+    unsigned long age = now - hurryHitAt[zone];
+    if (age >= HURRY_HIT_FADE_MS) {
+      hurryHitAt[zone] = 0;
+      continue;
+    }
+    uint8_t strength = 255 - (uint32_t)age * 255UL / HURRY_HIT_FADE_MS;
+    CRGB flash = (age < 90UL) ? CRGB::White : CRGB(0, 190, 255);
+    for (uint8_t i = 0; i < HURRY_PATH_COUNT; i++) {
+      if (pgm_read_byte_far(zoneBase + i) == zone) {
+        uint8_t led = pgm_read_byte_far(ledBase + i);
+        leds[led] = blend(leds[led], flash, strength);
+      }
+    }
+  }
+}
+
 
 void HurryUp()
 {
   if (hurryUp == HIGH && millis() - 80000 < hurryUpTimer)
   {
-    if (ledState == LOW) {
-      leds[LED_LEFT_RAMP_AMBIENT] = CRGB::White; // Left ramp ambient
-      leds[LED_FISHTANK_AMBIENT] = CRGB::White; // Fishtank ambient
-      leds[LED_RIGHT_RAMP_AMBIENT] = CRGB::Black; // Right ramp ambient
-      leds[LED_CNC_AMBIENT] = CRGB::Black; // CnC ambient
-    }
-    if (ledState == HIGH) {
-      leds[LED_LEFT_RAMP_AMBIENT] = CRGB::Black; // Left ramp ambient
-      leds[LED_FISHTANK_AMBIENT] = CRGB::Black; // Fishtank ambient
-      leds[LED_RIGHT_RAMP_AMBIENT] = CRGB::White; // Right ramp ambient
-      leds[LED_CNC_AMBIENT] = CRGB::White; // CnC ambient
-    }
-    if (hurryUpState == LOW) {
-      SetupBlackAndWhiteStripedPalette();
-      currentBlending = LINEARBLEND;
-      fasz = 0;
-      initlight = HIGH;
-    }
-    else {
-      fasz = 68;
-      Initlights();
-      initlight = LOW;
-    }
+    if (hurryChaseStartedAt == 0) ResetHurryUpLights();
   }
   if (hurryUp == HIGH && millis() - 80000 > hurryUpTimer)
   {
     hurryUp = LOW;
-    effect = LOW; effectID = 0; // az ID6 loop leall a Hurry Up vegen
+    effect = LOW;
+    effectID = 0;
+    StopHurryUpLights();
+    StopHurryUpBakedOverlay();
     initlight = HIGH;
     Initlights();
     fasz = 68;
     wTrig.trackPause(TRK_MUS_HURRY);
     wTrig.trackResume(TRK_THEME);
-    spinnersw = HIGH;
+    RestorePartyShotsForPlayer();
+    SendPartyState();
   }
 
 
