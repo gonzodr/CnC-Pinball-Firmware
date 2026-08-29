@@ -479,6 +479,15 @@ int a10 = 10;
 // Booleans
 boolean ballsaversw = HIGH; // Turn on the ballsaver
 boolean BallReadState = LOW;
+// A lecsorgas (BIS == 5) megerositese. A golyotarolo infra-szenzorait az
+// UFO-lottery fenyeffektje es a tekercsek zaja egy-egy pillanatra atbillenti
+// a kuszob ala, es egyetlen ilyen minta korabban azonnal "golyo lement"-et
+// jelentett - akkor is, ha a golyo eppen az UFO-ban ult. Ezert tobb egymas
+// utani meres ES egy minimalis ido is kell hozza.
+const uint8_t BALL_DRAIN_CONFIRM_READS = 6;
+const unsigned long BALL_DRAIN_CONFIRM_MS = 120UL;
+uint8_t bisFiveReads = 0;
+unsigned long bisFiveSince = 0;
 boolean ballHandlerSkip = 0;
 boolean shoot = LOW;
 boolean aftermulti = LOW;
@@ -1077,7 +1086,8 @@ void Ballhandler() {
     //////////////
 
     if (ballsaversw == LOW && shoot == 0 && firstplay == LOW) {
-      if (BIS == 5) {
+      if (BIS == 5 && bisFiveReads >= BALL_DRAIN_CONFIRM_READS &&
+          millis() - bisFiveSince >= BALL_DRAIN_CONFIRM_MS) {
       digitalWrite(leftFlipperBat, LOW);
       digitalWrite(rightFlipperBat, LOW);
         wTrig.stopAllTracks();
@@ -1332,6 +1342,18 @@ void MIV(boolean m) {
           BIS = 0;
           }
         }
+
+    // Csak a TENYLEGES meresek szamitanak: a BallReadState 1 mp-es ablakai
+    // kozott a BIS erteke valtozatlanul all, azt nem szabad megerositesnek
+    // venni. Egyetlen zajos minta nullazza a szamlalot.
+    if (BIS == 5) {
+      if (bisFiveReads == 0) bisFiveSince = millis();
+      if (bisFiveReads < 255) bisFiveReads++;
+    }
+    else {
+      bisFiveReads = 0;
+      bisFiveSince = 0;
+    }
         
   }
 
