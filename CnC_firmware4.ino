@@ -2904,20 +2904,24 @@ void Fishtank() {
   }
 
   // Mind a ket celpont -> egy betarazhato sor. Maximum harom tarolhato,
-  // golyok es jatekosvaltasok kozott is megmarad; a ROLL A JOINT fogyasztja.
+  // golyok es jatekosvaltasok kozott is megmarad.
   if (fishTankLightState1 == 1 && fishTankLightState2 == 1 && fishoff == 0) {
     fishtimer = millis();
     fishoff = 1;
     Score(Scoring::FISHTANK_PAIR_POINTS, Scoring::FISHTANK_PAIR_BONUS);
-    if (beerCredits[player] < 3) {
-      beerCredits[player]++;
-      Serial.print("Beer");
-      Serial.println(beerCredits[player]);
-      SendPartyEvent("BEER");
-      SendPartyState();
-    }
-    else {
-      SendPartyEvent("BEER_FULL");
+    // HurryUp alatt a Fish Tank csak pontot ad: a sor-gyujtes ilyenkor
+    // inaktiv, ugyanugy, ahogy a CnC ag is kulon HurryUp-modot fut.
+    if (hurryUp == LOW) {
+      if (beerCredits[player] < 3) {
+        beerCredits[player]++;
+        Serial.print("Beer");
+        Serial.println(beerCredits[player]);
+        SendPartyEvent("BEER");
+        SendPartyState();
+      }
+      else {
+        SendPartyEvent("BEER_FULL");
+      }
     }
   }
 
