@@ -1112,6 +1112,19 @@ void Ballhandler() {
         // Commercial tilt: az aktualis golyo felhalmozott bonusza elvész.
         // Az inittable() szandekosan mar e blokk elott lefut, ezert a
         // ballTilted flaget csak ITT, a bonus dontese utan szabad torolni.
+        // A jatekos utolso golyoja utan a betarazott (az UFO altal el nem
+        // vett) joint a bonuszban fizet. Csak az egy-jointos allapot juthat
+        // ide: kettot es harmat mar az UFO elvesz. A bonuszba tesszuk, hogy
+        // a bonusz-szorzo is vonatkozzon ra.
+        if (ball == 3 && extraball == 0 && jointStack[player] > 0) {
+          uint8_t heldIndex = jointStack[player] - 1;
+          if (heldIndex > 2) heldIndex = 2;
+          Score(Scoring::JOINT_POINTS[heldIndex], Scoring::JOINT_BONUS[heldIndex]);
+          wTrig.trackPlayPoly(TRK_BIGJOINT);
+          jointStack[player] = 0;
+          SendPartyState();
+        }
+
         if (ballTilted == LOW) {
           if (bonusx == 1) {
             bonus = bonus * 2;
@@ -2021,15 +2034,24 @@ boolean ExtraBallLotteryBlocked() {
 }
 
 uint8_t CurrentUfoPartyTier() {
+  // 3 joint = Love Pack (SpaceCoke), 2 joint = Feature Wheel.
+  // EGY jointnal az UFO szandekosan INAKTIV: nem veszi el a jointot, es nem
+  // ad erte semmit - a jatekos igy tud tovabb gyujteni. Az egyedul allo joint
+  // a jatek vegen, a bonuszban fizet (lasd a Nextball agat).
+  // Joint nelkul a weed tovabbra is a sima cashoutot nyitja.
   if (jointStack[player] >= 3) return UFO_PARTY_LOVE_PACK;
   if (jointStack[player] == 2) return UFO_PARTY_FEATURE_WHEEL;
-  if (jointStack[player] == 1) return UFO_PARTY_SUPER_CASHOUT;
+  if (jointStack[player] >= 1) return UFO_PARTY_NONE;
   if (weedQualified[player] == HIGH) return UFO_PARTY_CASHOUT;
   return UFO_PARTY_NONE;
 }
 
 boolean RollJointLit() {
-  return (weedQualified[player] == HIGH && beerCredits[player] > 0 &&
+  // Az N. jointhoz N sor kell: az elsohoz 1, a masodikhoz 2, a harmadikhoz 3.
+  // A jointok igy nem "fogyasztjak" a sort, hanem egyre tobbet kovetelnek meg
+  // belole, tehat a ket szamlalo egyutt telik meg haromig.
+  return (weedQualified[player] == HIGH &&
+          beerCredits[player] >= jointStack[player] + 1 &&
           jointStack[player] < 3 && multiball == 0 && hurryUp == LOW);
 }
 
@@ -2061,7 +2083,9 @@ void RestorePartyShotsForPlayer() {
 void ConsumeUfoPartyReward(uint8_t tier) {
   weedQualified[player] = LOW;
   spinnersw = 0;
-  if (tier >= UFO_PARTY_SUPER_CASHOUT) {
+  // Csak a Feature Wheel es a Love Pack fogyasztja el a jointokat; az egy
+  // jointos allapot nem is jut el idaig (ott az UFO inaktiv).
+  if (tier >= UFO_PARTY_FEATURE_WHEEL) {
     jointStack[player] = 0;
   }
   ufosw = 0;
@@ -2077,7 +2101,9 @@ void RollJoint() {
   jointStack[player]++;
   weedQualified[player] = LOW;
   spinnersw = 0;
-  ufosw = 1; // minden joint utan az UFO-n gyujtheto be vagy stackelheto tovabb
+  // Az UFO allapota a szintbol jon: egy jointnal inaktiv marad, kettonel-
+  // haromnal viszont van mit atvennie.
+  ufosw = (CurrentUfoPartyTier() != UFO_PARTY_NONE) ? 1 : 0;
 
   uint8_t index = jointStack[player] - 1;
   Score(Scoring::JOINT_POINTS[index], Scoring::JOINT_BONUS[index]);
