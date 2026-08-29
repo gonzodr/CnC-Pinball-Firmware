@@ -2071,7 +2071,9 @@ void ConsumeUfoPartyReward(uint8_t tier) {
 void RollJoint() {
   if (!RollJointLit()) return;
 
-  beerCredits[player]--;
+  // A sor NEM fogy el a jointtol: a ket szamlalo egymastol fuggetlenul
+  // gyulik 3-ig, es a Love Packhoz mindketto kell. A RollJointLit() tovabbra
+  // is megkovetel legalabb egy sort ahhoz, hogy egyaltalan lehessen sodorni.
   jointStack[player]++;
   weedQualified[player] = LOW;
   spinnersw = 0;
@@ -2089,10 +2091,13 @@ void RollJoint() {
   }
   else {
     SendPartyEvent("LOVE_PACK");
-    // A video meg nincs kesz. A trigger mar most stabil, igy a LovePack
-    // sequence kesobb pusztan az assets mappaba teheto.
-    Serial.println("LovePack");
   }
+  // A sodras animacioja: a GUI-ban JOINT_ROLLED_1..3 nevu sequence-ek
+  // vannak. A PartyEvent csak szoveges allapot, video-triggert kulon kell
+  // kuldeni - enelkul nem jatszott le semmit a sodrasnal.
+  Serial.print("JOINT_ROLLED_");
+  Serial.println(jointStack[player]);
+  delay(20);
   SendPartyState();
 }
 
@@ -3709,7 +3714,13 @@ void UFOO() {
         return;
       }
       BeginUfoLotteryPresentation(HIGH);
-
+      // FONTOS a return: a ConsumeUfoPartyReward() mar nullazta az ufosw-t,
+      // igy nelkule a lenti "nincs weed" ag azonnal ratolt volna egy
+      // ufoshoot = random(1,4)-et a most beallitott ufoshoot = 4-re. Ettol
+      // a jutalom-blokk (ufoshoot == 4) sosem futott le - elmaradt a
+      // SpaceCoke multiball es a lottery hangja -, helyette a golyot
+      // kilokte a "get the fuck out" ag.
+      return;
     }
 
     if (ufosw == 0 && multiball == 0 && hurryUp == 0) {
