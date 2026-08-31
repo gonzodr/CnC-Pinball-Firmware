@@ -224,6 +224,8 @@ namespace Scoring {
   const unsigned long LOOP_POINTS = 2500UL;
   const unsigned int  LOOP_BONUS = 250U;
   const unsigned long BRIDGE_POINTS = 1000UL;
+  // Hurry Up alatt a hid alapja; a 2x szorzoval ez a kifizetett 10000.
+  const unsigned long HURRY_BRIDGE_POINTS = 5000UL;
   const unsigned int  BRIDGE_BONUS = 100U;
   const unsigned long INACTIVE_CHARACTER_POINTS = 200UL;
   const unsigned int  INACTIVE_CHARACTER_BONUS = 50U;
@@ -760,6 +762,9 @@ unsigned long weedhurrytimer2 = 0;
 unsigned long weedhurrytimer3 = 0;
 unsigned long weedhurrytimer4 = 0;
 unsigned long hurryUpTimer = 0;
+// A Hurry Up hossza. Korabban ket helyen bedrotozott 80000 volt; a GUI a
+// visszaszamlalashoz megkapja az erteket, igy elég itt atirni.
+const unsigned long HURRY_UP_DURATION_MS = 60000UL;
 unsigned long stHscTimer = 0;
 unsigned long lfHscTimer = 0;
 unsigned long rfHscTimer = 0;
@@ -3788,8 +3793,10 @@ void UFOO() {
         // Csak ez a hosszabb, 4.3 mp-es VUK-ban tartott "UFO FUCK" ag kapja
         // a GUI-videot es a hosszu ID4 fenyanimaciot. A masik ket varians
         // szandekosan gyorsan visszaadja a golyot, hogy porogjon a jatek.
-        effect = HIGH;
-        effectID = 4;
+        // Az ID4 (UFO FUCK) addig loopol, amig a VUK vissza nem dobja a
+        // golyot - a 4,3 mp-es tartas hosszabb, mint egy lejatszas, es
+        // korabban a fenyeffekt idokozben lement, sotet VUK-ot hagyva.
+        StartFullBakedEffect(4, 0, HIGH);
         wTrig.trackPause(TRK_THEME);
         wTrig.trackPlayPoly(TRK_UFO);
         wTrig.trackPlayPoly(TRK_NOWEEDUFO);
@@ -3824,6 +3831,9 @@ void UFOO() {
       digitalWrite(ufoCoil, LOW);
       if (millis() - 500 > ufoshoottimer + 4300) {
         ufoshoot = 0;
+        StopFullBakedEffect(); // a loopolo UFO FUCK effekt vege
+        initlight = HIGH;
+        Initlights();
         wTrig.trackPause(TRK_UFO);
         if (multiball == 0) {
           wTrig.trackResume(TRK_THEME);
@@ -3884,6 +3894,9 @@ void UFOO() {
           wTrig.trackPlayPoly(TRK_HURRYUP);
           hurryUp = HIGH;
           hurryUpTimer = millis();
+          // A GUI ebbol rakja ki a lukteto "2X"-et es a visszaszamlalot.
+          Serial.print("HurryUp,");
+          Serial.println(HURRY_UP_DURATION_MS / 1000UL);
           StopFullBakedEffect(); // az UFO lottery full effektje leall
           StartHurryUpBakedOverlay(); // ID6 atlatszo legfelso retegkent marad
           fasz = 68;
@@ -4325,7 +4338,12 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
       *swT = millis();
 
       if (hurryUp == HIGH) {
-        Score(Scoring::BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
+        // A Score() a Hurry Up alatt megduplazza a kozvetlen pontot, ezert
+        // az 5000-es alapbol jon ki a kiirt 10000 - ugyanaz a "2X", amit a
+        // GUI is mutat.
+        Score(Scoring::HURRY_BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
+        Serial.println("HURRY_UP_MASTER");
+        delay(20);
       }
       else {
         const unsigned long comboNow = millis();
@@ -4563,13 +4581,14 @@ void RunHurryUpLights() {
 
 void HurryUp()
 {
-  if (hurryUp == HIGH && millis() - 80000 < hurryUpTimer)
+  if (hurryUp == HIGH && millis() - HURRY_UP_DURATION_MS < hurryUpTimer)
   {
     if (hurryChaseStartedAt == 0) ResetHurryUpLights();
   }
-  if (hurryUp == HIGH && millis() - 80000 > hurryUpTimer)
+  if (hurryUp == HIGH && millis() - HURRY_UP_DURATION_MS > hurryUpTimer)
   {
     hurryUp = LOW;
+    Serial.println("HurryUp,0"); // a GUI leveszi a 2X-et
     effect = LOW;
     effectID = 0;
     StopHurryUpLights();
