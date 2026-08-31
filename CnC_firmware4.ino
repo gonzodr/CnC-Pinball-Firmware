@@ -3793,10 +3793,10 @@ void UFOO() {
         // Csak ez a hosszabb, 4.3 mp-es VUK-ban tartott "UFO FUCK" ag kapja
         // a GUI-videot es a hosszu ID4 fenyanimaciot. A masik ket varians
         // szandekosan gyorsan visszaadja a golyot, hogy porogjon a jatek.
-        // Az ID4 (UFO FUCK) addig loopol, amig a VUK vissza nem dobja a
-        // golyot - a 4,3 mp-es tartas hosszabb, mint egy lejatszas, es
-        // korabban a fenyeffekt idokozben lement, sotet VUK-ot hagyva.
-        StartFullBakedEffect(4, 0, HIGH);
+        // Az ID4 (UFO FUCK) intrója egyszer megy le, utana a rajzban
+        // megjelolt loop-szakaszon marad, amig a VUK vissza nem dobja a
+        // golyot. (A teljes effekt ujraindítasa az introt is ismetelte.)
+        StartHoldingBakedEffect(4);
         wTrig.trackPause(TRK_THEME);
         wTrig.trackPlayPoly(TRK_UFO);
         wTrig.trackPlayPoly(TRK_NOWEEDUFO);
@@ -4342,7 +4342,8 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
         // az 5000-es alapbol jon ki a kiirt 10000 - ugyanaz a "2X", amit a
         // GUI is mutat.
         Score(Scoring::HURRY_BRIDGE_POINTS, Scoring::BRIDGE_BONUS);
-        Serial.println("HURRY_UP_MASTER");
+        // A kifizetett osszeghez tartozo video: Point4 -> a "10000" klip.
+        Serial.println("Point4");
         delay(20);
       }
       else {

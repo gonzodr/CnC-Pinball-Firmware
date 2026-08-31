@@ -86,6 +86,11 @@ int  runningEffect = 0;
 unsigned long effectStartT = 0;
 uint8_t fullEffectPlaysRemaining = 1;
 boolean fullEffectLoopForever = LOW;
+// A ciklus-szakaszon "megallas": az intro egyszer lemegy, utana a
+// loop marker altal kijelolt reszen marad, amig valaki le nem allitja.
+// Ez NEM ugyanaz, mint a fullEffectLoopForever, ami az egesz effektet
+// (az introt is) ujraindítja.
+boolean fullEffectHoldLoop = LOW;
 
 int8_t overlayIdx = -1;           // futo overlay effekt tabla-indexe (-1 = nincs)
 unsigned long overlayStartT = 0;
@@ -103,6 +108,12 @@ uint16_t bakedCurrentFrame(const EffectDef& e, unsigned long startT, bool& done)
   uint32_t cycleSteps = (uint32_t)loopLen * loops;
   uint32_t totalSteps = (uint32_t)introLen + cycleSteps + outroLen;
   uint32_t step = (e.frameMs > 0) ? ((millis() - startT) / e.frameMs) : 0;
+  if (fullEffectHoldLoop == HIGH && loopLen) {
+    // Vegtelen ciklus a markertol: az intro egyszer, utana bent maradunk.
+    done = false;
+    if (step < introLen) return (uint16_t)step;
+    return (uint16_t)(introLen + ((step - introLen) % loopLen));
+  }
   if (step >= totalSteps) { done = true; return 0; }
   done = false;
   if (step < introLen) return (uint16_t)step;
@@ -171,12 +182,32 @@ void StartFullBakedEffect(uint8_t id, uint8_t plays, boolean forever) {
   }
 }
 
+// FULL baked effekt inditasa ugy, hogy a loop marker utani szakaszon
+// megall: az intro egyszer megy le, a ciklus pedig addig ismetlodik, amig
+// StopFullBakedEffect() nem jon. Ezt hasznalja az UFO FUCK, ahol a VUK
+// tartasa hosszabb, mint egy teljes lejatszas.
+void StartHoldingBakedEffect(uint8_t id) {
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    if (bakedEffects[i].id == id && !bakedEffects[i].overlay) {
+      effect = HIGH;
+      effectID = id;
+      runningEffect = id;
+      effectStartT = millis();
+      fullEffectPlaysRemaining = 1;
+      fullEffectLoopForever = LOW;
+      fullEffectHoldLoop = HIGH;
+      return;
+    }
+  }
+}
+
 void StopFullBakedEffect() {
   effect = LOW;
   effectID = 0;
   runningEffect = 0;
   fullEffectPlaysRemaining = 1;
   fullEffectLoopForever = LOW;
+  fullEffectHoldLoop = LOW;
 }
 
 // OVERLAY effekt inditasa a jateklogikabol (csak overlay-flages effektet fogad).
@@ -283,6 +314,7 @@ void RunLightEffect() {
     effectStartT = millis();
     fullEffectPlaysRemaining = 1;
     fullEffectLoopForever = LOW;
+    fullEffectHoldLoop = LOW;
   }
   int8_t idx = -1;
   for (uint8_t i = 0; i < bakedEffectCount; i++) {
