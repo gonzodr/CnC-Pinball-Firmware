@@ -2142,6 +2142,10 @@ void RollJoint() {
   uint8_t index = jointStack[player] - 1;
   Score(Scoring::JOINT_POINTS[index], Scoring::JOINT_BONUS[index]);
   wTrig.trackPlayPoly(TRK_BIGJOINT);
+  // Fenyeffekt: az elso ket jointra a JointRolled (ID12), a harmadikra -
+  // ami mar Love Packot jelent - a Lovepack (ID13). Mindketto overlay,
+  // tehat a jatek-fenyre rajzol; a PlayBakedEffectOnce ezt magatol kezeli.
+  PlayBakedEffectOnce((jointStack[player] >= 3) ? 13 : 12);
 
   if (jointStack[player] == 1) {
     SendPartyEvent("JOINT1");
@@ -2305,6 +2309,10 @@ void StartUfoWheelPresentation() {
   // A fizikai UFO-visszajelzes a teljes GUI-lanccal egyutt indul, nem csak
   // annak vege utan villan fel egy pillanatra.
   StartUfoLotteryVisuals();
+  // A Wheel (ID15) a kerek teljes porgese alatt fut: az intro utan a
+  // loop-szakaszon marad, amig a GUI vissza nem szol (lasd
+  // CompleteUfoWheelPresentation -> ReleaseHoldingBakedEffect).
+  StartHoldingBakedEffect(15);
   ufoWheelSession++;
   if (ufoWheelSession == 0) ufoWheelSession = 1;
   ufoWheelWaiting = HIGH;
@@ -2316,6 +2324,9 @@ void StartUfoWheelPresentation() {
 void CompleteUfoWheelPresentation() {
   if (!ufoWheelWaiting) return;
   ufoWheelWaiting = LOW;
+  // Megallt a kerek: a loop-bol atlepunk a cooldown (outro) szakaszba,
+  // ami meg lefut egyszer. Nem vagjuk el, mint egy Stop tenne.
+  ReleaseHoldingBakedEffect();
 
   if (lottery == 9 && hurryUp == LOW) {
     ufoshoot = 0;
@@ -2360,6 +2371,7 @@ boolean CollectExtraBallLitAtHighRamp() {
   extraBallLit = LOW;
   extraball = 1;
   wTrig.trackPlayPoly(TRK_EXTRABALL);
+  PlayBakedEffectOnce(16);
   Serial.println("ExtraB");
   delay(20);
   return true;
@@ -3888,6 +3900,7 @@ void UFOO() {
         if (lottery  == 1) {    /// ExtraBall
           wTrig.trackPlayPoly(TRK_FIREWORK);
           wTrig.trackPlayPoly(TRK_EXTRABALL);
+          PlayBakedEffectOnce(16); // intro + loop + cooldown, egyszer
         }
         if (lottery  == 2) {    /// HurryUp
           wTrig.trackPlayPoly(TRK_FIREWORK);
@@ -3925,6 +3938,9 @@ void UFOO() {
         if (lottery  == 7) {    /// SpaceCoke Multi
           BIP = 5;
           multiball = 5;
+          // Az Ufo9 video mar a belepeskor lement; a fenyeffekt ITT indul,
+          // a multiball tenyleges kezdetekor.
+          PlayBakedEffectOnce(14);
           // Ide korabban ID4 (UFO FUCK) jott, de az mostmar kizarolag a
           // UFO-no-weed esemenye. Egyelore nincs baked effekt -> tegyunk ide
           // masikat, ha kell (multiball-start).

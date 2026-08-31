@@ -201,6 +201,29 @@ void StartHoldingBakedEffect(uint8_t id) {
   }
 }
 
+// A tartott ciklus ELENGEDESE: a loop-bol atlepunk az outro ("cooldown")
+// szakaszba, ami meg egyszer lefut, majd az effekt normalisan veget er.
+// A StopFullBakedEffect ezzel szemben azonnal levagja - ott nincs cooldown.
+void ReleaseHoldingBakedEffect() {
+  if (fullEffectHoldLoop != HIGH || effect != HIGH) return;
+  for (uint8_t i = 0; i < bakedEffectCount; i++) {
+    const EffectDef& e = bakedEffects[i];
+    if (e.id != runningEffect) continue;
+    uint16_t introLen = (e.introFrames > e.frames) ? e.frames : e.introFrames;
+    uint16_t loopEnd  = (e.loopFrames == 0 || e.loopFrames > e.frames) ? e.frames : e.loopFrames;
+    if (loopEnd < introLen) loopEnd = introLen;
+    uint16_t loopLen = loopEnd - introLen;
+    uint8_t loops = e.loops ? e.loops : 1;
+    // Ugy allitjuk vissza a kezdo idot, hogy a kovetkezo kockaszamitas
+    // pontosan az outro elso kockajara essen.
+    unsigned long consumed = (unsigned long)(introLen + (uint32_t)loopLen * loops) * e.frameMs;
+    effectStartT = millis() - consumed;
+    fullEffectHoldLoop = LOW;
+    return;
+  }
+  fullEffectHoldLoop = LOW;
+}
+
 void StopFullBakedEffect() {
   effect = LOW;
   effectID = 0;
