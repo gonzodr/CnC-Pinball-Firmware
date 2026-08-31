@@ -2986,6 +2986,7 @@ void Fishtank() {
     if (hurryUp == LOW) {
       if (beerCredits[player] < 3) {
         beerCredits[player]++;
+        PlayBakedEffectOnce(18); // Fishtank overlay a sor betarazasara
         Serial.print("Beer");
         Serial.println(beerCredits[player]);
         SendPartyEvent("BEER");
@@ -3935,6 +3936,11 @@ void UFOO() {
           wTrig.trackPlayPoly(TRK_FIREWORK);
           wTrig.trackPlayPoly(TRK_SCORE_30000);
         }
+        // A negy sima pont-kifizetesnek nincs sajat mondanivaloja, de a
+        // tobbi jutalom mellett furcsa a sotetseg -> kozos strobe.
+        if (lottery >= 3 && lottery <= 6) {
+          PlayBakedEffectOnce(17);
+        }
         if (lottery  == 7) {    /// SpaceCoke Multi
           BIP = 5;
           multiball = 5;
@@ -3956,11 +3962,13 @@ void UFOO() {
         if (lottery  == 8) {    /// Pontlopas (Ufo10..13)
           wTrig.trackPlayPoly(TRK_FIREWORK); // Firework
           wTrig.trackPlayPoly(TRK_COLLECT + ufoMinus); // 124..127 = kirabolt jatekos hangja
+          PlayBakedEffectOnce(17);
           ufoMinus = 0;
         }
         if (lottery == 10) {    /// Extra Ball Lit (Ufo8)
           wTrig.trackPlayPoly(TRK_FIREWORK);
           wTrig.trackPlayPoly(TRK_SHOOTBRIDGE); // atmeneti high-ramp callout
+          PlayBakedEffectOnce(17); // a KIGYUJTAS; a beszedes az ID16-ot kapja
         }
 
 
