@@ -134,7 +134,6 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_LARDASS            11
 #define TRK_WEED               15
 #define TRK_CHEECHYEAH         17
-#define TRK_UFO                18
 #define TRK_BANANA             19
 #define TRK_DAVE               23
 #define TRK_GATESUCCESS        27
@@ -142,11 +141,7 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_BIGYONG            29
 #define TRK_CHEECHBEAUTY       36
 #define TRK_CHEECHFART         37
-#define TRK_NOWEEDUFO          38
 #define TRK_SHOOTOUTUFO        42
-#define TRK_GETOUTUFO          43
-#define TRK_UFOALARM           44
-#define TRK_HAPPYUFO           45
 #define TRK_MISSU              46
 #define TRK_LETSPLAY           47
 #define TRK_DAVENOTHERE        51
@@ -154,21 +149,13 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_MUS_SWING_LOOP4    65
 #define TRK_WEEDFULL           72
 #define TRK_JACKPOT            73
-#define TRK_EXTRABALL          74
-#define TRK_SCORE_15000        75
-#define TRK_SCORE_20000        76
-#define TRK_SPACECOKEMULTI     77
-#define TRK_SCORE_30000        78
 #define TRK_MUS_ROCKFIGHT      88
 #define TRK_MUS_STRAWBERRY2    89
 #define TRK_BOOT               90
 #define TRK_FIREWORK           91
 #define TRK_SCORE_5000         92
-#define TRK_SCORE_25000        94
 #define TRK_COMBO1             95
 #define TRK_COMBO2             96
-#define TRK_SHOOTBRIDGE        98
-#define TRK_HURRYUP            101
 #define TRK_HISCORE_SKIP       102
 #define TRK_ADDPLAYER          103
 #define TRK_ADDSCORE           104
@@ -189,6 +176,39 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_COCKROACH          121
 #define TRK_PIPEWRENCH         122
 #define TRK_COLLECT            123
+#define TRK_UFO_WHEEL_BG       128
+
+// --- Uj Cheech/Chong es UFO/Alien voice-over csomag (OrigySD 2026) ---
+// Mindegyik esemeny harom, egymas utan szamozott valtozatbol all. A trackek
+// 255 fole is mennek, ezert a kezdoazonositok es a lejatszo helper 16 bitesek.
+#define TRK_VO_CHEECH_BALL_LAUNCH_A    206
+#define TRK_VO_CHEECH_BALL_SAVE_A      215
+#define TRK_VO_CHONG_EXTRA_BALL_A     218
+#define TRK_VO_CHONG_BEER_COLLECTED_A 230
+#define TRK_VO_CHONG_JOINT_ROLLED_1_A 239
+#define TRK_VO_UFO_WEED_NEED_BEER_A   224
+#define TRK_VO_UFO_WEED_CHOOSE_A      227
+#define TRK_VO_UFO_BEER_FULL_A        233
+#define TRK_VO_UFO_SPINNER_SHOOT_A    236
+#define TRK_VO_UFO_JOINT_ROLLED_2_A   242
+#define TRK_VO_UFO_LOVE_PACK_READY_A  245
+#define TRK_VO_UFO_NO_WEED_LONG_A     248
+#define TRK_VO_UFO_NO_WEED_EJECT_A    251
+#define TRK_VO_UFO_NO_WEED_ALARM_A    254
+#define TRK_VO_UFO_CASHOUT_15000_A    257
+#define TRK_VO_UFO_CASHOUT_20000_A    260
+#define TRK_VO_UFO_CASHOUT_25000_A    263
+#define TRK_VO_UFO_CASHOUT_30000_A    266
+#define TRK_VO_UFO_EXTRA_BALL_LIT_A   275
+#define TRK_VO_UFO_FEATURE_WHEEL_A    278
+#define TRK_VO_UFO_WHEEL_HURRY_UP_A   284
+#define TRK_VO_UFO_WHEEL_MUNCHIES_A   287
+#define TRK_VO_UFO_SPACE_COKE_START_A 290
+#define TRK_VO_UFO_WHEEL_EXTRA_BALL_A 293
+
+// A Ballhandler mar az elso golyo kilovesekor hasznalja, ezert explicit
+// deklaracio kell az Arduino automatikus prototipus-generalasa ele.
+void PlaySpeechRange(uint16_t firstTrack, uint8_t count = 3);
 
 // --- Kozponti pontozasi profil (balance pass 1, 2026-08-24) ---
 // A direkt pont es a golyovegi bonusz kulon ertek. A Hurry Up szorzojat
@@ -600,9 +620,12 @@ enum UfoPartyTier : uint8_t {
 uint8_t ufoAwardTier = UFO_PARTY_NONE;
 uint16_t ufoWheelSession = 0;
 boolean ufoWheelWaiting = LOW;
+boolean ufoWheelResultVoicePlayed = LOW;
 unsigned long ufoWheelStartedAt = 0;
 unsigned long ufoWheelLastSendAt = 0;
+unsigned long ufoWheelChaseStartedAt = 0;
 const unsigned long UFO_WHEEL_RETRY_MS = 500UL;
+const unsigned long UFO_WHEEL_RESULT_VOICE_MS = 5000UL;
 // A GUI 6 mp-es Wheel sequence-e utan erkezik a DONE; az Extra Ball/Hurry
 // eredmenyvideo mar a jutalommal parhuzamosan fut. Kapcsolathibanal 12 mp
 // utan is tovabblepunk, hogy a golyo ne ragadjon a VUK-ban.
@@ -660,7 +683,6 @@ unsigned long loopswt = 0;
 // int cheechAlleySwitch = "D42"; // cheech alley
 int startButton = 47; // start
 // int d49 = 49; // unused
-int spsound = 0;
 int giftsw = 0;
 int intmon = 1;
 int heysoundcounter = 0;
@@ -951,6 +973,7 @@ void loop() {
       GiftRunlight();     // gift-fazis futofeny az inaktiv postokon (Weed/CnC/Fishtank UTAN!)
       RunOverlayEffect(); // overlay/canvas effekt: rarajzol a jatek-fenyre (subsystemek UTAN!)
       RunLightEffect();   // full fenyeffekt-motor (effect == HIGH eseten atveszi a palyat)
+      RunUfoWheelChaseLights(); // a Wheel szines pixelei ALATT latszo korbefuto fenynyalab
       RunHurryUpLights(); // proceduralis chase + lassan kihunyo talalati retegek
       RunHurryUpBakedOverlay(); // ID6 legfelso reteg; fekete/magenta = atlatszo
     }
@@ -987,6 +1010,7 @@ void loop() {
 ///////////////////////////////////
 
 void Ballhandler() {
+   boolean ballSaveFeedStarted = LOW;
    if(shoot==0){
     MIV(LOW); // Measure how many ball in the stack
    }
@@ -1001,7 +1025,7 @@ void Ballhandler() {
         shoottimer = millis();
         shoottimer2 = millis();
         shoot = 1;
-        wTrig.trackPlayPoly(TRK_CHEECHYEAH);
+        PlaySpeechRange(TRK_VO_CHEECH_BALL_LAUNCH_A);
       }
     }
 
@@ -1018,6 +1042,7 @@ void Ballhandler() {
           shoottimer = millis();
           shoottimer2 = millis();
           shoot = 1;
+          ballSaveFeedStarted = HIGH;
           TriggerHurryHit(HURRY_ZONE_BALLSAVE);
           if (firstplay == LOW) {
             startmus = LOW;
@@ -1029,6 +1054,7 @@ void Ballhandler() {
           shoottimer = millis();
           shoottimer2 = millis();
           shoot = 1;
+          ballSaveFeedStarted = HIGH;
           TriggerHurryHit(HURRY_ZONE_BALLSAVE);
           if (firstplay == LOW) {
             startmus = LOW;
@@ -1083,6 +1109,11 @@ void Ballhandler() {
           }
           maxBallSw = LOW;
         }
+      }
+      // Csak a tenyleges, egygolyos ball save kap Cheech-bemondast.
+      // Az elso kiloves es a multiball alatti automatikus visszatoltes nem.
+      if (ballSaveFeedStarted == HIGH && firstplay == LOW && multiball == 0) {
+        PlaySpeechRange(TRK_VO_CHEECH_BALL_SAVE_A);
       }
     }
 
@@ -1184,7 +1215,8 @@ void Ballhandler() {
         else {
           extraball = extraball - 1;
           shoot = 1;
-          wTrig.trackPlaySolo(TRK_EXTRABALL);
+          // Az Extra Ball kovetkezo golyojanak fix, felismerheto inditohangja.
+          wTrig.trackPlaySolo(TRK_VO_CHONG_EXTRA_BALL_A);
           startmus = HIGH;
           firstplay = HIGH;
         }
@@ -2100,6 +2132,18 @@ void SendPartyEvent(const char* eventName) {
   Serial.println(eventName);
 }
 
+// Harom egymas utan szamozott A/B/C voice-over kozul valaszt. uint16_t kell,
+// mert az uj UFO-csomag egy resze a 255-os trackazonosito folott van.
+void PlaySpeechRange(uint16_t firstTrack, uint8_t count) {
+  uint16_t track = firstTrack + (uint16_t)random(0, count);
+  wTrig.trackPlayPoly((int)track);
+#ifdef SIM_MODE
+  char tb[28];
+  snprintf(tb, sizeof(tb), "T,speech,%u", track);
+  Serial.println(tb);
+#endif
+}
+
 void RestorePartyShotsForPlayer() {
   if (multiball != 0 || hurryUp == HIGH) {
     ufosw = 0;
@@ -2141,7 +2185,15 @@ void RollJoint() {
 
   uint8_t index = jointStack[player] - 1;
   Score(Scoring::JOINT_POINTS[index], Scoring::JOINT_BONUS[index]);
-  wTrig.trackPlayPoly(TRK_BIGJOINT);
+  if (jointStack[player] == 1) {
+    PlaySpeechRange(TRK_VO_CHONG_JOINT_ROLLED_1_A);
+  }
+  else if (jointStack[player] == 2) {
+    PlaySpeechRange(TRK_VO_UFO_JOINT_ROLLED_2_A);
+  }
+  else {
+    PlaySpeechRange(TRK_VO_UFO_LOVE_PACK_READY_A);
+  }
   // Fenyeffekt: az elso ket jointra a JointRolled (ID12), a harmadikra -
   // ami mar Love Packot jelent - a Lovepack (ID13). Mindketto overlay,
   // tehat a jatek-fenyre rajzol; a PlayBakedEffectOnce ezt magatol kezeli.
@@ -2224,6 +2276,21 @@ const char* UfoWheelResultName() {
   return "MUNCHIES";
 }
 
+void PlayUfoWheelResultVoice() {
+  if (ufoWheelResultVoicePlayed == HIGH) return;
+  ufoWheelResultVoicePlayed = HIGH;
+
+  if (lottery == 1) {
+    PlaySpeechRange(TRK_VO_UFO_WHEEL_EXTRA_BALL_A);
+  }
+  else if (lottery == 2) {
+    PlaySpeechRange(TRK_VO_UFO_WHEEL_HURRY_UP_A);
+  }
+  else {
+    PlaySpeechRange(TRK_VO_UFO_WHEEL_MUNCHIES_A);
+  }
+}
+
 void SendUfoWheelStart() {
   Serial.print("WheelStart,");
   Serial.print(ufoWheelSession);
@@ -2289,7 +2356,6 @@ void ApplyUfoLotteryEntryAward(boolean playLegacyVideo) {
 
 void StartUfoLotteryVisuals() {
   wTrig.trackPause(TRK_THEME);
-  wTrig.trackPlayPoly(TRK_HAPPYUFO);
   // UFO Lottery (weed kigyujtve): baked ID2 a 0-67-en, felul palettas feny.
   effect = HIGH;
   effectID = 2;
@@ -2309,13 +2375,17 @@ void StartUfoWheelPresentation() {
   // A fizikai UFO-visszajelzes a teljes GUI-lanccal egyutt indul, nem csak
   // annak vege utan villan fel egy pillanatra.
   StartUfoLotteryVisuals();
+  wTrig.trackPlayPoly(TRK_UFO_WHEEL_BG);
+  PlaySpeechRange(TRK_VO_UFO_FEATURE_WHEEL_A);
   // A Wheel (ID15) a kerek teljes porgese alatt fut: az intro utan a
   // loop-szakaszon marad, amig a GUI vissza nem szol (lasd
   // CompleteUfoWheelPresentation -> ReleaseHoldingBakedEffect).
   StartHoldingBakedEffect(15);
+  ufoWheelChaseStartedAt = millis();
   ufoWheelSession++;
   if (ufoWheelSession == 0) ufoWheelSession = 1;
   ufoWheelWaiting = HIGH;
+  ufoWheelResultVoicePlayed = LOW;
   ufoWheelStartedAt = millis();
   ufoshoot = 6; // a golyo a GUI visszajelzeseig a VUK-ban parkol
   SendUfoWheelStart();
@@ -2323,7 +2393,11 @@ void StartUfoWheelPresentation() {
 
 void CompleteUfoWheelPresentation() {
   if (!ufoWheelWaiting) return;
+  // Ha a GUI a varnal korabban vagy kapcsolat-hiba miatt kesobb kuldi a
+  // DONE-t, az eredmenyhang akkor sem maradhat el es nem szolhat ketszer.
+  PlayUfoWheelResultVoice();
   ufoWheelWaiting = LOW;
+  ufoWheelChaseStartedAt = 0;
   // Megallt a kerek: a loop-bol atlepunk a cooldown (outro) szakaszba,
   // ami meg lefut egyszer. Nem vagjuk el, mint egy Stop tenne.
   ReleaseHoldingBakedEffect();
@@ -2355,6 +2429,12 @@ void HandleUfoWheelDone(const char* command) {
 void UpdateUfoWheelPresentation() {
   if (!ufoWheelWaiting) return;
   unsigned long now = millis();
+  // A firmware mar a sorsolaskor ismeri az eredmenyt, ezert a hatmasodperces
+  // GUI-wheel 5. masodperceben el tudja inditani a megfelelo UFO-mondatot.
+  if (ufoWheelResultVoicePlayed == LOW &&
+      now - ufoWheelStartedAt >= UFO_WHEEL_RESULT_VOICE_MS) {
+    PlayUfoWheelResultVoice();
+  }
   if (now - ufoWheelStartedAt >= UFO_WHEEL_TIMEOUT_MS) {
     Serial.println("WheelStatus,Timeout");
     CompleteUfoWheelPresentation();
@@ -2370,7 +2450,7 @@ boolean CollectExtraBallLitAtHighRamp() {
   }
   extraBallLit = LOW;
   extraball = 1;
-  wTrig.trackPlayPoly(TRK_EXTRABALL);
+  PlaySpeechRange(TRK_VO_CHONG_EXTRA_BALL_A);
   PlayBakedEffectOnce(16);
   Serial.println("ExtraB");
   delay(20);
@@ -2872,18 +2952,18 @@ void Weed() {
     weedoff = 1;
     effect = HIGH;
     effectID = 5; // Weedblast - a weed kigyulesekor (korabban ID3 volt)
-    wTrig.trackPlayPoly(TRK_WEEDFULL);
-    spsound = random(1, 5);
-    static const uint8_t weedDoneSound[4] = { 67, 66, 115, 116 };
-    wTrig.trackPlayPoly(weedDoneSound[spsound - 1]);
+    boolean canChoosePartyShot =
+      (beerCredits[player] > 0 && jointStack[player] < 3);
+    PlaySpeechRange(canChoosePartyShot
+                      ? TRK_VO_UFO_WEED_CHOOSE_A
+                      : TRK_VO_UFO_WEED_NEED_BEER_A);
     Serial.println("Weed");
     weedQualified[player] = HIGH;
     if (multiball == 0 && hurryUp == LOW) {
       ufosw = 1;
       spinnersw = 1;
     }
-    SendPartyEvent((beerCredits[player] > 0 && jointStack[player] < 3)
-                     ? "CHOOSE" : "NEED_BEER");
+    SendPartyEvent(canChoosePartyShot ? "CHOOSE" : "NEED_BEER");
     SendPartyState();
     delay(10);
   }
@@ -2986,6 +3066,7 @@ void Fishtank() {
     if (hurryUp == LOW) {
       if (beerCredits[player] < 3) {
         beerCredits[player]++;
+        PlaySpeechRange(TRK_VO_CHONG_BEER_COLLECTED_A);
         PlayBakedEffectOnce(18); // Fishtank overlay a sor betarazasara
         Serial.print("Beer");
         Serial.println(beerCredits[player]);
@@ -2993,6 +3074,7 @@ void Fishtank() {
         SendPartyState();
       }
       else {
+        PlaySpeechRange(TRK_VO_UFO_BEER_FULL_A);
         SendPartyEvent("BEER_FULL");
       }
     }
@@ -3598,6 +3680,7 @@ void Weedspinner() {
       if (weedQualified[player] == HIGH) {
         weedQualified[player] = LOW;
         ufosw = (jointStack[player] > 0) ? 1 : 0;
+        PlaySpeechRange(TRK_VO_UFO_SPINNER_SHOOT_A);
         SendPartyEvent("SPINNER");
         SendPartyState();
       }
@@ -3811,18 +3894,17 @@ void UFOO() {
         // golyot. (A teljes effekt ujraindítasa az introt is ismetelte.)
         StartHoldingBakedEffect(4);
         wTrig.trackPause(TRK_THEME);
-        wTrig.trackPlayPoly(TRK_UFO);
-        wTrig.trackPlayPoly(TRK_NOWEEDUFO);
+        PlaySpeechRange(TRK_VO_UFO_NO_WEED_LONG_A);
         Serial.println("Ufo6");
         delay(20);
       }
       if (ufoshoot == 2) {
         wTrig.trackPause(TRK_THEME);
-        wTrig.trackPlayPoly(TRK_GETOUTUFO);
+        PlaySpeechRange(TRK_VO_UFO_NO_WEED_EJECT_A);
       }
       if (ufoshoot == 3) {
         wTrig.trackPause(TRK_THEME);
-        wTrig.trackPlayPoly(TRK_UFOALARM);
+        PlaySpeechRange(TRK_VO_UFO_NO_WEED_ALARM_A);
       }
     }
 
@@ -3847,7 +3929,6 @@ void UFOO() {
         StopFullBakedEffect(); // a loopolo UFO FUCK effekt vege
         initlight = HIGH;
         Initlights();
-        wTrig.trackPause(TRK_UFO);
         if (multiball == 0) {
           wTrig.trackResume(TRK_THEME);
         }
@@ -3900,12 +3981,10 @@ void UFOO() {
       if (millis() - 700 > ufoshoottimer + 4000) {
         if (lottery  == 1) {    /// ExtraBall
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_EXTRABALL);
           PlayBakedEffectOnce(16); // intro + loop + cooldown, egyszer
         }
         if (lottery  == 2) {    /// HurryUp
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_HURRYUP);
           hurryUp = HIGH;
           hurryUpTimer = millis();
           // A GUI ebbol rakja ki a lukteto "2X"-et es a visszaszamlalot.
@@ -3922,19 +4001,19 @@ void UFOO() {
         }
         if (lottery  == 3) {    /// 15000
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_SCORE_15000);
+          PlaySpeechRange(TRK_VO_UFO_CASHOUT_15000_A);
         }
         if (lottery  == 4) {    /// 20000
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_SCORE_20000);
+          PlaySpeechRange(TRK_VO_UFO_CASHOUT_20000_A);
         }
         if (lottery  == 6) {    /// 25000
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_SCORE_25000);
+          PlaySpeechRange(TRK_VO_UFO_CASHOUT_25000_A);
         }
         if (lottery  == 5) {    /// 30000
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_SCORE_30000);
+          PlaySpeechRange(TRK_VO_UFO_CASHOUT_30000_A);
         }
         // A negy sima pont-kifizetesnek nincs sajat mondanivaloja, de a
         // tobbi jutalom mellett furcsa a sotetseg -> kozos strobe.
@@ -3950,10 +4029,10 @@ void UFOO() {
           // Ide korabban ID4 (UFO FUCK) jott, de az mostmar kizarolag a
           // UFO-no-weed esemenye. Egyelore nincs baked effekt -> tegyunk ide
           // masikat, ha kell (multiball-start).
-          wTrig.trackPlayPoly(TRK_SPACECOKEMULTI);
+          PlaySpeechRange(TRK_VO_UFO_SPACE_COKE_START_A);
           wTrig.trackPlayPoly(TRK_FIREWORK);
           wTrig.trackPlayPoly(TRK_MUS_SPACECOKE);
-          wTrig.trackPlayPoly(TRK_CHEECH_SPACECOKE);
+          wTrig.trackPlayPoly(TRK_CHEECH_SPACECOKE); // filmes Cheech-orditas
           ufosw = 0;
           spinnersw = 2;
           BrdgLowActive = HIGH;
@@ -3967,7 +4046,7 @@ void UFOO() {
         }
         if (lottery == 10) {    /// Extra Ball Lit (Ufo8)
           wTrig.trackPlayPoly(TRK_FIREWORK);
-          wTrig.trackPlayPoly(TRK_SHOOTBRIDGE); // atmeneti high-ramp callout
+          PlaySpeechRange(TRK_VO_UFO_EXTRA_BALL_LIT_A);
           PlayBakedEffectOnce(17); // a KIGYUJTAS; a beszedes az ID16-ot kapja
         }
 
@@ -4554,6 +4633,29 @@ void StopHurryUpLights() {
 void TriggerHurryHit(uint8_t zone) {
   if (hurryUp == HIGH && zone < HURRY_ZONE_COUNT) {
     hurryHitAt[zone] = millis();
+  }
+}
+
+void RunUfoWheelChaseLights() {
+  if (ufoWheelWaiting != HIGH || effect != HIGH || effectID != 15) return;
+  if (ufoWheelChaseStartedAt == 0) ufoWheelChaseStartedAt = millis();
+
+  const unsigned long now = millis();
+  const uint_farptr_t ledBase = pgm_get_far_address(hurryPathLed);
+  static const uint8_t trailBrightness[6] = { 255, 150, 88, 48, 24, 10 };
+  uint8_t head = ((now - ufoWheelChaseStartedAt) / HURRY_CHASE_STEP_MS) %
+                 HURRY_PATH_COUNT;
+
+  // Ugy viselkedik, mint egy also reteg: csak a Wheel kocka fekete helyein
+  // latszik at. A szines Wheel-pixeleket nem irja vagy fakitja felul.
+  for (uint8_t trail = 0; trail < 6; trail++) {
+    uint8_t pathIndex = (head + HURRY_PATH_COUNT - trail) % HURRY_PATH_COUNT;
+    uint8_t led = pgm_read_byte_far(ledBase + pathIndex);
+    if (leds[led] == CRGB::Black) {
+      CRGB comet = CRGB(255, 72, 0);
+      comet.nscale8_video(trailBrightness[trail]);
+      leds[led] = comet;
+    }
   }
 }
 

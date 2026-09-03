@@ -64,6 +64,25 @@ ebben a merfoldkoben.
 - [ ] Spinner progressz a GUI-n is latszodjon.
 - [ ] Multiball alatt `SHOOT JACKPOTS` statusz.
 
+## P0 - Cheech/Chong hangcsomag (OrigySD 2026)
+
+- [x] Cheech BALL_LAUNCH: 206-208, veletlen A/B/C az elso golyoinditaskor.
+- [x] Cheech BALL_SAVE: 215-217, csak tenyleges egygolyos mentesnel;
+      elso kilovesnel es multiball-potlasnal nem szol.
+- [x] Chong EXTRA_BALL_AWARDED: 218-220 a high-ramp collectnel; a kovetkezo
+      extra golyo inditasakor fixen 218.
+- [x] Chong BEER_COLLECTED: 230-232 a teljes FISH+TANK par utan.
+- [x] Chong JOINT_ROLLED_1: 239-241 az elso joint sodrasakor.
+- [ ] Cheech MULTIBALL_ACAPULCO: a tablazat szerinti 293-295 mar az Alien
+      Wheel Extra Ball harom hangja; uj, szabad tracktartomany es 3 WAV kell.
+- [ ] Chong MULTIBALL_MICHOACAN: 296-298 WAV hianyzik; a B/C szoveg is
+      hianyzik a katalogusbol.
+- [ ] Chong MULTIBALL_LABRADOR: 302-304 WAV hianyzik; a C szoveg is
+      hianyzik a katalogusbol.
+- [ ] Cheech COMBO: 311-313 WAV hianyzik.
+- [ ] MULTIBALL3 / Thai Stick: nincs Cheech/Chong esemenysor a katalogusban;
+      karakter, harom szoveg es szabad trackazonositok kellenek.
+
 ## P0 - pontozas rendbetetele
 
 - [x] A pont- es bonuszertekek nevesitett `Scoring` profilban vannak.
