@@ -179,7 +179,9 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_UFO_WHEEL_BG       128
 
 // --- Uj Cheech/Chong es UFO/Alien voice-over csomag (OrigySD 2026) ---
-// Mindegyik esemeny harom, egymas utan szamozott valtozatbol all. A trackek
+// Az UFO/egyeb esemenyek harom, a jackpotok ket egymas utani hangbol allnak.
+// Jackpot: az elso track Cheech, a kovetkezo Chong; egy talalat egy hang.
+// A trackek
 // 255 fole is mennek, ezert a kezdoazonositok es a lejatszo helper 16 bitesek.
 #define TRK_VO_CHEECH_BALL_LAUNCH_A    206
 #define TRK_VO_CHEECH_BALL_SAVE_A      215
@@ -205,6 +207,14 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_VO_UFO_WHEEL_MUNCHIES_A   287
 #define TRK_VO_UFO_SPACE_COKE_START_A 290
 #define TRK_VO_UFO_WHEEL_EXTRA_BALL_A 293
+
+#define TRK_VO_JACKPOT_10000_A       209
+#define TRK_VO_JACKPOT_15000_A       211
+#define TRK_VO_JACKPOT_20000_A       213
+#define TRK_VO_JACKPOT_25000_A       221
+#define TRK_VO_JACKPOT_30000_A       299
+#define TRK_VO_JACKPOT_50000_A       305
+#define TRK_VO_JACKPOT_100000_A      307
 
 // A Ballhandler mar az elso golyo kilovesekor hasznalja, ezert explicit
 // deklaracio kell az Arduino automatikus prototipus-generalasa ele.
@@ -2049,13 +2059,48 @@ void SendData() {
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 
-void Score(unsigned long scr, unsigned long bns) {
-  // Hurry Up egyetlen, jatekosnak is elmondhato szabaly: minden kozvetlen
-  // pont 2x. A bonusz valtozatlan marad, igy a golyovegi x2/x4/x6/x8 nem
-  // szorozza meg meg egyszer a Hurry Up jutalmat.
-  if (hurryUp == HIGH) {
-    scr = scr * Scoring::HURRY_UP_MULTIPLIER;
+unsigned long DirectScorePoints(unsigned long basePoints) {
+  return hurryUp == HIGH ? basePoints * Scoring::HURRY_UP_MULTIPLIER : basePoints;
+}
+
+unsigned long JackpotScorePoints(unsigned long basePoints) {
+  unsigned long points = DirectScorePoints(basePoints);
+  // Jackpot-specifikus emeles a szorzo UTAN: a video es a jovairas egyezik.
+  // A tobbi pontforras Hurry Up alatt tovabbra is pontosan 2x marad.
+  if (points == 40000UL) return 50000UL;
+  if (points == 60000UL) return 100000UL;
+  return points;
+}
+
+void PlayJackpotFeedback(unsigned long basePoints) {
+  // A modszam nem azonositja a pontot: a ket hid jackpot-tablaja elter.
+  // A GUI pontosan a ScoreJackpot() altal jovairt osszeghez valaszt videot.
+  unsigned long points = JackpotScorePoints(basePoints);
+  Serial.print("Jackpot_");
+  Serial.println(points);
+
+  uint16_t firstTrack = 0;
+  switch (points) {
+    case 10000UL:  firstTrack = TRK_VO_JACKPOT_10000_A;  break;
+    case 15000UL:  firstTrack = TRK_VO_JACKPOT_15000_A;  break;
+    case 20000UL:  firstTrack = TRK_VO_JACKPOT_20000_A;  break;
+    case 25000UL:  firstTrack = TRK_VO_JACKPOT_25000_A;  break;
+    case 30000UL:  firstTrack = TRK_VO_JACKPOT_30000_A;  break;
+    case 50000UL:  firstTrack = TRK_VO_JACKPOT_50000_A;  break;
+    case 100000UL: firstTrack = TRK_VO_JACKPOT_100000_A; break;
   }
+  if (firstTrack != 0) {
+    // 50/50 Cheech vagy Chong; a haromvaltozatos alapertelmezes itt TILOS.
+    PlaySpeechRange(firstTrack, 2);
+  }
+  else {
+    // Jovobeli, meg nem felmondott osszegnel se mondjunk hibas pontot.
+    wTrig.trackPlayPoly(TRK_JACKPOT);
+  }
+}
+
+void AddAwardedScore(unsigned long scr, unsigned long bns) {
+  // Mar vegleges pontosszeg: itt sem szorzot, sem jackpot-emelest nem adunk.
   bonus = bonus + bns;
   score[player] = score[player] + scr;
 #ifdef SIM_MODE
@@ -2066,6 +2111,15 @@ void Score(unsigned long scr, unsigned long bns) {
            player, scr, bns, score[player]);
   Serial.println(tb);
 #endif
+}
+
+void Score(unsigned long scr, unsigned long bns) {
+  // Altalanos Hurry Up: 2x kozvetlen pont, valtozatlan golyovegi bonusz.
+  AddAwardedScore(DirectScorePoints(scr), bns);
+}
+
+void ScoreJackpot(unsigned long scr, unsigned long bns) {
+  AddAwardedScore(JackpotScorePoints(scr), bns);
 }
 
 // Legalabb minimumMs vedelmet biztosit, de egy mar futo hosszabb save-et
@@ -2132,7 +2186,7 @@ void SendPartyEvent(const char* eventName) {
   Serial.println(eventName);
 }
 
-// Harom egymas utan szamozott A/B/C voice-over kozul valaszt. uint16_t kell,
+// Egymas utani voice-overek kozul valaszt (alapbol 3, jackpotnal 2). uint16_t kell,
 // mert az uj UFO-csomag egy resze a 255-os trackazonosito folott van.
 void PlaySpeechRange(uint16_t firstTrack, uint8_t count) {
   uint16_t track = firstTrack + (uint16_t)random(0, count);
@@ -2822,12 +2876,11 @@ void Loopshoot() {
   }
   if (SimDigitalRead(loopSwitchSide) == LOW && millis() - 1000 < looptimer && loopsw == LOW) {
     if (multiloopsw == 1) {
-      Serial.println("Jackpot6");
-      wTrig.trackPlayPoly(TRK_JACKPOT);
+      PlayJackpotFeedback(Scoring::LOOP_JACKPOT_POINTS);
     }
     wTrig.trackPlayPoly(TRK_BLOB);
     if (multiloopsw == 1) {
-      Score(Scoring::LOOP_JACKPOT_POINTS, Scoring::LOOP_JACKPOT_BONUS);
+      ScoreJackpot(Scoring::LOOP_JACKPOT_POINTS, Scoring::LOOP_JACKPOT_BONUS);
       effect = HIGH;
       effectID = 1; // Loop-Jackpot - a multiball loop-jackpotnal
     }
@@ -4513,7 +4566,12 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
     if (SimDigitalRead(swPin) == LOW && *swFlag == 0) {
       *swFlag = 1;
       *swT = millis();
-      Score(jpScr[multiball], jpBns[multiball]);
+      if (multiball == 0) {
+        Score(jpScr[multiball], jpBns[multiball]);
+      }
+      else {
+        ScoreJackpot(jpScr[multiball], jpBns[multiball]);
+      }
       if (suppressFeedback) {
         // Az EXTRA BALL collect video/callout elsoseget kap ugyanazon a lovesen.
       }
@@ -4522,9 +4580,7 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
         Serial.println("Point2");
       }
       else {
-        wTrig.trackPlayPoly(TRK_JACKPOT);
-        Serial.print("Jackpot");
-        Serial.println(multiball + 1); // Jackpot2..Jackpot6
+        PlayJackpotFeedback(jpScr[multiball]);
       }
       delay(20);
       effect = HIGH;

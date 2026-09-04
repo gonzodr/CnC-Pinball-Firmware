@@ -28,7 +28,12 @@ ebben a merfoldkoben.
 - [ ] Multiball2 video: `Acapulco Gold`.
 - [ ] Multiball3 video: `Thai Stick`.
 - [ ] Multiball4 video: `Labrador`.
-- [ ] Jackpot2..Jackpot6 video.
+- [x] Pontos osszegu jackpot-videok: 10000/15000/20000/25000/30000/50000/100000.
+      A firmware `Jackpot_<jovairt pont>` sort kuld a hidakon es a loopon;
+      a GUI a 125 frame-es, 30 fps-es sequence-et egyszer jatssza le.
+- [x] Jackpot-emeles a Hurry Up szorzo utan: 40000 helyett 50000,
+      60000 helyett 100000 pont es egyezo video. A bonusz valtozatlan;
+      mas pontforrasokra nem ervenyes az emeles.
 - [x] Cheech es Chong hid-combo videok: karakterenkent 6 sequence,
       2500/5000/7500/10000/15000/20000 ponttal (2026-08-24).
 - [x] Oldalspecifikus combo trigger: kishid = Chong, nagyhid = Cheech.
@@ -73,6 +78,14 @@ ebben a merfoldkoben.
       extra golyo inditasakor fixen 218.
 - [x] Chong BEER_COLLECTED: 230-232 a teljes FISH+TANK par utan.
 - [x] Chong JOINT_ROLLED_1: 239-241 az elso joint sodrasakor.
+- [x] Jackpot hangok: ertekenkent 50/50 Cheech vagy Chong, egy bemondas
+      talalatonkent; a regi 073 nem szol ra az uj dumara. Trackparok:
+      10000=209/210, 15000=211/212, 20000=213/214, 25000=221/222,
+      30000=299/300, 50000=305/306, 100000=307/308. A video, hang es
+      pontozas ugyanazt az emelt jackpot-osszeget hasznalja.
+- [ ] Jackpot audio/video gepi ellenorzes: a WAV-ok 3,16-6,13 masodpercesek,
+      a video 4,17 s. A hosszabb hangok a pontkepernyore visszaterve is futhatnak;
+      a bekotes nem vagja vagy gyorsitja oket.
 - [ ] Cheech MULTIBALL_ACAPULCO: a tablazat szerinti 293-295 mar az Alien
       Wheel Extra Ball harom hangja; uj, szabad tracktartomany es 3 WAV kell.
 - [ ] Chong MULTIBALL_MICHOACAN: 296-298 WAV hianyzik; a B/C szoveg is
@@ -103,8 +116,9 @@ ebben a merfoldkoben.
 - [x] Combo bonusgorbe: 100/150/200/250/300/500.
 - [ ] Kis/nagy híd jackpot-arany fizikai nehezseg alapjan.
 - [ ] Bonus maximum vagy elvart golyovegi bonusztartomany meghatarozasa.
-- [x] Hurry Up kozponti szabaly: minden direkt pont 2x, a bonusz valtozatlan,
-      mikro-switch video- es effekt-ujrainditas nelkul.
+- [x] Hurry Up kozponti szabaly: direkt pont 2x, a bonusz valtozatlan,
+      mikro-switch video- es effekt-ujrainditas nelkul. Jackpot-kivetel:
+      a szorzas utan 40000 -> 50000, 60000 -> 100000.
 
 ## P1 - GUI allapot/HUD
 
