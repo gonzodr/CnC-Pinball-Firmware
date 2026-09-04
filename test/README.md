@@ -76,6 +76,12 @@ es 307/308 hang kell legyen. Mindket hid es a loop ugyanazt a feedback
 helpert hasznalja. A forrasszintu kiosztas-ellenorzes kulon futtathato:
 `python -m unittest discover -s test -p test_jackpot_audio.py`.
 
+Jackpot-feny: ID19 FULL, 40 frame x 50 ms, ket teljes lejatszas (kb. 4 s).
+Uj jackpot ujrainditja a ket kort. A masodik kor utan visszaall a jatekfeny;
+a regi loop-ID1 / hid-ID5 nem indul ra. Elozo UFO hold/vegtelen allapot nem
+oroklodhet. A Danger tovabbra is 3 kort fut, a Tilt pedig drainig vegtelent.
+Forrasszintu ellenorzes: `python -m unittest discover -s test -p test_jackpot_lights.py`.
+
 - **Lefedi:** pontozás (Score choke-point trace), játékfolyam, videó-
   triggerek, hangválasztás ott, ahol soros-látható.
 - **NEM fedi:** a LED-rutinokat (a pad nem capture-özi a szalagot) és a

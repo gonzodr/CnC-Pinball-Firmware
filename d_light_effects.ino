@@ -177,6 +177,8 @@ void StartFullBakedEffect(uint8_t id, uint8_t plays, boolean forever) {
       effectStartT = millis();
       fullEffectPlaysRemaining = plays ? plays : 1;
       fullEffectLoopForever = forever;
+      // Egy korabbi tartott UFO-loop ne tegye vegtelenné az uj effektet.
+      fullEffectHoldLoop = LOW;
       return;
     }
   }

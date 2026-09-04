@@ -2078,6 +2078,8 @@ void PlayJackpotFeedback(unsigned long basePoints) {
   unsigned long points = JackpotScorePoints(basePoints);
   Serial.print("Jackpot_");
   Serial.println(points);
+  // ID19: 40 x 50 ms = 2 s; ket teljes kor a jackpot video/hang mellett.
+  StartFullBakedEffect(19, 2, LOW);
 
   uint16_t firstTrack = 0;
   switch (points) {
@@ -2881,8 +2883,6 @@ void Loopshoot() {
     wTrig.trackPlayPoly(TRK_BLOB);
     if (multiloopsw == 1) {
       ScoreJackpot(Scoring::LOOP_JACKPOT_POINTS, Scoring::LOOP_JACKPOT_BONUS);
-      effect = HIGH;
-      effectID = 1; // Loop-Jackpot - a multiball loop-jackpotnal
     }
     else {
       Score(Scoring::LOOP_POINTS, Scoring::LOOP_BONUS);
@@ -4583,8 +4583,11 @@ void BridgeCommon(uint8_t swPin, boolean* swFlag, unsigned long* swT,
         PlayJackpotFeedback(jpScr[multiball]);
       }
       delay(20);
-      effect = HIGH;
-      effectID = 5;
+      if (multiball == 0) {
+        // A sima aktiv hid regi fenye marad; jackpotnal az ID19 fut.
+        effect = HIGH;
+        effectID = 5;
+      }
     }
 
     if (*swFlag == 1 && millis() > *swT + 1000) {

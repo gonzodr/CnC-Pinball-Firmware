@@ -34,6 +34,9 @@ ebben a merfoldkoben.
 - [x] Jackpot-emeles a Hurry Up szorzo utan: 40000 helyett 50000,
       60000 helyett 100000 pont es egyezo video. A bonusz valtozatlan;
       mas pontforrasokra nem ervenyes az emeles.
+- [x] Jackpot-feny: ID19, ket teljes 2 s-os kor (osszesen kb. 4 s),
+      a ket hid es a loop kozos video/hang/feny inditasaval. Jackpotnal
+      a regi ID1/ID5 effekt nem irja felul; uj jackpot ujrainditja a ket kort.
 - [x] Cheech es Chong hid-combo videok: karakterenkent 6 sequence,
       2500/5000/7500/10000/15000/20000 ponttal (2026-08-24).
 - [x] Oldalspecifikus combo trigger: kishid = Chong, nagyhid = Cheech.
@@ -140,7 +143,8 @@ ebben a merfoldkoben.
 
 - [ ] Egységes palyafeny-szotar dokumentalasa es alkalmazasa.
 - [ ] Multiball-start feny.
-- [ ] Kulon híd-jackpot overlay; ne a Weedblast legyen altalanos jackpot-effekt.
+- [x] Dedikalt híd-jackpot feny: ID19 teljes palyas effekt, 2 kor;
+      jackpotnal mar nem a Weedblast indul.
 - [ ] SpaceCoke start feny.
 - [ ] Cheech/Chong harmadik collectible completion feny.
 - [ ] Effect ID1 overlay/full inditas ellenorzese es javitasa, ha szukseges.
