@@ -954,6 +954,9 @@ void loop() {
       MunchiesUpdate();
     }
     else {
+      // Az egyszeri Initlights() nem eleg az overlayek ala: a teljesen
+      // statikus LED-ek alapjat minden frame-ben ujra fel kell epiteni.
+      RestoreStaticPlayfieldLeds();
       Multiball();
       Loopshoot();
       Ballhandler();
@@ -2548,6 +2551,26 @@ void PlaySpeech(const uint8_t* tracks, uint8_t count) {
 //// Initlights
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
+void RestoreStaticPlayfieldLeds() {
+  // Ezeket semmilyen normal jatekrutin nem animalja. Az overlay effektek
+  // viszont atmenetileg irhatnak rajuk, ezert az alapallapotukat minden
+  // jatek-frame elejen visszaallitjuk; maga az aktualis overlay kesobb,
+  // kozvetlenul a FastLED.show() elott tovabbra is szabadon felulirhatja.
+  leds[0] = CRGB::White;
+  leds[1] = CRGB::White;
+  leds[4] = CRGB::White;
+  leds[5] = CRGB::White;
+  leds[11] = CRGB::White;
+  leds[12] = CRGB::White;
+  leds[13] = CRGB::White;
+  leds[14] = CRGB::White;
+
+  leds[LED_RRAMP_ARROW_22] = CRGB::Black;
+  leds[LED_RRAMP_ARROW_21] = CRGB::Black;
+  leds[LED_RIGHT_LOOP_2] = CRGB::Black;
+  leds[LED_RIGHT_LOOP_1] = CRGB::Black;
+}
+
 void Initlights() {
   if (initlight == 1) {
     leds[0] = CRGB::White;
