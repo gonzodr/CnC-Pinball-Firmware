@@ -142,6 +142,7 @@ int simForceLottery = 0; // cinkelt UFO-lotto: 7=SpaceCoke, 8=pontlopas, 9=minig
 #define TRK_CHEECHBEAUTY       36
 #define TRK_CHEECHFART         37
 #define TRK_SHOOTOUTUFO        42
+#define TRK_HAPPYUFO           45
 #define TRK_MISSU              46
 #define TRK_LETSPLAY           47
 #define TRK_DAVENOTHERE        51
@@ -2421,6 +2422,13 @@ void StartUfoLotteryVisuals() {
 
 void BeginUfoLotteryPresentation(boolean playLegacyVideo) {
   StartUfoLotteryVisuals();
+  // A sima WEED es az egyjointos Super Cashout lottery alatt ez adja a
+  // hatterzenet. A Feature Wheel sajat (TRK_UFO_WHEEL_BG), a Love Pack pedig
+  // SpaceCoke hangot kap, ezert azokra nem inditjuk el.
+  if (ufoAwardTier == UFO_PARTY_CASHOUT ||
+      ufoAwardTier == UFO_PARTY_SUPER_CASHOUT) {
+    wTrig.trackPlayPoly(TRK_HAPPYUFO);
+  }
   ApplyUfoLotteryEntryAward(playLegacyVideo);
   ufoshoot = 4;
   ufoshoottimer = millis();
@@ -4175,7 +4183,14 @@ void UFOO() {
         leds[LED_UFO_ARROW_2] = CRGB::Cyan;
       }
     }
-
+  }
+  else {
+    // Az overlay effektek csak a sajat szines pixeleiket irjak felul, a
+    // transparent frame-ek nem torlik a leds[] korabbi tartalmat. Ezert az
+    // inaktiv UFO-nyilak alapallapotat minden korben explicit visszaallitjuk,
+    // kulonben Weedblast/Joint/Combo utan halvany szin maradhat rajtuk.
+    leds[LED_UFO_ARROW_1] = CRGB::Black;
+    leds[LED_UFO_ARROW_2] = CRGB::Black;
   }
 }
 
