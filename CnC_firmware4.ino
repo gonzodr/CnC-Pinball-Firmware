@@ -2154,13 +2154,15 @@ boolean ExtraBallLotteryBlocked() {
 
 uint8_t CurrentUfoPartyTier() {
   // 3 joint = Love Pack (SpaceCoke), 2 joint = Feature Wheel.
-  // EGY jointnal az UFO szandekosan INAKTIV: nem veszi el a jointot, es nem
-  // ad erte semmit - a jatekos igy tud tovabb gyujteni. Az egyedul allo joint
-  // a jatek vegen, a bonuszban fizet (lasd a Nextball agat).
-  // Joint nelkul a weed tovabbra is a sima cashoutot nyitja.
+  // Egy joint ONMAGABAN inaktiv, igy tovabb gyujtheto. Ha melle ujra
+  // kigyullad a WEED, az UFO Super Cashout lotteryt ad, de a jointot nem
+  // fogyasztja el. Joint nelkul a WEED a sima Cashoutot nyitja.
   if (jointStack[player] >= 3) return UFO_PARTY_LOVE_PACK;
   if (jointStack[player] == 2) return UFO_PARTY_FEATURE_WHEEL;
-  if (jointStack[player] >= 1) return UFO_PARTY_NONE;
+  if (jointStack[player] == 1) {
+    return (weedQualified[player] == HIGH)
+             ? UFO_PARTY_SUPER_CASHOUT : UFO_PARTY_NONE;
+  }
   if (weedQualified[player] == HIGH) return UFO_PARTY_CASHOUT;
   return UFO_PARTY_NONE;
 }
@@ -2214,9 +2216,10 @@ void RestorePartyShotsForPlayer() {
 void ConsumeUfoPartyReward(uint8_t tier) {
   weedQualified[player] = LOW;
   spinnersw = 0;
-  // Csak a Feature Wheel es a Love Pack fogyasztja el a jointokat; az egy
-  // jointos allapot nem is jut el idaig (ott az UFO inaktiv). A jointokkal
-  // EGYUTT a hozzajuk gyujtott sor is elfogy - ket joint ket sort visz.
+  // Csak a Feature Wheel es a Love Pack fogyasztja el a jointokat. A Super
+  // Cashout elhasznalja a friss WEED-et, de az egy jointot meghagyja tovabbi
+  // gyujteshez. A magasabb tiereknel a jointokkal EGYUTT a hozzajuk gyujtott
+  // sor is elfogy - ket joint ket sort visz.
   if (tier >= UFO_PARTY_FEATURE_WHEEL) {
     uint8_t spent = jointStack[player];
     jointStack[player] = 0;
@@ -3740,7 +3743,9 @@ void Weedspinner() {
       // vegeig aktiv marad. Egy korabbi joint UFO-cashoutja nem veszik el.
       if (weedQualified[player] == HIGH) {
         weedQualified[player] = LOW;
-        ufosw = (jointStack[player] > 0) ? 1 : 0;
+        // A spinner elhasznalta a WEED-et. Egy magaban maradt joint nem
+        // aktivalhatja az UFO-t; a teljes tier-logika dontse el az allapotot.
+        ufosw = (CurrentUfoPartyTier() != UFO_PARTY_NONE) ? 1 : 0;
         PlaySpeechRange(TRK_VO_UFO_SPINNER_SHOOT_A);
         SendPartyEvent("SPINNER");
         SendPartyState();
@@ -4144,8 +4149,8 @@ void UFOO() {
     }
   }
 
-  if (ufosw == 1) {
-    uint8_t tier = CurrentUfoPartyTier();
+  uint8_t tier = CurrentUfoPartyTier();
+  if (ufosw == 1 && tier != UFO_PARTY_NONE) {
     Blinktimer();
     if (ledState == HIGH) {
       if (tier == UFO_PARTY_CASHOUT) {
@@ -4160,7 +4165,7 @@ void UFOO() {
         leds[LED_UFO_ARROW_1] = CRGB::Magenta;
         leds[LED_UFO_ARROW_2] = CRGB::White;
       }
-      else {
+      else if (tier == UFO_PARTY_LOVE_PACK) {
         leds[LED_UFO_ARROW_1] = CRGB::Cyan;
         leds[LED_UFO_ARROW_2] = CRGB::White;
       }
@@ -4178,7 +4183,7 @@ void UFOO() {
         leds[LED_UFO_ARROW_1] = CRGB::White;
         leds[LED_UFO_ARROW_2] = CRGB::Magenta;
       }
-      else {
+      else if (tier == UFO_PARTY_LOVE_PACK) {
         leds[LED_UFO_ARROW_1] = CRGB::White;
         leds[LED_UFO_ARROW_2] = CRGB::Cyan;
       }
